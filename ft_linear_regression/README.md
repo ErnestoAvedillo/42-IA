@@ -41,5 +41,5 @@
 
 ### Resources
 
-* **[Andrew NG Lexture notes.](https://sgfin.github.io/files/notes/CS229_Lecture_Notes.pdf)**
+* **[Andrew NG Lecture notes.](https://sgfin.github.io/files/notes/CS229_Lecture_Notes.pdf)**
 

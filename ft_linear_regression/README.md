@@ -28,9 +28,15 @@
     python estimate_price.py
 
 ### Pictures
+ python predict_price.py data.csv
 <p>
   <img src="./pictures/Screenshot from 2025-02-21 16-22-58.png">
   <img src="./pictures/Screenshot from 2025-02-21 16-23-10.png">
+</p>
+ python predict_price.py data.csv 2
+<p>
+  <img src="./pictures/Screenshot from 2025-02-21 17-08-34.png">
+  <img src="./pictures/Screenshot from 2025-02-21 17-08-42.png">
 </p>
 
 ### Resources

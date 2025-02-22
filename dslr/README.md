@@ -44,19 +44,15 @@
 </p>
     python histogram.py ../data/dataset_training.csv
 <p>
-  <img src="./pictures/Screenshot from 2025-02-21 17-08-42.png">
+  <img src="./pictures/Screenshot from 2025-02-22 15-45-44.png">
 </p>
     python pair_plot.py ../data/dataset_training.csv
 <p>
-  <img src="./pictures/Screenshot from 2025-02-21 17-08-42.png">
+  <img src="./pictures/Screenshot from 2025-02-22 15-49-59.png">
 </p>
     python logreg_train.py ../data/dataset_training.csv
 <p>
-  <img src="./pictures/Screenshot from 2025-02-21 17-08-42.png">
-</p>
-    python logreg_predict.py ../data/dataset_training.csv
-<p>
-  <img src="./pictures/Screenshot from 2025-02-21 17-08-42.png">
+  <img src="./pictures/Screenshot from 2025-02-22 15-53-46.png">
 </p>
 
 ### Resources

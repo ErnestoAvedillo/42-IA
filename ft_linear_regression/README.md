@@ -9,10 +9,13 @@
 </h1>
 <!--FINISH HEADER-->
 
+## LINEAR REGRESSION
+
 ### Descripion
-- This exercise consists in devlop the code to calculate a linear regression of a car value depending of their milleage.
+- This exercise consists of developing the code to calculate a linear regression of a car's value depending on its mileage.
+
 ##### File configuration
-- **_estimate_price.py_**: calculate the orice based on the parameters saved in a file named `arguments.json`. When this file does not exist, arguments to estimate are 0. Execution: `python estimate_price.py`.
+- **_estimate_price.py_**: calculate the price based on the parameters saved in a file named `arguments.json`. When this file does not exist, arguments to estimate are 0. Execution: `python estimate_price.py`.
 - **_predict_price.py_**: calculates the parameters of the regression and saves it in a file nammed `arguments.json`.
 - **_regression.py_**: This is itself the ruotine that calculates the regression.
 - **_plot_loss.py_**: Plots the historic of the all loses.

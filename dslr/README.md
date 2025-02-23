@@ -9,6 +9,8 @@
 </h1>
 <!--FINISH HEADER-->
 
+## LOGISTIC REGRESSION
+
 ### Descripion
 - With this exercise we start learning how to analyze and visualize data.
 - Afterwords we learn to create a clasifyer using logistir regression.

@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-#from histogram import show_all_histograms
+from histogram import show_all_histograms
 from sklearn.model_selection import train_test_split
 
 from layer import Layer
@@ -28,10 +28,21 @@ print(data)
 print("imprimo la descripcion de los datos")
 print(data.describe())
 print("imprimo las keys  de los datos")
-print(data.keys())
-for key in data.keys():
+keys = data.keys()
+print (keys)
+#show_all_histograms(data)
+for key in keys:
     if data[key].value_counts().count() > 10:
         continue
     print(key, data[key].unique())
     print(key, data[key].value_counts())
-#show_all_histograms(data)
+Y = data[["1_B","1_M"]].to_numpy().astype(int)
+X = data.drop(columns=[0,"1_B","1_M"]).to_numpy().astype(float)
+print(X)
+print(Y)
+X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.2)
+network = Network()
+network.add_layer(layer = Layer(nodes = 20, input_dim=30))
+network.add_layer(nodes = 10)
+network.add_layer(nodes = 2)
+network.train(X_train, Y_train, X_test, Y_test, epochs=100)

@@ -38,4 +38,4 @@
 ### Resources
 
 * **[Understanding Backpropagation](https://towardsdatascience.com/understanding-backpropagation-abcc509ca9d0/)**
-
+* **[Neural Networks and deep kearning](http://neuralnetworksanddeeplearning.com/)**

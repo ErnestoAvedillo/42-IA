@@ -28,10 +28,11 @@ class Network:
         return current_input
     
     def backward(self,delta):
-        for layer in reversed(self.layers):
-            delta=layer.backward(delta, self.learning_rate).mean(axis=2)
+        self.layers[-1].backward_last_layer(delta, self.learning_rate)
+        for i in range(len(self.layers[:-1]) - 1, -1, -1):
+            self.layers[i].backward(self.learning_rate, self.layers[i+1])
 
-    def train(self, X, Y, x_test, y_test, epochs=1000, accuracy=0.99, learning_rate=0.001, batch_size=None):
+    def train(self, X, Y, x_test, y_test, epochs=1000, accuracy=0.99, learning_rate=0.00001, batch_size=None):
         factor_theta0 = np.concat((np.ones([1]),-(X.mean(axis = 0)/ X.std(axis = 0))), axis = 0)
         X = (X - np.mean(X, axis = 0)) / (np.std(X, axis = 0))
         y_pred = np.zeros(Y.shape)
@@ -56,6 +57,9 @@ class Network:
                 print(f"Epoch {_} - Train Accuracy: {np.mean(y_pred.argmax(axis=1) == X)}", end="\t")
             test_pred = self.predict(x_test).argmax()
             print(f" - Test Accuracy: {np.mean(test_pred == y_test)}")
+            for layer in self.layers:
+                print(layer)
+            input("Press Enter to continue...")
             if np.mean(test_pred == y_test) > accuracy:
                 break
 

@@ -1,7 +1,7 @@
-from numpy import exp, tanh, maximum, where
+from numpy import exp, tanh, maximum, where, ones, diag, outer, array
 
 
-activation_types = {"sigmoid":1, "tanh":2, "relu":3, "linear":4}
+activation_types = {"sigmoid":1, "tanh":2, "relu":3, "linear":4, "softmax":5}
    
 
 class Activation:
@@ -10,8 +10,8 @@ class Activation:
         if type not in activation_types:
             raise ValueError("Activation type not supported")
         self.type = activation_types[type]
-        self.forward_functions = {1: self.sigmoid, 2: self.tanh, 3: self.relu, 4: lambda x: x}
-        self.backward_functions = {1: self.sigmoid_derivative, 2: self.tanh_derivative, 3: self.relu_derivative, 4: lambda x: 1} # linear derivative is 1, so we can just return x and it will
+        self.forward_functions = {1: self.sigmoid, 2: self.tanh, 3: self.relu, 4: self.linear, 5: self.softmax}
+        self.backward_functions = {1: self.sigmoid_derivative, 2: self.tanh_derivative, 3: self.relu_derivative, 4: self.linear_derivative, 5:self.softmax_derivative } # linear derivative is 1, so we can just return x and it will
         pass
 
     def forward(self, x):
@@ -24,7 +24,7 @@ class Activation:
         return 1 / (1 + exp(-x))
     
     def sigmoid_derivative(self, x):
-        return x * (1 - x)
+        return exp(x) * pow(1 + exp(x),-2)
     
     def tanh(self, x):
         return tanh(x)
@@ -37,3 +37,15 @@ class Activation:
     
     def relu_derivative(self, x):
         return where(x <= 0, 0, 1)
+    
+    def softmax(self, x):
+        return exp(x) / exp(x).sum()
+    
+    def softmax_derivative(self, x):
+        return 1
+    
+    def linear(self, x):
+        return x
+    
+    def linear_derivative(self, x):
+        return ones(x.shape)

@@ -34,19 +34,20 @@ class Layer:
         return self.y_predicted
 
     def backward_last_layer(self, error, learning_rate):
-        self.delta = error * self.activation.backward(np.dot(self.input, self.weights))
+        activation = self.activation.backward(np.dot(self.input, self.weights)) 
+        self.delta = error * activation
         self.delta_weights = np.einsum('ij,ik->ikj', self.delta, self.input).sum(axis=0)
         self.delta_bias = np.sum(self.delta, axis=0)
-        self.weights -= learning_rate * self.delta_weights / self.data_length
-        self.bias -= learning_rate * self.delta_bias / self.data_length
+        self.weights -= learning_rate * self.delta_weights
+        self.bias -= learning_rate * self.delta_bias
         return 
     
     def backward(self, learning_rate, next_layer):
         self.delta = np.dot(next_layer.get_delta(), next_layer.get_weights().T) * self.activation.backward(np.dot(self.input, self.weights))
         self.delta_weights = np.einsum('ij,ik->ikj', self.delta, self.input).sum(axis=0)
         self.delta_bias = np.sum(self.delta, axis=0)
-        self.weights -= learning_rate * self.delta_weights / self.data_length
-        self.bias -= learning_rate * self.delta_bias / self.data_length
+        self.weights -= learning_rate * self.delta_weights
+        self.bias -= learning_rate * self.delta_bias
         return
 
     def __str__(self):

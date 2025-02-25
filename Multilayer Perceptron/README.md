@@ -39,3 +39,4 @@
 
 * **[Understanding Backpropagation](https://towardsdatascience.com/understanding-backpropagation-abcc509ca9d0/)**
 * **[Neural Networks and deep kearning](http://neuralnetworksanddeeplearning.com/)**
+* **[The Softmax function and its derivative](https://eli.thegreenplace.net/2016/the-softmax-function-and-its-derivative/)**

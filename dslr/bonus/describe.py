@@ -61,8 +61,21 @@ def describe (data:pd.DataFrame):
 			val25 = np.nan
 			val50 = np.nan
 			val75 = np.nan
-		stats_data[keys[col]] =[count, mean, std_dev, min, val25, val50, val75, max, mean - 1.96 * std_dev, mean + 1.96 * std_dev, mean - 3.291 * std_dev, mean + 3.291 * std_dev]
-	stats_df = pd.DataFrame(stats_data, index=["count", "mean", "std_dev", "min", "25%", "50%", "75%", "max", "lower 95% conf", "upper 95% conf", "lower 99.9% conf", "upper 99.9% conf"])
+		stats_data[keys[col]] =[
+			count, 
+			mean, 
+			std_dev, 
+			min, 
+			val25, 
+			val50, 
+			val75, 
+			max, 
+			mean - 1.96 * std_dev, 
+			mean + 1.96 * std_dev, 
+			mean - 3.291 * std_dev, 
+			mean + 3.291 * std_dev,
+			data[keys[col]].count() - data[keys[col]].quantile(0.999)]
+	stats_df = pd.DataFrame(stats_data, index=["count", "mean", "std_dev", "min", "25%", "50%", "75%", "max", "lower 95% conf", "upper 95% conf", "lower 99.9% conf", "upper 99.9% conf", "Nr. out of 99.9"])
 	return stats_df
 
 

@@ -14,6 +14,10 @@ class Activation:
         self.backward_functions = {1: self.sigmoid_derivative, 2: self.tanh_derivative, 3: self.relu_derivative, 4: self.linear_derivative, 5:self.softmax_derivative } # linear derivative is 1, so we can just return x and it will
         pass
 
+    def get_activation(self):
+        keys = list(activation_types.keys())
+        return keys[self.type - 1]
+
     def forward(self, x):
         return self.forward_functions[self.type](x)
 
@@ -24,7 +28,8 @@ class Activation:
         return 1 / (1 + exp(-x))
     
     def sigmoid_derivative(self, x):
-        return exp(x) * pow(1 + exp(x),-2)
+        aux = exp(x)
+        return aux * pow(1 + aux,-2)
     
     def tanh(self, x):
         return tanh(x)
@@ -39,10 +44,11 @@ class Activation:
         return where(x <= 0, 0, 1)
     
     def softmax(self, x):
-        return exp(x) / exp(x).sum()
+        aux = exp(x) / exp(x).sum()
+        return aux
     
     def softmax_derivative(self, x):
-        return 1
+        return ones(x.shape)
     
     def linear(self, x):
         return x

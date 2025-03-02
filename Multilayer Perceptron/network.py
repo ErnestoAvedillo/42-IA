@@ -1,10 +1,13 @@
 import numpy as np
 from layer import Layer
+import json
 
 class Network:
     def __init__(self,layers = None, x = None, y = None, learning_rate = 0.001):
         if layers is None:
             self.layers = []
+        self.mean = None
+        self.std = None
         self.learning_rate = None
 
     def add_layer(self, layer):
@@ -33,8 +36,7 @@ class Network:
         for i in range(len(self.layers[:-1]) - 1, -1, -1):
             self.layers[i].backward(self.learning_rate, self.layers[i+1])
 
-    def train(self, X, Y, X_test, y_test, epochs=1000, accuracy=0.99, learning_rate=0.01, batch_size=None):
-     #   factor_theta0 = np.concat((np.ones([1]),-(X.mean(axis = 0)/ X.std(axis = 0))), axis = 0)
+    def train(self, X, Y, X_test, y_test, epochs=1000, accuracy=0.9999, delta_accuracy = 0.0000001, learning_rate=0.01, batch_size=None):
         m = Y.shape[0]
         if X.ndim == 1:
             X = X.reshape(m, 1)
@@ -45,11 +47,14 @@ class Network:
             x_test = x_test.reshape(m, 1)
         if y_test.ndim == 1:
             y_test = y_test.reshape(m, 1)
-        X = (X - np.mean(X, axis = 0)) / (np.std(X, axis = 0))
-        x_test = (X_test - np.mean(X, axis = 0)) / (np.std(X, axis = 0))
+        self.mean = X.mean(axis = 0)
+        self.std = X.std(axis = 0)
+        X = (X - self.mean) / (self.std)
+        x_test = (X_test - self.mean) / (self.std)
         y_pred = np.zeros(Y.shape)
         test_pred = np.zeros(y_test.shape)
         self.learning_rate = learning_rate
+        last_accuracy = 0.5
         for _ in range(epochs):
             if batch_size is None:
                 y_pred = self.forward(X)
@@ -69,19 +74,52 @@ class Network:
                 y_pred = self.forward(X)
                 print(f"Epoch {_} - Train Accuracy: {np.mean(np.round(y_pred).astype(int) == Y)}", end="\t")
             test_pred = self.forward(x_test)
-#            train_pred = self.predict(X)
-#            for i in range(20):
-#                print(f" - compare train: {np.round(train_pred[i],2)} == {np.round(y_test[i],2)}")
-#            for i in range(20):
-#                print(f" - compare  test: {np.round(test_pred[i],2)} == {np.round(y_test[i],2)}")
             print(f" - Test Accuracy: {np.mean(np.round(test_pred).astype(int) == y_test)}")
-#            input("Press Enter to continue...")
-            if np.mean(test_pred == y_test) > accuracy:
+            curr_accuracy = np.mean(np.round(test_pred).astype(int) == y_test) 
+            if curr_accuracy > accuracy :
                 break
+            last_accuracy = curr_accuracy
         return np.mean(np.round(test_pred).astype(int) == y_test)
         
+    def save_model(self, file_name):
+        model = {}
+        model["mean"] = self.mean.tolist()
+        model["std"] = self.std.tolist()
+        model["learning_rate"] = self.learning_rate
+        model["layers"] = []
+        for layer in self.layers:
+            model["layers"].append(layer.__dict__)
+        with open(file_name, "w") as file:
+            file.write(model)
 
-    def predict(self, x):
+    def get_model(self):
+        model_layers = []
+        for layer in self.layers:
+            model_layers.append(layer.get_model())
+
+        model ={
+            "mean":self.mean.tolist(),
+            "std":self.std.tolist(),
+            "layers":model_layers
+        }
+        return model
+
+    def set_model(self, model):
+        self.layers = None
+        self.mean = np.array(model["mean"])
+        self.std = np.array(model["std"])
+        for layer in model["model_layers"]:
+            self.add_layer(model = layer)
+
+    def save_model(self, file_name):
+        model = self.get_model()
+        with open(file_name, "w") as archivo:
+            json.dump(model, archivo)
+
+
+    def predict(self, X):
+
+        x = X - self.mean / self.std
         return self.forward(x)
 
     def __str__(self):

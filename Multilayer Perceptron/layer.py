@@ -2,18 +2,35 @@ import numpy as np
 from activation import Activation
 
 class Layer:
-    def __init__(self, input_dim, nodes, activation="sigmoid"):
-        self.input_dim = input_dim
-        self.nodes = nodes
-        self.activation = Activation(activation)
-        self.weights = np.random.randn(input_dim, nodes)
-        self.bias = np.random.randn(nodes)
-        self.input = None
-        self.y_predicted = None
-        self.delta = None
-        self.delta_weights = None
-        self.delta_bias = None
-        self.data_length = None
+    def __init__(self, input_dim, nodes, activation="sigmoid", model = None):
+        if model is not None:
+            self.set_model(model)
+        else:
+           self.input_dim = input_dim
+           self.nodes = nodes
+           self.activation = Activation(activation)
+           self.weights = np.random.randn(input_dim, nodes)
+           self.bias = np.random.randn(nodes)
+           self.input = None
+           self.y_predicted = None
+           self.delta = None
+           self.delta_weights = None
+           self.delta_bias = None
+           self.data_length = None
+    
+    def get_model(self):
+        model = {"activation":self.activation.get_activation(),
+                 "weights":self.weights.tolist(),
+                 "bias": self.bias.tolist()}
+        return model
+
+    def set_model(self, model):
+        self.activation = Activation(model["activation"])
+        self.weights = np.array(model["weights"])
+        self.bias = np.array(model["bias"])
+        self.input_dim = self.weightshape[0]
+        self.nodes = self.weightshape[1]
+
 
     def get_weights(self):
         return self.weights

@@ -42,6 +42,8 @@ def my_std_dev(data:np.ndarray):
 	return math.sqrt(cuadratic_sum / count)
 
 def describe (data:pd.DataFrame):
+	if data.ndim == 1:
+		data = data.to_frame()
 	keys = data.keys()
 	num_col = len(keys)
 	stats_data = {}
@@ -78,7 +80,7 @@ def describe (data:pd.DataFrame):
 	stats_df = pd.DataFrame(stats_data, index=["count", "mean", "std_dev", "min", "25%", "50%", "75%", "max", "lower 95% conf", "upper 95% conf", "lower 99.9% conf", "upper 99.9% conf", "Outliers"])
 	return stats_df
 
-
+"""
 if len(sys.argv) != 2:
 	print("Please give a file as argument to describe.")
 	exit(1)
@@ -90,4 +92,4 @@ except:
 data=df
 print(df.describe())
 resutl = describe(data)
-print (resutl)
+print (resutl)"""

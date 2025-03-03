@@ -41,5 +41,11 @@ for key in description.keys()[1:-2]:
 for key in description.keys()[1:]:
     print(key, pd.concat([description[key], cleaned_description[key]], axis = 1))
 
-cleaned_data.to_csv("data_cleaned.csv", index = False, index_label=0, columns = cleaned_data.columns)
+mask = np.random.rand(cleaned_data.shape[0]) > 0.1
+cleaned_data_train_validation = cleaned_data[mask == True]
+cleaned_data_test = cleaned_data[mask == False]
+
+cleaned_data_train_validation.to_csv("data_train.csv", index = False, index_label=0, columns = cleaned_data.columns)
+cleaned_data_test.to_csv("data_test.csv", index = False, index_label=0, columns = cleaned_data.columns)
+
 print(cleaned_data.shape)

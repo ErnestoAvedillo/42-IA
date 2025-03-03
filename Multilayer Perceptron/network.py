@@ -1,6 +1,8 @@
 import numpy as np
 from layer import Layer
 import json
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
+
 
 class Network:
     def __init__(self,layers = None, x = None, y = None, learning_rate = 0.001):
@@ -115,12 +117,25 @@ class Network:
         model = self.get_model()
         with open(file_name, "w") as archivo:
             json.dump(model, archivo)
-
+    
+    def open_model(self, file_name):
+        with open(file_name,'r') as archivo:
+            model = json.load(archivo)
+        self.set_model(model)
 
     def predict(self, X):
 
         x = X - self.mean / self.std
         return self.forward(x)
 
+    def evaluate_prediction(self, Y, Y_predicted):
+        metrics = {
+            "accuracy": accuracy_score(self.y_true, self.y_pred),
+            "precision": precision_score(self.y_true, self.y_pred, average="weighted"),
+            "recall": recall_score(self.y_true, self.y_pred, average="weighted"),
+            "f1_score": f1_score(self.y_true, self.y_pred, average="weighted"),
+        }
+        return metrics
+            
     def __str__(self):
         return "\n".join([str(layer) for layer in self.layers])

@@ -44,8 +44,8 @@ class Activation:
         return where(x <= 0, 0, 1)
     
     def softmax(self, x):
-        aux = exp(x) / exp(x).sum()
-        return aux
+        aux = exp(x)
+        return aux / aux.sum(axis = 1,keepdims=True)
     
     def softmax_derivative(self, x):
         return ones(x.shape)

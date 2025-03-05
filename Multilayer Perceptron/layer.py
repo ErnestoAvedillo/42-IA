@@ -2,13 +2,21 @@ import numpy as np
 from activation import Activation
 
 class Layer:
-    def __init__(self, input_dim, nodes, activation="sigmoid", model = None):
+    #def __init__(self, input_dim = None, nodes = None, activation="sigmoid", model = None):
+    def __init__(self, **kwargs):
+        input_dim = kwargs.get("input_dim", None)
+        nodes = kwargs.get("nodes", None)
+        model = kwargs.get("model", None) 
+        if len(kwargs) == 0:
+            return
         if model is not None:
-            self.set_model(model)
+            self.set_model(model = model)
         else:
+           if input_dim is None or nodes is None:
+                raise ValueError("input_dim and nodes must be defined")
            self.input_dim = input_dim
            self.nodes = nodes
-           self.activation = Activation(activation)
+           self.activation = Activation(kwargs.get("activation", "sigmoid"))
            self.weights = np.random.randn(input_dim, nodes)
            self.bias = np.random.randn(nodes)
            self.input = None
@@ -21,16 +29,17 @@ class Layer:
     def get_model(self):
         model = {"activation":self.activation.get_activation(),
                  "weights":self.weights.tolist(),
-                 "bias": self.bias.tolist()}
+                 "bias": self.bias.tolist(),
+                 "input_dim": self.input_dim,
+                 "nodes": self.nodes}
         return model
 
     def set_model(self, model):
         self.activation = Activation(model["activation"])
         self.weights = np.array(model["weights"])
         self.bias = np.array(model["bias"])
-        self.input_dim = self.weightshape[0]
-        self.nodes = self.weightshape[1]
-
+        self.input_dim = model["input_dim"]
+        self.nodes = model["nodes"]
 
     def get_weights(self):
         return self.weights

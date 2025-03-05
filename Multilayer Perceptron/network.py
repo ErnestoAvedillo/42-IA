@@ -12,9 +12,6 @@ class Network:
         self.std = None
         self.learning_rate = None
 
-    def add_layer(self, layer):
-        self.layers.append(layer)
-    
     def add_layer(self, layer = None, nodes = None, input_dim=None, activation="sigmoid"):
         if layer is not None:
             self.layers.append(layer)
@@ -25,7 +22,7 @@ class Network:
             raise ValueError("First layer must have input_dim")
         else:
             input = input_dim if input_dim is not None else self.layers[-1].nodes
-        self.layers.append(Layer(input, nodes, activation))
+        self.layers.append(Layer(input_dim = input, nodes = nodes, activation = activation))
 
     def forward(self, X):
         current_input = X
@@ -38,7 +35,7 @@ class Network:
         for i in range(len(self.layers[:-1]) - 1, -1, -1):
             self.layers[i].backward(self.learning_rate, self.layers[i+1])
 
-    def train(self, X, Y, X_test, y_test, epochs=1000, accuracy=0.9999, delta_accuracy = 0.0000001, learning_rate=0.01, batch_size=None):
+    def train(self, X, Y, X_test, y_test, epochs=1000, accuracy=0.9999, learning_rate=0.01, batch_size=None):
         m = Y.shape[0]
         if X.ndim == 1:
             X = X.reshape(m, 1)
@@ -56,31 +53,27 @@ class Network:
         y_pred = np.zeros(Y.shape)
         test_pred = np.zeros(y_test.shape)
         self.learning_rate = learning_rate
-        last_accuracy = 0.5
         for _ in range(epochs):
             if batch_size is None:
                 y_pred = self.forward(X)
                 delta = y_pred - Y
                 self.backward(delta)
-                print(f"Epoch {_} - Train Accuracy: {np.mean(np.round(y_pred).astype(int) == Y)}", end="\t")
             else:
-                batches_x = np.array_split(x, np.ceil(x.shape[0] / batch_size))
-                batches_y = np.array_split(y, np.ceil(y.shape[0] / batch_size))
-                i = 0
-                for i in range(batches_x):
-                    x = batches_x[i]
-                    y = self.forward(x)
+                batches_x = np.array_split(X, np.ceil(X.shape[0] / batch_size))
+                batches_y = np.array_split(Y, np.ceil(Y.shape[0] / batch_size))
+                for i in range(len(batches_x)):
+                    y = self.forward(batches_x[i])
                     delta = batches_y[i] - y
                     self.backward(delta)
-                    print(f"Epoch {_} -batch {i} - Train Accuracy: {np.mean(np.round(y_pred).astype(int) == Y)}", end="\r")
-                y_pred = self.forward(X)
-                print(f"Epoch {_} - Train Accuracy: {np.mean(np.round(y_pred).astype(int) == Y)}", end="\t")
+                    y = self.forward(batches_x[i])
+                    print(f"Epoch {_} -batch {i} - Train Accuracy: {np.mean(np.round(y).astype(int) == [batches_y[i]])}", end="\r")
+            y_pred = self.forward(X)
+            print(f"Epoch {_} - Train Accuracy: {np.mean(np.round(y_pred).astype(int) == Y)}", end="\t")
             test_pred = self.forward(x_test)
             print(f" - Test Accuracy: {np.mean(np.round(test_pred).astype(int) == y_test)}")
             curr_accuracy = np.mean(np.round(test_pred).astype(int) == y_test) 
             if curr_accuracy > accuracy :
                 break
-            last_accuracy = curr_accuracy
         return np.mean(np.round(test_pred).astype(int) == y_test)
         
     def save_model(self, file_name):
@@ -102,16 +95,19 @@ class Network:
         model ={
             "mean":self.mean.tolist(),
             "std":self.std.tolist(),
+            "learning_rate":self.learning_rate,
             "layers":model_layers
         }
         return model
 
     def set_model(self, model):
-        self.layers = None
+        self.layers = []
         self.mean = np.array(model["mean"])
         self.std = np.array(model["std"])
-        for layer in model["model_layers"]:
-            self.add_layer(model = layer)
+        self.learning_rate = model["learning_rate"]
+        for layer in model["layers"]:
+            new_layer= Layer(model = layer)
+            self.layers.append(new_layer)
 
     def save_model(self, file_name):
         model = self.get_model()
@@ -124,16 +120,17 @@ class Network:
         self.set_model(model)
 
     def predict(self, X):
+        x = (X - self.mean) / self.std
+        y_pred =  self.forward(x)
+        return np.round(y_pred).astype(int)
 
-        x = X - self.mean / self.std
-        return self.forward(x)
-
-    def evaluate_prediction(self, Y, Y_predicted):
+    def evaluate_prediction(self, Y, y_pred):
         metrics = {
-            "accuracy": accuracy_score(self.y_true, self.y_pred),
-            "precision": precision_score(self.y_true, self.y_pred, average="weighted"),
-            "recall": recall_score(self.y_true, self.y_pred, average="weighted"),
-            "f1_score": f1_score(self.y_true, self.y_pred, average="weighted"),
+            "nyaccuracy": np.mean(np.round(y_pred).astype(int) == Y),
+            "accuracy": accuracy_score(Y, y_pred),
+            "precision": precision_score(Y, y_pred, average="weighted"),
+            "recall": recall_score(Y, y_pred, average="weighted"),
+            "f1_score": f1_score(Y, y_pred, average="weighted"),
         }
         return metrics
             

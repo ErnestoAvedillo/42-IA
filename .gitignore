@@ -2,3 +2,5 @@ __pycache__
 *.json
 .vscode
 data_cleaned.csv
+data_test.csv
+data_train.csv

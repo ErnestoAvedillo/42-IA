@@ -43,3 +43,8 @@
 * **[Understanding Backpropagation](https://towardsdatascience.com/understanding-backpropagation-abcc509ca9d0/)**
 * **[Neural Networks and deep kearning](http://neuralnetworksanddeeplearning.com/)**
 * **[The Softmax function and its derivative](https://eli.thegreenplace.net/2016/the-softmax-function-and-its-derivative/)**
+* **[What is Adam Optimizer?](https://www.geeksforgeeks.org/adam-optimizer/)**
+* **[ML | Momentum-based Gradient Optimizer](https://www.geeksforgeeks.org/ml-momentum-based-gradient-optimizer-introduction/)**
+* **[Explicación del Optimizador Adagrad: Cómo funciona, aplicación y comparaciones](https://www.datacamp.com/es/tutorial/adagrad-optimizer-explained)**
+* **[Nesterov Momentum Explained with examples in TensorFlow and PyTorch](https://medium.com/@giorgio.martinez1926/nesterov-momentum-explained-with-examples-in-tensorflow-and-pytorch-4673dbf21998)**
+* **[RMSProp Optimizer in Deep Learning](https://www.geeksforgeeks.org/rmsprop-optimizer-in-deep-learning/)**

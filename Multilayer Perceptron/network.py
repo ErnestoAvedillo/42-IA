@@ -1,6 +1,8 @@
 import numpy as np
 from layer import Layer
+from optimizer import Optimizer
 import json
+import copy
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 
 
@@ -31,11 +33,12 @@ class Network:
         return current_input
     
     def backward(self,delta):
-        self.layers[-1].backward_last_layer(delta, self.learning_rate)
+        self.layers[-1].backward_last_layer(delta)
         for i in range(len(self.layers[:-1]) - 1, -1, -1):
-            self.layers[i].backward(self.learning_rate, self.layers[i+1])
+            self.layers[i].backward(self.layers[i+1])
 
-    def train(self, X, Y, X_test, y_test, epochs=1000, accuracy=0.9999, learning_rate=0.01, batch_size=None):
+    #def train(self, X, Y, X_test, y_test, epochs=1000, accuracy=0.9999, learning_rate=0.01, batch_size=None)
+    def train(self, X, Y, X_test, y_test, epochs=1000, accuracy=0.9999, batch_size=None, optimizer=Optimizer(optimizer = "sgd")):
         m = Y.shape[0]
         if X.ndim == 1:
             X = X.reshape(m, 1)
@@ -52,7 +55,9 @@ class Network:
         x_test = (X_test - self.mean) / (self.std)
         y_pred = np.zeros(Y.shape)
         test_pred = np.zeros(y_test.shape)
-        self.learning_rate = learning_rate
+        for layer in  self.layers:
+            optimizer_copy = copy.deepcopy(optimizer)
+            layer.set_optimizer(optimizer_copy)
         for _ in range(epochs):
             if batch_size is None:
                 y_pred = self.forward(X)
@@ -66,11 +71,13 @@ class Network:
                     delta = batches_y[i] - y
                     self.backward(delta)
                     y = self.forward(batches_x[i])
-                    print(f"Epoch {_} -batch {i} - Train Accuracy: {np.mean(np.round(y).astype(int) == [batches_y[i]])}", end="\r")
+                    self.evaluate_prediction(Y, y_pred)
+                    print(f"Epoch {_} -batch {i} - Train loss: {  self.metrics["loss"]}", end="\r")
             y_pred = self.forward(X)
-            print(f"Epoch {_} - Train Accuracy: {np.mean(np.round(y_pred).astype(int) == Y)}", end="\t")
+            self.evaluate_prediction(Y, y_pred)
+            print(f"Epoch {_} - Train loss: { self.metrics["loss"]}", end="\t")
             test_pred = self.forward(x_test)
-            print(f" - Test Accuracy: {np.mean(np.round(test_pred).astype(int) == y_test)}")
+            print(f" - Val loss: {  self.metrics["loss"]} - Val accuracy: { self.metrics["accuracy"]}")
             curr_accuracy = np.mean(np.round(test_pred).astype(int) == y_test) 
             if curr_accuracy > accuracy :
                 break
@@ -125,14 +132,12 @@ class Network:
         return np.round(y_pred).astype(int)
 
     def evaluate_prediction(self, Y, y_pred):
-        metrics = {
-            "nyaccuracy": np.mean(np.round(y_pred).astype(int) == Y),
-            "accuracy": accuracy_score(Y, y_pred),
-            "precision": precision_score(Y, y_pred, average="weighted"),
-            "recall": recall_score(Y, y_pred, average="weighted"),
-            "f1_score": f1_score(Y, y_pred, average="weighted"),
+        y_pred = y_pred + 1e-10 
+        self.metrics = {
+            "loss": np.dot(Y.T, np.log(y_pred)).sum() + np.dot((1 -Y).T, np.log (y_pred)).sum(),
+            "accuracy": np.mean(np.round(y_pred).astype(int) == Y)
         }
-        return metrics
+        return
             
     def __str__(self):
         return "\n".join([str(layer) for layer in self.layers])

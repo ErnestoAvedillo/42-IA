@@ -1,5 +1,6 @@
 import numpy as np  
 from activation import Activation
+from optimizer import Optimizer
 
 class Layer:
     #def __init__(self, input_dim = None, nodes = None, activation="sigmoid", model = None):
@@ -25,6 +26,10 @@ class Layer:
            self.delta_weights = None
            self.delta_bias = None
            self.data_length = None
+           self.optimizer = None
+    
+    def set_optimizer(self, optimizer = Optimizer(optimizer = "sgd")):
+        self.optimizer = optimizer
     
     def get_model(self):
         model = {"activation":self.activation.get_activation(),
@@ -59,21 +64,23 @@ class Layer:
         self.y_predicted = self.activation.forward(np.dot(input, self.weights) + self.bias)
         return self.y_predicted
 
-    def backward_last_layer(self, error, learning_rate):
+    def backward_last_layer(self, error):
         activation = self.activation.backward(np.dot(self.input, self.weights)) 
         self.delta = error * activation
         self.delta_weights = np.einsum('ij,ik->ikj', self.delta, self.input).sum(axis=0)
         self.delta_bias = np.sum(self.delta, axis=0)
-        self.weights -= learning_rate * self.delta_weights
-        self.bias -= learning_rate * self.delta_bias
+        velocity_weight, velocity_bias = self.optimizer.calculate_optimizer(self.delta_weights, self.delta_bias)
+        self.weights -= velocity_weight
+        self.bias -=  velocity_bias
         return 
     
-    def backward(self, learning_rate, next_layer):
+    def backward(self, next_layer):
         self.delta = np.dot(next_layer.get_delta(), next_layer.get_weights().T) * self.activation.backward(np.dot(self.input, self.weights))
         self.delta_weights = np.einsum('ij,ik->ikj', self.delta, self.input).sum(axis=0)
         self.delta_bias = np.sum(self.delta, axis=0)
-        self.weights -= learning_rate * self.delta_weights
-        self.bias -= learning_rate * self.delta_bias
+        velocity_weight, velocity_bias = self.optimizer.calculate_optimizer(self.delta_weights, self.delta_bias)
+        self.weights -= velocity_weight
+        self.bias -=  velocity_bias
         return
 
     def __str__(self):

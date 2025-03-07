@@ -117,6 +117,8 @@ class Optimizer:
             self.momentum_bias = np.zeros_like(gradient_bias)
         self.momentum_weights = self.beta1 * self.momentum_weights + (1 - self.beta1) * gradients_weights
         self.velocities_weights = self.beta2 * self.velocities_weights + (1 - self.beta2) * gradients_weights ** 2
-        
-        gradients_weights_correction = self.learning_rate * self.momentum_weights / (np.sqrt(self.velocities_weights) + self.epsilon)
+        gradients_weights_correction = self.learning_rate * self.momentum_weights / np.sqrt(self.velocities_weights + self.epsilon)
+        self.momentum_bias = self.beta1 * self.momentum_bias + (1 - self.beta1) * gradient_bias
+        self.velocities_bias = self.beta2 * self.velocities_bias + (1 - self.beta2) * gradient_bias ** 2
+        gradients_bias_correction = self.learning_rate * self.momentum_bias / np.sqrt(self.velocities_bias + self.epsilon)
         return gradients_weights_correction, gradients_bias_correction

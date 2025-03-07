@@ -38,7 +38,7 @@ class Network:
             self.layers[i].backward(self.layers[i+1])
 
     #def train(self, X, Y, X_test, y_test, epochs=1000, accuracy=0.9999, learning_rate=0.01, batch_size=None)
-    def train(self, X, Y, X_test, y_test, epochs=1000, accuracy=0.9999, batch_size=None, optimizer=Optimizer(optimizer = "sgd")):
+    def train(self, X, Y, X_test, y_test, epochs=1000, accuracy=0.9999, batch_size=None, optimizer=Optimizer(optimizer = "sgd"), verbose = False):
         m = Y.shape[0]
         if X.ndim == 1:
             X = X.reshape(m, 1)
@@ -72,15 +72,20 @@ class Network:
                     self.backward(delta)
                     y = self.forward(batches_x[i])
                     self.evaluate_prediction(Y, y_pred)
-                    print(f"Epoch {_} -batch {i} - Train loss: {  self.metrics["loss"]}", end="\r")
+                    if verbose:
+                        print(f"Epoch {_} -batch {i} - Train loss: {  self.metrics["loss"]}", end="\r")
             y_pred = self.forward(X)
             self.evaluate_prediction(Y, y_pred)
-            print(f"Epoch {_} - Train loss: { self.metrics["loss"]}", end="\t")
+            if verbose:
+                print(f"Epoch {_} - Train loss: { self.metrics["loss"]}", end="\t")
             test_pred = self.forward(x_test)
-            print(f" - Val loss: {  self.metrics["loss"]} - Val accuracy: { self.metrics["accuracy"]}")
+            if verbose:
+                print(f" - Val loss: {self.metrics["loss"]} - Val accuracy: { self.metrics["accuracy"]}")
             curr_accuracy = np.mean(np.round(test_pred).astype(int) == y_test) 
             if curr_accuracy > accuracy :
                 break
+        if not verbose:
+             print(f"Val loss: {self.metrics["loss"]} - Val accuracy: { self.metrics["accuracy"]}")
         return np.mean(np.round(test_pred).astype(int) == y_test)
         
     def save_model(self, file_name):
@@ -140,4 +145,5 @@ class Network:
         return
             
     def __str__(self):
-        return "\n".join([str(layer) for layer in self.layers])
+        description = f"NN with optimizer{str(self.optimizer)}.\n"
+        return description.join([str(layer) for layer in self.layers])

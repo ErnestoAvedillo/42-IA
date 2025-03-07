@@ -139,7 +139,7 @@ class Network:
     def evaluate_prediction(self, Y, y_pred):
         y_pred = y_pred + 1e-10 
         self.metrics = {
-            "loss": np.dot(Y.T, np.log(y_pred)).sum() + np.dot((1 -Y).T, np.log (y_pred)).sum(),
+            "loss": -(np.dot(Y.T, np.log(y_pred)).sum() + np.dot((1 -Y).T, np.log (y_pred)).sum()) / Y.shape[0],
             "accuracy": np.mean(np.round(y_pred).astype(int) == Y)
         }
         return

@@ -147,16 +147,11 @@ class Network:
         not_Y = np.logical_not(Y).astype(int)
         not_y_pred_rounded = np.logical_not(y_pred_rounded).astype(int)
         self.metrics = {
-            "my_loss": -np.mean(np.sum(Y * np.log(y_pred + 1e-9), axis=1)),
-            "loss": log_loss(Y, y_pred),
+            "loss": -np.mean(np.sum(Y * np.log(y_pred + 1e-9), axis=1)),
             "accuracy": np.mean(np.round(y_pred).astype(int) == Y),
-            "accuracy_score": accuracy_score(Y, y_pred_rounded),
-            "f1 score": f1_score(Y, y_pred_rounded, average = "macro", zero_division=1),
-            "my f_1 score": 2 * np.sum(Y * y_pred_rounded) /(2 *np.sum(Y * y_pred_rounded) + np.sum(not_Y * y_pred_rounded) + np.sum(Y * not_y_pred_rounded) + +1e-10),
-            "precision": precision_score(Y, y_pred_rounded, average = "macro", zero_division=1),
-            "my precision": np.sum(Y * y_pred_rounded) / (np.sum(Y * y_pred_rounded) + np.sum(not_Y * y_pred_rounded) +1e-10),
-            "recall": recall_score(Y, y_pred_rounded, average = "macro", zero_division=1),
-            "my recall": np.sum(Y * y_pred_rounded) / (np.sum(Y * y_pred_rounded) + np.sum( not_Y * y_pred_rounded) +1e-10)
+            "f_1 score": 2 * np.sum(Y * y_pred_rounded) /(2 *np.sum(Y * y_pred_rounded) + np.sum(not_Y * y_pred_rounded) + np.sum(Y * not_y_pred_rounded) + +1e-10),
+            "precision": np.sum(Y * y_pred_rounded) / (np.sum(Y * y_pred_rounded) + np.sum(not_Y * y_pred_rounded) +1e-10),
+            "recall": np.sum(Y * y_pred_rounded) / (np.sum(Y * y_pred_rounded) + np.sum( Y * not_y_pred_rounded) +1e-10)
         }
         return
             

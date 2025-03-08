@@ -22,7 +22,6 @@ except:
     
 Y = data[["1_B","1_M"]].to_numpy().astype(int)
 X = data.drop(columns=["1_B","1_M"]).to_numpy().astype(float)
-y_predicted = mynetwork.predict(X)
-mynetwork.evaluate_prediction(Y, y_predicted)
+y_predicted = mynetwork.predict(X,Y)
 for key, val in mynetwork.metrics.items():
-    print(f"The {key} is : {val}")
+    print(f"The {key} is : {val:.4f}")

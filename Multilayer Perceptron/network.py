@@ -3,7 +3,7 @@ from layer import Layer
 from optimizer import Optimizer
 import json
 import copy
-from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score,log_loss
 
 
 class Network:
@@ -37,8 +37,8 @@ class Network:
         for i in range(len(self.layers[:-1]) - 1, -1, -1):
             self.layers[i].backward(self.layers[i+1])
 
-    #def train(self, X, Y, X_test, y_test, epochs=1000, accuracy=0.9999, learning_rate=0.01, batch_size=None)
-    def train(self, X, Y, X_test, y_test, epochs=1000, accuracy=0.9999, batch_size=None, optimizer=Optimizer(optimizer = "sgd"), verbose = False):
+    #def train(self, X, Y, X_test, y_test, epochs=1000, delta_accuracy=0.0.001, learning_rate=0.01, batch_size=None)
+    def train(self, X, Y, X_test, y_test, epochs=1000, delta_accuracy=0.000001, batch_size=None, optimizer=Optimizer(optimizer = "sgd"), verbose = False):
         m = Y.shape[0]
         if X.ndim == 1:
             X = X.reshape(m, 1)
@@ -58,6 +58,8 @@ class Network:
         for layer in  self.layers:
             optimizer_copy = copy.deepcopy(optimizer)
             layer.set_optimizer(optimizer_copy)
+        array_looses = []
+        array_accuracies = []
         for _ in range(epochs):
             if batch_size is None:
                 y_pred = self.forward(X)
@@ -73,20 +75,21 @@ class Network:
                     y = self.forward(batches_x[i])
                     self.evaluate_prediction(Y, y_pred)
                     if verbose:
-                        print(f"Epoch {_} -batch {i} - Train loss: {  self.metrics["loss"]}", end="\r")
+                        print(f"Epoch {_} -batch {i} - Train loss: {  self.metrics["loss"]:.4f}", end="\r")
             y_pred = self.forward(X)
             self.evaluate_prediction(Y, y_pred)
             if verbose:
-                print(f"Epoch {_} - Train loss: { self.metrics["loss"]}", end="\t")
+                print(f"Epoch {_} - Train loss: { self.metrics["loss"]:.4f}", end="\t")
             test_pred = self.forward(x_test)
             if verbose:
-                print(f" - Val loss: {self.metrics["loss"]} - Val accuracy: { self.metrics["accuracy"]}")
-            curr_accuracy = np.mean(np.round(test_pred).astype(int) == y_test) 
-            if curr_accuracy > accuracy :
+                print(f" - Val loss: {self.metrics["loss"]:.4f} - Val accuracy: { self.metrics["accuracy"]:.4f}")
+            array_accuracies.append(self.metrics["accuracy"])
+            array_looses.append(self.metrics["loss"])
+            if len(array_accuracies) > int(0.1* epochs) and abs(self.metrics["accuracy"] - array_accuracies[-min(50,len(array_accuracies))]) < delta_accuracy :
                 break
         if not verbose:
-             print(f"Val loss: {self.metrics["loss"]} - Val accuracy: { self.metrics["accuracy"]}")
-        return np.mean(np.round(test_pred).astype(int) == y_test)
+             print(f"Val loss: {self.metrics["loss"]} - Val accuracy: { self.metrics["accuracy"]:.4f}")
+        return np.array(array_looses), np.array(array_accuracies)
         
     def save_model(self, file_name):
         model = {}
@@ -131,16 +134,29 @@ class Network:
             model = json.load(archivo)
         self.set_model(model)
 
-    def predict(self, X):
+    def predict(self, X, Y = None):
         x = (X - self.mean) / self.std
         y_pred =  self.forward(x)
+        if Y is not None:
+            self.evaluate_prediction(Y, y_pred)
         return np.round(y_pred).astype(int)
 
     def evaluate_prediction(self, Y, y_pred):
-        y_pred = y_pred + 1e-10 
+        y_pred = y_pred +1e-10
+        y_pred_rounded = np.round(y_pred)
+        not_Y = np.logical_not(Y).astype(int)
+        not_y_pred_rounded = np.logical_not(y_pred_rounded).astype(int)
         self.metrics = {
-            "loss": -(np.dot(Y.T, np.log(y_pred)).sum() + np.dot((1 -Y).T, np.log (y_pred)).sum()) / Y.shape[0],
-            "accuracy": np.mean(np.round(y_pred).astype(int) == Y)
+            "my_loss": -np.mean(np.sum(Y * np.log(y_pred + 1e-9), axis=1)),
+            "loss": log_loss(Y, y_pred),
+            "accuracy": np.mean(np.round(y_pred).astype(int) == Y),
+            "accuracy_score": accuracy_score(Y, y_pred_rounded),
+            "f1 score": f1_score(Y, y_pred_rounded, average = "macro", zero_division=1),
+            "my f_1 score": 2 * np.sum(Y * y_pred_rounded) /(2 *np.sum(Y * y_pred_rounded) + np.sum(not_Y * y_pred_rounded) + np.sum(Y * not_y_pred_rounded) + +1e-10),
+            "precision": precision_score(Y, y_pred_rounded, average = "macro", zero_division=1),
+            "my precision": np.sum(Y * y_pred_rounded) / (np.sum(Y * y_pred_rounded) + np.sum(not_Y * y_pred_rounded) +1e-10),
+            "recall": recall_score(Y, y_pred_rounded, average = "macro", zero_division=1),
+            "my recall": np.sum(Y * y_pred_rounded) / (np.sum(Y * y_pred_rounded) + np.sum( not_Y * y_pred_rounded) +1e-10)
         }
         return
             

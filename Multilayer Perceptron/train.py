@@ -49,8 +49,8 @@ match model_optimizer:
         optimizer = Optimizer(optimizer = "momentum", learning_rate = 0.01, momentum = 0.9)
     case "adagrad":
         optimizer = Optimizer(optimizer = "adagrad", learning_rate = 0.01)
-    case "adagrad":
-        optimizer = Optimizer(optimizer = "nesterov", learning_rate = 0.01, momentum = 0.5)
+    case "nesterov":
+        optimizer = Optimizer(optimizer = "nesterov", learning_rate = 0.001, momentum = 0.4)
     case "rmsprop":
         optimizer = Optimizer(optimizer = "rmsprop", learning_rate = 0.001, beta = 0.9, epsilon = 1e-8)
     case "adam":

@@ -22,7 +22,7 @@ data["1_M"] = (data["1_M"] == True).astype(int)
 data["1_B"] = (data["1_B"] == True).astype(int)
 
 print ("Removing los outliers...")
-z_threshold = 5
+z_threshold = 4
 print(data.shape)
 outliers = ((data - description.loc["mean",:]) / description.loc["std_dev",:]).abs() > z_threshold
 cleaned_data = data[~outliers.any(axis=1)]

@@ -47,6 +47,7 @@ def describe (data:pd.DataFrame):
 	keys = data.keys()
 	num_col = len(keys)
 	stats_data = {}
+	z_threshold = 4
 	for col in range(num_col):
 		if data[keys[col]].dtypes == 'object' or data[keys[col]].dtypes == 'str':
 			continue
@@ -76,8 +77,8 @@ def describe (data:pd.DataFrame):
 			mean + 1.96 * std_dev, 
 			mean - 3.291 * std_dev, 
 			mean + 3.291 * std_dev,
-			((data[keys[col]] < mean - 3.291 * std_dev) | (data[keys[col]] > mean + 3.291 * std_dev)).sum()]
-	stats_df = pd.DataFrame(stats_data, index=["count", "mean", "std_dev", "min", "25%", "50%", "75%", "max", "lower 95% conf", "upper 95% conf", "lower 99.9% conf", "upper 99.9% conf", "Outliers"])
+			((data[keys[col]] < mean - z_threshold * std_dev) | (data[keys[col]] > mean + z_threshold * std_dev)).sum()]
+	stats_df = pd.DataFrame(stats_data, index=["count", "mean", "std_dev", "min", "25%", "50%", "75%", "max", "lower 95% conf", "upper 95% conf", "lower 99.9% conf", "upper 99.9% conf", "Outliers (5s)"])
 	return stats_df
 
 """

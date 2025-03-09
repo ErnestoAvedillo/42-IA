@@ -15,8 +15,8 @@
 - With this exercise we lean to programm a neural network.
 ##### File configuration
 - **_histogram.py_**: Plots an istogram for all 31 fields of the data.
-- **_clan_data_.py_**: cleans all data not necesary or that will be.
-- **_layer.py_**: calculates the acivation formula for the forward and backward propagation
+- **_clean_data_.py_**: cleans all data not necesary and eliinates all outliers (5 sigma). It's execution willl create 2 files: data_train.csv and data_test.csv
+- **_layer.py_**: Class to calculate the acivation formula for the forward and backward propagation
 - **_layer.py_**: class for each layer
 - **_network.py_**: computes the complete neural network.
 - **_plotting.py_**: Plots the given points and the linear result.
@@ -25,11 +25,13 @@
 
 ##### Description
 - **Execution**: 
-    
-    python histogram.py data.csv 
-    
-    python clean_data.py data.csv
+    the process to execute this study is:
 
+    python histogram.py data.csv
+    
+    python clean_data.py data.csv 
+
+    python train_all.py data_train.csv
 
 ### Pictures
  python histogram.py data.csv

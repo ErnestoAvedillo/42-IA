@@ -32,9 +32,6 @@ def my_std_dev(data:np.ndarray):
 	for value in data:
 		if np.isnan(value):
 			continue
-#		if type(value) == str:
-#		cuadratic_sum += math.pow(len(value) - mean, 2)
-#	else:
 		cuadratic_sum += math.pow(value - mean, 2)
 		if np.isnan(cuadratic_sum):
 			print(f"cuadratic_sum is nan: {value}-- mean")		
@@ -80,17 +77,3 @@ def describe (data:pd.DataFrame):
 			((data[keys[col]] < mean - z_threshold * std_dev) | (data[keys[col]] > mean + z_threshold * std_dev)).sum()]
 	stats_df = pd.DataFrame(stats_data, index=["count", "mean", "std_dev", "min", "25%", "50%", "75%", "max", "lower 95% conf", "upper 95% conf", "lower 99.9% conf", "upper 99.9% conf", "Outliers (5s)"])
 	return stats_df
-
-"""
-if len(sys.argv) != 2:
-	print("Please give a file as argument to describe.")
-	exit(1)
-try:
-	df = pd.read_csv(sys.argv[1])
-except:
-	print("The file you entered does not exist or you don't have access.")
-	exit(1)
-data=df
-print(df.describe())
-resutl = describe(data)
-print (resutl)"""

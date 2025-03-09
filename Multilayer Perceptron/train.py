@@ -31,17 +31,7 @@ else:
 Y = data[["1_B","1_M"]].to_numpy().astype(int)
 X = data.drop(columns=["1_B","1_M"]).to_numpy().astype(float)
 X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.1)
-"""
-for i in range(X_train.shape[1]):
-    print("Column", i)
-    print(f"Mean    train: {X_train[:,i].mean()} Test: {X_test[:,i].mean()}")
-    print(f"Std_dev train: {X_train[:,i].std()} Test: {X_test[:,i].std()}")
-input("Press enter...")
-"""
 
-network = {}
-i = 0
-last_accuracy = 0
 match model_optimizer:
     case "sgd":
         optimizer = Optimizer(optimizer = "sgd", learning_rate = 0.001)
@@ -66,7 +56,6 @@ network.add_layer(nodes = 5)
 network.add_layer(nodes = 2, activation = "softmax")
 arr_looses, arr_accuracies, arr_looses_val, arr_accuracies_val =network.train(X_train, Y_train, X_test, Y_test, epochs=1000,  optimizer = optimizer, verbose = True)
 network.save_model(model_file)
-#curr_accuracy =network[i].train(X_train, Y_train, X_test, Y_test, epochs=100, batch_size=128, optimizer = optimizer)
 
 print ("Metrics for the lastiteration:")
 for key, value in network.metrics.items():

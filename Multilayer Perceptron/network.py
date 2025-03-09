@@ -3,7 +3,6 @@ from layer import Layer
 from optimizer import Optimizer
 import json
 import copy
-from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score,log_loss
 
 
 class Network:

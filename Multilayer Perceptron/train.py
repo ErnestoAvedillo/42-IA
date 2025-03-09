@@ -46,17 +46,17 @@ match model_optimizer:
     case "sgd":
         optimizer = Optimizer(optimizer = "sgd", learning_rate = 0.001)
     case "momentum":
-        optimizer = Optimizer(optimizer = "momentum", learning_rate = 0.01, momentum = 0.9)
+        optimizer = Optimizer(optimizer = "momentum", learning_rate = 0.001, momentum = 0.9)
     case "adagrad":
         optimizer = Optimizer(optimizer = "adagrad", learning_rate = 0.01)
     case "nesterov":
         optimizer = Optimizer(optimizer = "nesterov", learning_rate = 0.001, momentum = 0.4)
     case "rmsprop":
-        optimizer = Optimizer(optimizer = "rmsprop", learning_rate = 0.001, beta = 0.9, epsilon = 1e-8)
+        optimizer = Optimizer(optimizer = "rmsprop", learning_rate = 0.01, beta = 0.4, epsilon = 1e-8)
     case "adam":
         optimizer = Optimizer(optimizer = "adam", learning_rate = 0.001, beta1 = 0.9, beta2 = 0.99, epsilon = 1e-8)
     case _:
-        optimizer = Optimizer(optimizer = "sgd", learning_rate = 0.01)
+        optimizer = Optimizer(optimizer = "sgd", learning_rate = 0.001)
 network = None
 network = Network()
 network.add_layer(layer = Layer(nodes = 30, input_dim=X_train.shape[1]))

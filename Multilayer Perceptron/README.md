@@ -17,14 +17,20 @@
 - **_histogram.py_**: Plots an istogram for all 31 fields of the data.
 - **_clean_data_.py_**: cleans all data not necesary and eliinates all outliers (5 sigma). It's execution willl create 2 files: data_train.csv and data_test.csv
 - **_layer.py_**: Class to calculate the acivation formula for the forward and backward propagation
-- **_layer.py_**: class for each layer
+- **_optimizer.py_**: class that selects the optimizer.
+- **_activation.py_**: Plots the given points and the linear result.
 - **_network.py_**: computes the complete neural network.
+- **_train.py_**: trains the model for the given data.
+- **_train_all.py_**: trains the model for different number of nodes and for all optimizers.
+- **_train_compare.py_**: trains the model for different optimizers adn compares the loss and accuracies in a graph.
+- **_predict.py_**: opens the model weights and predicts results.
+- **_predict_all.py_**: opens all models weights placed in a folder and predicts the results.
 - **_plotting.py_**: Plots the given points and the linear result.
-
 
 
 ##### Description
 - **Execution**: 
+
     the process to execute this study is:
 
     python histogram.py data.csv
@@ -32,12 +38,27 @@
     python clean_data.py data.csv 
 
     python train_all.py data_train.csv
+    
+    python train_compare.py data_train.csv
+
+    python train.py [data_train.csv] [model.json] [adam,rmsprop,momentum,adagrad,nesterov, sgd]
+
+    python predict.py [data_test.csv] [model.json]
+    python predict_all.py [data_test.csv] [./model_folder]
 
 ### Pictures
  python histogram.py data.csv
 <p>
   <img src="./pictures/Screenshot from 2025-03-02 11-06-49.png">
   <img src="./pictures/Screenshot from 2025-03-02 11-08-05.png">
+</p>
+ python train_compare.py data_train.csv
+<p>
+  <img src="./pictures/Screenshot from 2025-03-09 21-43-38.png">
+</p>
+ python train.py data_train.csv model.json adam
+<p>
+  <img src="./pictures/Screenshot from 2025-03-09 21-53-28.png">
 </p>
 
 ### Resources

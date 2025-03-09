@@ -60,7 +60,7 @@ for keys, optimizer in models_optimizer.items():
                     network.add_layer(nodes = k)
                     #networ.add_layer(nodes = 1)
                     network.add_layer(nodes = 2, activation = "softmax")
-                    _, curr_accuracy =network.train(X_train, Y_train, X_test, Y_test, epochs=100,  optimizer = optimizer)
+                    _, curr_accuracy, loss_val, curr_accuracy_val =network.train(X_train, Y_train, X_test, Y_test, epochs=100,  optimizer = optimizer)
                     #curr_accuracy =network[i].train(X_train, Y_train, X_test, Y_test, epochs=100, batch_size=128, optimizer = optimizer)
                     if curr_accuracy[-1] > last_accuracy:
                         print (f"Accuracy improved from {last_accuracy} to {curr_accuracy} with layer 2: {l} nodes, layer 3: {j} nodes and layer 4 {k} nodes")

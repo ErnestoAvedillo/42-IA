@@ -13,13 +13,8 @@ class Network:
         self.mean = None
         self.std = None
         self.learning_rate = None
-        self.metrics = {
-            "loss": 0,
-            "accuracy": 0,
-            "f_1 score": 0,
-            "precision": 0,
-            "recall": 0
-        }
+        self.metrics = {}
+        self.metrics_val = {}
 
     def add_layer(self, layer = None, nodes = None, input_dim=None, activation="sigmoid"):
         if layer is not None:
@@ -67,6 +62,8 @@ class Network:
             layer.set_optimizer(optimizer_copy)
         array_looses = []
         array_accuracies = []
+        array_looses_val = []
+        array_accuracies_val = []
         for _ in range(epochs):
             if batch_size is None:
                 y_pred = self.forward(X)
@@ -80,23 +77,26 @@ class Network:
                     delta = batches_y[i] - y
                     self.backward(delta)
                     y = self.forward(batches_x[i])
-                    self.evaluate_prediction(Y, y_pred)
+                    self.metrics = self.evaluate_prediction(Y, y_pred)
                     if verbose:
                         print(f"Epoch {_} -batch {i} - Train loss: {self.metrics['loss']:.4f}", end="\r")
             y_pred = self.forward(X)
-            self.evaluate_prediction(Y, y_pred)
+            self.metrics = self.evaluate_prediction(Y, y_pred)
             if verbose:
                 print(f"Epoch {_} - Train loss: { self.metrics['loss']:.4f}", end="\t")
             test_pred = self.forward(x_test)
+            self.metrics_val = self.evaluate_prediction(y_test, test_pred)
             if verbose:
-                print(f" - Val loss: {self.metrics['loss']:.4f} - Val accuracy: { self.metrics['accuracy']:.4f}")
+                print(f" - Val loss: {self.metrics_val['loss']:.4f} - Val accuracy: { self.metrics_val['accuracy']:.4f}")
             array_accuracies.append(self.metrics['accuracy'])
             array_looses.append(self.metrics['loss'])
+            array_accuracies_val.append(self.metrics_val['accuracy'])
+            array_looses_val.append(self.metrics_val['loss'])
             if len(array_accuracies) > int(0.1* epochs) and abs(self.metrics['accuracy'] - array_accuracies[-min(50,len(array_accuracies))]) < delta_accuracy :
                 break
         if not verbose:
              print(f"Val loss: {self.metrics['loss']} - Val accuracy: { self.metrics['accuracy']:.4f}")
-        return np.array(array_looses), np.array(array_accuracies)
+        return np.array(array_looses), np.array(array_accuracies), np.array(array_looses_val), np.array(array_accuracies_val)
         
     def save_model(self, file_name):
         model = {}
@@ -145,7 +145,7 @@ class Network:
         x = (X - self.mean) / self.std
         y_pred =  self.forward(x)
         if Y is not None:
-            self.evaluate_prediction(Y, y_pred)
+            self.metrics = self.evaluate_prediction(Y, y_pred)
         return np.round(y_pred).astype(int)
 
     def evaluate_prediction(self, Y, y_pred):
@@ -153,14 +153,14 @@ class Network:
         y_pred_rounded = np.round(y_pred)
         not_Y = np.logical_not(Y).astype(int)
         not_y_pred_rounded = np.logical_not(y_pred_rounded).astype(int)
-        self.metrics = {
+        metrics = {
             "loss": -np.mean(np.sum(Y * np.log(y_pred + 1e-9), axis=1)),
             "accuracy": np.mean(np.round(y_pred).astype(int) == Y),
             "f_1 score": 2 * np.sum(Y * y_pred_rounded) /(2 *np.sum(Y * y_pred_rounded) + np.sum(not_Y * y_pred_rounded) + np.sum(Y * not_y_pred_rounded) + +1e-10),
             "precision": np.sum(Y * y_pred_rounded) / (np.sum(Y * y_pred_rounded) + np.sum(not_Y * y_pred_rounded) +1e-10),
             "recall": np.sum(Y * y_pred_rounded) / (np.sum(Y * y_pred_rounded) + np.sum( Y * not_y_pred_rounded) +1e-10)
         }
-        return
+        return metrics
             
     def __str__(self):
         description = f"NN with optimizer{str(self.optimizer)}.\n"

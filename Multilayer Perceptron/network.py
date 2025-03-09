@@ -13,6 +13,13 @@ class Network:
         self.mean = None
         self.std = None
         self.learning_rate = None
+        self.metrics = {
+            "loss": 0,
+            "accuracy": 0,
+            "f_1 score": 0,
+            "precision": 0,
+            "recall": 0
+        }
 
     def add_layer(self, layer = None, nodes = None, input_dim=None, activation="sigmoid"):
         if layer is not None:
@@ -75,20 +82,20 @@ class Network:
                     y = self.forward(batches_x[i])
                     self.evaluate_prediction(Y, y_pred)
                     if verbose:
-                        print(f"Epoch {_} -batch {i} - Train loss: {  self.metrics["loss"]:.4f}", end="\r")
+                        print(f"Epoch {_} -batch {i} - Train loss: {self.metrics['loss']:.4f}", end="\r")
             y_pred = self.forward(X)
             self.evaluate_prediction(Y, y_pred)
             if verbose:
-                print(f"Epoch {_} - Train loss: { self.metrics["loss"]:.4f}", end="\t")
+                print(f"Epoch {_} - Train loss: { self.metrics['loss']:.4f}", end="\t")
             test_pred = self.forward(x_test)
             if verbose:
-                print(f" - Val loss: {self.metrics["loss"]:.4f} - Val accuracy: { self.metrics["accuracy"]:.4f}")
-            array_accuracies.append(self.metrics["accuracy"])
-            array_looses.append(self.metrics["loss"])
-            if len(array_accuracies) > int(0.1* epochs) and abs(self.metrics["accuracy"] - array_accuracies[-min(50,len(array_accuracies))]) < delta_accuracy :
+                print(f" - Val loss: {self.metrics['loss']:.4f} - Val accuracy: { self.metrics['accuracy']:.4f}")
+            array_accuracies.append(self.metrics['accuracy'])
+            array_looses.append(self.metrics['loss'])
+            if len(array_accuracies) > int(0.1* epochs) and abs(self.metrics['accuracy'] - array_accuracies[-min(50,len(array_accuracies))]) < delta_accuracy :
                 break
         if not verbose:
-             print(f"Val loss: {self.metrics["loss"]} - Val accuracy: { self.metrics["accuracy"]:.4f}")
+             print(f"Val loss: {self.metrics['loss']} - Val accuracy: { self.metrics['accuracy']:.4f}")
         return np.array(array_looses), np.array(array_accuracies)
         
     def save_model(self, file_name):

@@ -44,6 +44,7 @@
     python train.py [data_train.csv] [model.json] [adam,rmsprop,momentum,adagrad,nesterov, sgd]
 
     python predict.py [data_test.csv] [model.json]
+    
     python predict_all.py [data_test.csv] [./model_folder]
 
 ### Pictures

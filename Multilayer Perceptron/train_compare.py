@@ -1,9 +1,9 @@
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
-from layer import Layer
-from optimizer import Optimizer
-from network import Network
+from neural_network_class.layer import Layer
+from neural_network_class.optimizer import Optimizer
+from neural_network_class.network import Network
 import sys
 from load_data import load_data
 import matplotlib.pyplot as plt

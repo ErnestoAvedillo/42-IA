@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-from network import Network
+from neural_network_class.network import Network
 import sys
 import os
 from load_data import load_data

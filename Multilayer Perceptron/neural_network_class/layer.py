@@ -1,6 +1,6 @@
 import numpy as np  
-from activation import Activation
-from optimizer import Optimizer
+from .activation import Activation
+from .optimizer import Optimizer
 
 class Layer:
     #def __init__(self, input_dim = None, nodes = None, activation="sigmoid", model = None):

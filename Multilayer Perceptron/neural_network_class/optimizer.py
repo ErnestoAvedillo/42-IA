@@ -1,10 +1,10 @@
 import copy
-from optimizers.adam import Adam
-from optimizers.adagrad import Adagrad
-from optimizers.momentum import Momentum
-from optimizers.nesterov import Nesterov
-from optimizers.rmsprop import RMSProp
-from optimizers.sgd import SGD
+from .optimizers.adam import Adam
+from .optimizers.adagrad import Adagrad
+from .optimizers.momentum import Momentum
+from .optimizers.nesterov import Nesterov
+from .optimizers.rmsprop import RMSProp
+from .optimizers.sgd import SGD
 
 class Optimizer:
     def __init__(self, **kwargs):

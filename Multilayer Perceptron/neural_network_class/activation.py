@@ -1,8 +1,8 @@
-from activations.sigmoid import Sigmoid
-from activations.tanh import Tanh
-from activations.relu import ReLU
-from activations.linear import Linear
-from activations.softmax import Softmax
+from .activations.sigmoid import Sigmoid
+from .activations.tanh import Tanh
+from .activations.relu import ReLU
+from .activations.linear import Linear
+from .activations.softmax import Softmax
 
 
 class Activation:

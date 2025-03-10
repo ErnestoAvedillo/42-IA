@@ -1,6 +1,6 @@
 import numpy as np
-from layer import Layer
-from optimizer import Optimizer
+from .layer import Layer
+from .optimizer import Optimizer
 import json
 import copy
 

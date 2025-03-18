@@ -35,3 +35,4 @@
 * **[MEG and EEG data analysis with MNE-Python - PMC](https://pmc.ncbi.nlm.nih.gov/articles/PMC3872725/)**
 * **[Dimensionality reduction PCA](https://ethen8181.github.io/machine-learning/dim_reduct/PCA.html#PCA)**
 * **[Introduction to EEG analysis](https://alexenge.github.io/intro-to-eeg/misc/index.html)**
+* **[Understanding Dimension Reduction with Principal Component Analysis (PCA)](https://blog.paperspace.com/dimension-reduction-with-principal-component-analysis/)**

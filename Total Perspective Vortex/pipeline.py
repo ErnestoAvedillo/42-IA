@@ -1,3 +1,4 @@
+from pandas import DataFrame
 import numpy as np
 import mne
 from mne.preprocessing import ICA
@@ -23,7 +24,7 @@ def get_event_type(filename):
     return event_type
 
 if len(sys.argv) < 2:
-    sample_data_folder = "/home/ernesto/mne_data/physionet/files/eegmmidb/1.0.0/S081"
+    sample_data_folder = "/home/ernesto/mne_data/physionet/files/eegmmidb/1.0.0/S003"
     #print("plese enter file to be analised.")
     #sys.exit(1)
 else:
@@ -32,7 +33,7 @@ else:
 
 channels, montage = config_montage()
 hfreq = 70
-CSPModel = CSPModel(5)
+csp_model = CSPModel(5)
 for ruta, carpeta, archivos in os.walk(sample_data_folder):
     for archivo in archivos:
         if archivo.endswith(".edf"):
@@ -44,11 +45,6 @@ for ruta, carpeta, archivos in os.walk(sample_data_folder):
         raw.rename_channels({old: new for old, new in zip(raw.ch_names, channels)})
         raw.set_montage(montage)
         raw = raw.filter(l_freq=0.1, h_freq = hfreq , fir_design='firwin')
-        # We can print the montage to see the changes
-        #raw.plot(start=5, duration=10, n_channels=64, scalings="auto")
-        # We can print the montage to see the changes
-        #raw.plot_sensors(show_names=True)
-        # We obtain the events from the annotations
         events, event_id = mne.events_from_annotations(raw)
         event_names = {v: k for k, v in event_id.items()}  # Map IDs to event names
         if events.size == 0:
@@ -59,5 +55,17 @@ for ruta, carpeta, archivos in os.walk(sample_data_folder):
         for i, (epoch, event_type) in enumerate(zip(epochs, epochs.events[:, 2])):
             event_label = event_names.get(event_type, "Unknown")
             psds, freqs = mne.time_frequency.psd_array_multitaper(epoch, sfreq=raw.info['sfreq'], fmin=1, fmax=40, n_jobs=1)
-            CSPModel.add_data(psds, events_types.get_event_nr(event_label))
-CSPModel.fit()
+            csp_model.add_data(psds, events_types.get_event_nr(event_label))
+weights = csp_model.fit()
+csp_model.save_model("csp_model.npy")
+
+predict = "/home/ernesto/mne_data/physionet/files/eegmmidb/1.0.0/S003/S003R03.edf"
+raw = mne.io.read_raw_edf(predict,preload=True)
+raw.filter(l_freq=0.1, h_freq = 40 , fir_design='firwin')
+raw.rename_channels({old: new for old, new in zip(raw.ch_names, channels)})
+raw.set_montage(montage)
+t1, t2 = 4.2, 8.3 # Define the time range in seconds
+raw.crop(tmin=t1, tmax=t2)
+my_data = raw.get_data()
+result =  np.dot(weights, my_data)
+print(result.shape)

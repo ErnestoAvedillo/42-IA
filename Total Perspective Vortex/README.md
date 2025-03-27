@@ -36,3 +36,5 @@
 * **[Dimensionality reduction PCA](https://ethen8181.github.io/machine-learning/dim_reduct/PCA.html#PCA)**
 * **[Introduction to EEG analysis](https://alexenge.github.io/intro-to-eeg/misc/index.html)**
 * **[Understanding Dimension Reduction with Principal Component Analysis (PCA)](https://blog.paperspace.com/dimension-reduction-with-principal-component-analysis/)**
+* **[Convolutional Neural Network from Scratch | Mathematics & Python Code](https://www.youtube.com/watch?v=Lakz2MoHy6o)**
+* **[Convolutional Neural Network from Scratch | Mathematics & Python Code Github](https://github.com/TheIndependentCode/Neural-Network)**

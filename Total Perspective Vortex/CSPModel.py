@@ -1,4 +1,6 @@
 import numpy as np
+import pandas as pd
+import json
 
 class CSPModel:
     def __init__(self, n_components):
@@ -26,7 +28,51 @@ class CSPModel:
         #E, V = np.linalg.eigh(R_inv)
         #V = V[:, np.argsort(E)[::-1]]
         P = np.dot(np.diag(np.sqrt(1/eigenvalues)), eigenventors.T)
-        self.W = np.dot(P, eigenventors)
+        S = covs_per_label.copy()
+        print(len(S))
+        for i in range(len(S)):
+            S[i] = P @ system_cov @ P.T
+        _, W_eigenvect = np.linalg.eigh(S)
+        self.W = W_eigenvect[0]
+        #All eigenvectors should be the same. Only the first is needed.
+        return self.W
+
+    def get_weights(self):
+        return self.W
+    
+    def set_weights(self, W):
+        self.W = W
+
+    def save_model(self, filename):
+        with open(filename, "w", encoding="utf-8") as myfile:
+            weights_dicc = {"weights": self.W.tolist()}
+            json.dump(weights_dicc, myfile, indent = 4, ensure_ascii = False)
+
+    def load_model(self, filename):
+        with open(filename, "r", encoding="utf-8") as myfile:
+            data = json.load(myfile)
+            self.W = data["houses"]
+
+    def get_dataset(self):
+        data = self.covs[0]
+        Y = np.zeros(data.shape[2])
+        for i in range (1, self.n_components):
+            if self.covs[i].ndim == 1:
+                print(f"Error in label {i} with shape {self.covs[i].shape}")
+                continue
+            elif self.covs[i].ndim == 2:
+                self.covs[i] = np.expand_dims(self.covs[i], axis = 2)
+            data = np.concatenate((data, self.covs[i]), axis = 2)
+            Y = np.concatenate((Y, np.ones(self.covs[i].shape[2]) * i), axis = 0)
+        data = np.dot(self.W, data)
+        data = data.reshape(data.shape[0] * data.shape[1], data.shape[2])
+        Y = Y.reshape(Y.shape[0], 1)
+        data = np.concatenate((data.T, Y), axis = 1)
+        return data
+    
+    def save_dataset(self, filename):
+        data = self.get_dataset()
+        pd.DataFrame(data).to_csv(filename, header = False, index = False)
 
     def transform(self, X):
         return np.dot(self.W, X)

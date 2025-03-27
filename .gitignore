@@ -4,3 +4,5 @@ __pycache__
 data_cleaned.csv
 data_test.csv
 data_train.csv
+test.csv
+train.csv   

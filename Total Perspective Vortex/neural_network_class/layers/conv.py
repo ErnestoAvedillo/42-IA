@@ -9,13 +9,13 @@ class Conv2D(Activation):
     def __init__(self, **kwargs):
         self.input_shape = kwargs.get("input_shape", None)
         self.kernel_size = kwargs.get("kernel_size", None)
-        #self.n_filters = kwargs.get("n_filters", 1)
+        self.n_filters = kwargs.get("n_filters", 1)
         self.stride = kwargs.get("stride", 1)
         self.padding = kwargs.get("padding", 0)
-        #self.weights = np.random.randn(self.n_filters, self.kernel_size, self.kernel_size)
-        self.weights = np.random.randn(self.kernel_size, self.kernel_size)
-        #self.bias = np.random.randn(self.n_filters)
-        self.bias = random.random()
+        self.weights = np.random.randn(self.n_filters, self.kernel_size, self.kernel_size)
+        #self.weights = np.random.randn(self.kernel_size, self.kernel_size)
+        self.bias = np.random.randn(self.n_filters)
+        #self.bias = random.random()
         self.input = None
         self.delta = None
         self.delta_input = None
@@ -33,7 +33,7 @@ class Conv2D(Activation):
                  "bias": self.bias.tolist(),
                  "input_shape": self.input_shape,
                  "kernel_size": self.kernel_size,
-                 #"n_filters": self.n_filters,
+                 "n_filters": self.n_filters,
                  "stride": self.stride,
                  "padding": self.padding}
         return model
@@ -43,7 +43,7 @@ class Conv2D(Activation):
         self.bias = np.array(model["bias"])
         self.input_shape = model["input_shape"]
         self.kernel_size = model["kernel_size"]
-        #self.n_filters = model["n_filters"]
+        self.n_filters = model["n_filters"]
         self.stride = model["stride"]
         self.padding = model["padding"]
 
@@ -71,13 +71,15 @@ class Conv2D(Activation):
     def forward_calculation(self, X):
         self.input = X
         self.n_samples = X.shape[0]
-        output = signal.convolve2d(X[0], self.weights, mode = "valid")+ self.bias
+        outputs = []
         for i in range(1, self.n_samples):
-                aux = signal.convolve2d(X[i], self.weights, mode = "valid")+ self.bias
-                if i == 1:
-                    output = np.stack((output, aux))
-                else:
-                    output = np.concatenate((output, aux.reshape(-1,aux.shape[0],aux.shape[1])),axis = 0)
+            outputs1 = []
+            for l in range(0,self.n_filters):
+                aux = signal.convolve2d(X[i,:,:,l], self.weights, mode = "valid")+ self.bias
+                outputs1.append(aux)
+            outputs1 = np.stack(outputs1)
+            outputs.append(outputs1)
+        output = np.stack(outputs)        
         output = self.forward(output)
         return output
     
@@ -86,7 +88,8 @@ class Conv2D(Activation):
         self.delta_bias = np.sum(self.delta, axis = (0, 1, 2))
         self.delta_inputs = np.copy(self.input)
         for i in range(self.delta.shape[0]):
-            self.delta_weights= signal.correlate2d(self.input[i], self.delta[i], "valid")
+            for l in range(self.delta.shape[3]):
+                self.delta_weights= signal.correlate2d(self.input[i,:,:,l], self.delta[i,:,:,l], "valid")
         velocity_weight, velocity_bias = self.optimizer.calculate_optimizer(self.delta_weights, self.delta_bias)
         self.weights -= velocity_weight
         self.bias -=  velocity_bias

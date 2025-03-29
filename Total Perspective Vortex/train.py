@@ -6,21 +6,22 @@ from neural_network_class.layer import Layer
 from neural_network_class.optimizer import Optimizer
 from sklearn.model_selection import train_test_split
 
+
 data = pd.read_csv("train.csv").values
 Y = np.array([data[:, -1] == option for option in range(int(max(data[:,-1])) + 1)]).T.astype(int)
 X = data[:, :-1]
-X = X.reshape(-1, 64, 64)
-print (f"Imprimo el shape de X {X.shape}")
-print (f"Imprimo el shape de Y {Y.shape}")
-print (f"Imprimo Y {Y}")
-print (f"Imprimo X {X}")
+X = X.reshape(-1, 1, 64, 64)
+#print (f"Imprimo el shape de X {X.shape}")
+#print (f"Imprimo el shape de Y {Y.shape}")
+#print (f"Imprimo Y {Y}")
+#print (f"Imprimo X {X}")
 X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.1)
 network = None
-network = Network()
+network = Network(normalize = False)
 
 #network.add_layer(layer = Layer(layer_type = "dense", input_shape = 64, data_shape=X_train.shape[1]))
-network.add_layer(layer = Layer(layer_type = "conv", input_shape = (64,64), kernel_size = 8 , filters = 1, activation = "relu"))
-#network.add_layer(layer_type = "maxpool", pool_size = (2, 2))
+network.add_layer(layer_type = "conv", data_shape = (64,64), kernel_size = 4 , filters = 1, activation = "relu")
+network.add_layer(layer_type = "max_pool", kernel_size = 4, activation = "relu")
 network.add_layer(layer_type = "flattend")
 network.add_layer(layer_type = "dense", input_shape = 32)
 network.add_layer(layer_type = "dense", input_shape = 16)
@@ -38,8 +39,8 @@ Y = np.array([data[:, -1] == option for option in range(int(max(data[:,-1])) + 1
 X = data[:, :-1]
 X = X.reshape(-1, 64, 64)
 
-Y_pred = network.test(X_test)
-network.evaluate(Y_pred, Y_test)
+Y_pred = network.predict(X_test)
+network.evaluate_prediction(Y_pred, Y_test)
 for i in range(len(Y_pred)):
     print(f"Expected: {Y_test[i]} Predicted: {Y_pred[i]}")
 network.save_model("model.json")

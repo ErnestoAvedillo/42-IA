@@ -8,9 +8,10 @@ import copy
 
 class Network:
     #def __init__(self,layers = None, x = None, y = None, learning_rate = 0.001):
-    def __init__(self,layers = None):
+    def __init__(self,layers = None, normalize = False):
         if layers is None:
             self.layers = []
+        self.normalize = normalize
         self.mean = None
         self.std = None
         self.learning_rate = None
@@ -24,14 +25,12 @@ class Network:
             return
         if layer_type is None:
             raise ValueError("layer_type parameter must be defined")
-#        elif input_shape is None and layer_type != "flattend":
-#            raise ValueError("input_shape parameter must be defined")
         if kwargs.get("data_shape",None) is None and len(self.layers) == 0:
-            raise ValueError("First layer must have data_shape")
-        if kwargs.get("data_shape",None) is None:
+            raise ValueError("First layer must have data_shape defined")
+        elif kwargs.get("data_shape",None) is None:
             mylast_layer = self.layers[-1]
-            kwargs["data_shape"] = mylast_layer.get_output_shape()
-        #self.layers.append(Layer(layer_type = layer_type ,data_shape = input, input_shape = input_shape, activation = activation))
+            kwargs["data_shape"],kwargs["filters"] = mylast_layer.get_output_shape()
+        #self.layers.append(Layer(layer_type = layer_type ,data_shape = input, input_shape = data_shape, activation = activation))
         self.layers.append(Layer(layer_type = layer_type, **kwargs))
 
     def forward(self, X):
@@ -56,11 +55,15 @@ class Network:
             x_test = x_test.reshape(m, 1)
         if y_test.ndim == 1:
             y_test = y_test.reshape(m, 1)
-        self.mean = X.mean(axis = 0)
-        self.std = X.std(axis = 0)
-#        X = (X - self.mean) / (self.std)
-#        x_test = (X_test - self.mean) / (self.std)
-        x_test = X_test
+        if self.normalize:
+            self.mean = X.mean(axis = 0)
+            self.std = X.std(axis = 0)
+            X = (X - self.mean) / (self.std)
+            x_test = (X_test - self.mean) / (self.std)
+        else:
+            self.mean = 0
+            self.std = 1
+            x_test = X_test
         y_pred = np.zeros(Y.shape)
         test_pred = np.zeros(y_test.shape)
         for layer in  self.layers:
@@ -106,8 +109,8 @@ class Network:
         
     def save_model(self, file_name):
         model = {}
-        model["mean"] = self.mean.tolist()
-        model["std"] = self.std.tolist()
+        model["mean"] = self.mean.tolist() if self.normalize else 0
+        model["std"] = self.std.tolist() if self.normalize else 1
         model["learning_rate"] = self.learning_rate
         model["layers"] = []
         for layer in self.layers:
@@ -121,8 +124,8 @@ class Network:
             model_layers.append(layer.get_model())
 
         model ={
-            "mean":self.mean.tolist(),
-            "std":self.std.tolist(),
+            "mean":self.mean.tolist() if self.normalize else 0,
+            "std":self.std.tolist() if self.normalize else 1,
             "learning_rate":self.learning_rate,
             "layers":model_layers
         }

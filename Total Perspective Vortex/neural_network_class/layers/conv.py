@@ -7,14 +7,14 @@ from ..optimizer import Optimizer
 
 class Conv2D(Activation):
     def __init__(self, **kwargs):
-        self.input_shape = kwargs.get("input_shape", None)
+        self.data_shape = kwargs.get("data_shape", None)
         self.kernel_size = kwargs.get("kernel_size", None)
-        self.n_filters = kwargs.get("n_filters", 1)
+        self.filters = kwargs.get("filters", 1)
         self.stride = kwargs.get("stride", 1)
         self.padding = kwargs.get("padding", 0)
-        self.weights = np.random.randn(self.n_filters, self.kernel_size, self.kernel_size)
+        self.weights = np.random.randn(self.filters, self.kernel_size, self.kernel_size)
         #self.weights = np.random.randn(self.kernel_size, self.kernel_size)
-        self.bias = np.random.randn(self.n_filters)
+        self.bias = np.random.randn(self.filters)
         #self.bias = random.random()
         self.input = None
         self.delta = None
@@ -31,9 +31,9 @@ class Conv2D(Activation):
     def get_model(self):
         model = {"weights":self.weights.tolist(),
                  "bias": self.bias.tolist(),
-                 "input_shape": self.input_shape,
+                 "data_shape": self.data_shape,
                  "kernel_size": self.kernel_size,
-                 "n_filters": self.n_filters,
+                 "filters": self.filters,
                  "stride": self.stride,
                  "padding": self.padding}
         return model
@@ -41,9 +41,9 @@ class Conv2D(Activation):
     def set_model(self, model):
         self.weights = np.array(model["weights"])
         self.bias = np.array(model["bias"])
-        self.input_shape = model["input_shape"]
+        self.data_shape = model["data_shape"]
         self.kernel_size = model["kernel_size"]
-        self.n_filters = model["n_filters"]
+        self.filters = model["filters"]
         self.stride = model["stride"]
         self.padding = model["padding"]
 
@@ -53,29 +53,33 @@ class Conv2D(Activation):
     def get_bias(self):
         return self.bias
     
-    def get_input_shape(self):
-        return self.input_shape
+    def get_data_shape(self):
+        return self.data_shape, self.filters
     
     def calculate_delta_on_input(self):
+        output = np.zeros(self.input.shape)
         weights_rot = np.flip(self.weights)
-        output = signal.convolve(self.delta, weights_rot, mode = "full")
+        for i in range(self.delta.shape[0]):
+            for j in range(self.delta.shape[1]):
+                output[i,j] = signal.convolve2d(self.delta[i,j], weights_rot[j], mode = "full")
         return output
 
     def get_output_shape(self):
-        #arr1 = np.ones((self.input_shape))
+        #arr1 = np.ones((self.data_shape))
         #arr2 = np.ones((self.kernel_size,self.kernel_size))
         #output = signal.convolve2d(arr1, arr2, mode = "valid").shape
-        output2 = self.input_shape[0] - self.kernel_size + 1
-        return (output2, output2)
+        output1 = self.data_shape[0] - self.kernel_size + 1
+        output2 = self.data_shape[1] - self.kernel_size + 1
+        return (output1, output2), self.filters
 
     def forward_calculation(self, X):
         self.input = X
         self.n_samples = X.shape[0]
         outputs = []
-        for i in range(1, self.n_samples):
+        for i in range(self.n_samples):
             outputs1 = []
-            for l in range(0,self.n_filters):
-                aux = signal.convolve2d(X[i,:,:,l], self.weights, mode = "valid")+ self.bias
+            for l in range(0,self.filters):
+                aux = signal.convolve2d(X[i, l, :, :], self.weights[l, :, :], mode = "valid")+ self.bias
                 outputs1.append(aux)
             outputs1 = np.stack(outputs1)
             outputs.append(outputs1)
@@ -85,11 +89,11 @@ class Conv2D(Activation):
     
     def backward_calculation(self, next_layer):
         self.delta = next_layer.calculate_delta_on_input()
-        self.delta_bias = np.sum(self.delta, axis = (0, 1, 2))
+        self.delta_bias = np.sum(self.delta, axis = (0, 2, 3))
         self.delta_inputs = np.copy(self.input)
         for i in range(self.delta.shape[0]):
-            for l in range(self.delta.shape[3]):
-                self.delta_weights= signal.correlate2d(self.input[i,:,:,l], self.delta[i,:,:,l], "valid")
+            for j in range(self.delta.shape[1]):
+                self.delta_weights[j]= signal.correlate2d(self.input[i, j, :, :], self.delta[i, j, :, :], "valid")
         velocity_weight, velocity_bias = self.optimizer.calculate_optimizer(self.delta_weights, self.delta_bias)
         self.weights -= velocity_weight
         self.bias -=  velocity_bias

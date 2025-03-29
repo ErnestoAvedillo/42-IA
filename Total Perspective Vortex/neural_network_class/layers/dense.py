@@ -58,10 +58,10 @@ class Dense(Activation):
         return np.dot(self.get_delta(), self.get_weights().T)
     
     def get_input_shape(self):
-        return self.data_shape
+        return self.data_shape, None
     
     def get_output_shape(self):
-        return self.input_shape
+        return self.input_shape, None
     
     def forward_calculation(self, input):
         self.input = input

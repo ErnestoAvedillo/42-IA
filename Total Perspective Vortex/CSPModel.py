@@ -9,6 +9,7 @@ class CSPModel:
         for i in range(n_components):
             self.covs [i] = np.array([])
         self.W = None
+        self.filename = None
 
     def add_data(self, data, label):
         cov = np.cov(data)
@@ -71,7 +72,8 @@ class CSPModel:
         return data
     
     def save_dataset(self, filename):
-        data = self.get_dataset()
+        self.filename = filename
+        data = np.random.shuffle(self.get_dataset())
         pd.DataFrame(data).to_csv(filename, header = False, index = False)
 
     def transform(self, X):

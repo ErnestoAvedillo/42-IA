@@ -1,13 +1,15 @@
 from .layers.dense import Dense
 from .layers.conv import Conv2D
 from .layers.flattend import Flattend
+from .layers.max_pool import MaxPool
 
 class Layer():
     def __init__(self, layer_type = None, **kwargs):
         layers ={
             'dense': Dense,
             'conv': Conv2D,
-            'flattend': Flattend
+            'flattend': Flattend,
+            'max_pool': MaxPool
         }
         if layer_type not in layers:
             raise ValueError(f"Invalid layer_type: {layer_type}.")
@@ -33,11 +35,14 @@ class Layer():
     def get_delta(self):
         return self.layer.get_delta()
     
+    def get_model(self):
+        return self.layer.get_model()
+
     def calculate_delta_on_input(self):
         return self.layer.calculate_delta_on_input()
     
-    def get_input_shape(self):
-        return self.layer.get_input_shape()
+    def get_data_shape(self):
+        return self.layer.get_data_shape()
     
     def get_output_shape(self):
         return self.layer.get_output_shape()

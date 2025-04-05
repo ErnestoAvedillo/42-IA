@@ -1,5 +1,6 @@
 class Event_Type():
     def __init__(self, filename):
+        self.filename = filename
         self.event_type = None
         self.filenames = [
             ["R03.edf","R04.edf","R07.edf","R08.edf","R11.edf","R12.edf"],
@@ -20,3 +21,11 @@ class Event_Type():
     def get_event_nr(self, event_label):
         key_events = self.event_type.keys()
         return self.event_type[event_label]
+    
+    def convert_event(self, event):
+        if any(word in self.filename for word in self.filenames[0]):
+            return event
+        else:
+            event[event[:, 2] == 1, 2] = 3
+            event[event[:, 2] == 2, 2] = 4
+        return event

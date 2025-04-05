@@ -1,10 +1,27 @@
 import numpy as np
 import pandas as pd
 import os
-from mne import  channels, io, events_from_annotations, Epochs, time_frequency
+from mne import  channels, io, events_from_annotations, Epochs, annotations_from_events, Annotations
 from .event_type import Event_Type
 from CSPModel import CSPModel
-
+from mne.decoding import (
+    CSP,
+    GeneralizingEstimator,
+    LinearModel,
+    Scaler,
+    SlidingEstimator,
+    Vectorizer,
+    cross_val_multiscore
+)
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+from mne import io, Epochs, events_from_annotations
+from mne.datasets import sample
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
+from sklearn.svm import SVC
+from sklearn.model_selection import train_test_split, cross_val_score
+from sklearn.ensemble import RandomForestClassifier
+from reshape_transformer import ReshapeTransformer
 class pipeline():
     def __init__(self, folder = None, filename=None):
         self.weights = None
@@ -21,6 +38,9 @@ class pipeline():
         self.csp_model_train = None
         self.n_components = None
         self.raw  = None
+        self.pipeline = None
+        self.X = None
+        self.Y = None
         if folder is not None:
             self.add_files_from_folder(folder)
         if filename is None:
@@ -78,44 +98,95 @@ class pipeline():
             return
         self.mask = np.array(np.random.rand(len(self.files)) < percentage)
     
-    def fill_model(self, mask) -> CSPModel:
+    def fill_model(self, mask):
         data_raws = []
+        filenames = ["R05.edf","R06.edf","R09.edf","R10.edf","R13.edf","R14.edf"]
+        # Read the files and create a list of raw objects
+        # Iterate over the files and load them
         for file, is_train in zip(self.files, mask):
             if not is_train:
                 continue
             my_raw = io.read_raw_edf(file, preload=True, verbose = "error")
-            event_list = self.get_events(my_raw)
-            if event_list is None or event_list.size == 0:
+            # Get events from annotations
+            events, event_id = events_from_annotations(my_raw)
+
+            data_raws.append([file,my_raw,events, event_id])
+        data_X = []
+        data_Y = []
+        for file, my_raw, events, event_id in data_raws:
+            # Get events from annotations
+            events, event_id = events_from_annotations(my_raw)
+            # Convert events to the correct format
+            tmin = -0.2  # 200 ms before the event
+            tmax = 4   # 500 ms after the event ---- 
+            epochs = Epochs(my_raw, events, event_id, tmin, tmax, baseline=(None, 0), preload=True, verbose = "error")
+            if epochs is None or len(epochs) == 0:
                 continue
-            data_raws.append(my_raw)
-        self.concat_raw(data_raws)
-        tmin = -0.2  # 200 ms before the event
-        tmax = 4   # 500 ms after the event
-        self.epochs = Epochs(self.raw, self.events, self.event_id, tmin, tmax, baseline=(None, 0), preload=True, verbose = "error")
-        spectrum= self.raw.compute_psd(method="welch", fmin=4, fmax=40)
-        self.csp_model = CSPModel(self.n_components)
-        self.X = self.epochs.get_data()  # (n_trials, n_channels, n_samples)
-        self.Y = self.epochs.events[:, -1]  # Etiquetas
-        self.csp_model.add_data(self.X, self.Y)
-        return self.csp_model
+            X = epochs.get_data()  # (n_trials, n_channels, n_samples)
+            labels = epochs.events[:, -1]  # Etiquetas
+            if any(word in file for word in filenames):
+                labels[labels == 2] = 4
+                labels[labels == 3] = 5
+            data_X.append(epochs.get_data())
+            data_Y.append(labels)
+        self.X = np.concatenate(data_X, axis=0)
+        self.Y = np.concatenate(data_Y, axis=0)
+        return 
 
     def train_model(self):
-        self.csp_model_train = self.fill_model( self.mask)
-        self.csp_model_train.make_pipeline(self.epochs.info)
-        self.csp_model_train.fit_pipeline(self.X, self.Y)
-        self.csp_model_train.plot_patterns(self.epochs.info)
-        self.csp_model_train.save_model("csp_model.json")
+        self.fill_model( self.mask)
+        self.pipeline = self.make_pipeline()
+        self.pipeline.fit(self.X, self.Y)
 
     def test_model(self):
-        parameters =self.csp_model_train.get_param_pipeline()
-        if parameters is None:
-            print("Train model first.")
-            return
-        self.csp_model_test = self.fill_model( ~self.mask)
-        self.csp_model_test.set_param_pipeline(parameters)
-        self.csp_model_test.set_weights(self.csp_model_train.get_weights())
-        self.csp_model_test.transform(self.csp_model_train.covs, self.csp_model_train.labels)
+        self.fill_model( ~self.mask)
+        y_pred = self.pipeline.predict(self.X)
+        print(f"score: {self.pipeline.score(self.X, self.Y)}")
+        print(f"accuracy: {np.mean(y_pred == self.Y)}")
+    """("estimator", GeneralizingEstimator(
+                LinearModel(SVC(kernel='poly', C=1, gamma='scale', probability=True)),
+                scoring="accuracy",
+                n_jobs=1,
+                verbose=True,
+            ))
+            ('classifier', RandomForestClassifier(n_estimators=100, random_state=42))  
+            """
+    def make_pipeline(self):
+
+        #("csp",CSPModel (n_components = self.n_components)),
+        pipeline = Pipeline([
+            ("csp",CSP (n_components = self.n_components, reg = None, log = None, transform_into = "average_power", rank = {'eeg':64}, norm_trace = False)),
+            ('reshape',ReshapeTransformer()),
+            ("scaler", StandardScaler()),
+            #('classifier', LinearDiscriminantAnalysis())
+            #('classifier',SVC(kernel='rbf', C=1, gamma='scale', probability=True))  
+            ('classifier',RandomForestClassifier(n_estimators=100, random_state=42))  
+            ])
+        return pipeline
     
+    def fit_pipeline(self, X, y):
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+        self.pipeline.fit(X_train, y_train)
+        print(self.pipeline.score(X_test, y_test))
+    
+    def predict_pipeline(self, X):
+        return self.pipeline.predict(X)
+    
+    def set_param_pipeline(self, **params):
+        self.pipeline.set_params(params)
+
+    def get_param_pipeline(self):
+        return self.pipeline.get_params()
+    
+    def score_pipeline(self, X, y):
+        return self.pipeline.score(X, y)
+    
+    def cross_val_score_pipeline(self, X, y, cv=5):
+        accuracy = cross_val_score(self.pipeline, X, y, cv=cv).mean()
+        print(f"Cross-validation accuracy: {accuracy:.2f}")
+        return accuracy
+
+
     def save_weights(self, filename):
         self.csp_model.save_model(filename)
     

@@ -23,6 +23,7 @@ excluded_channels = ["AF1","AF2", "AF5", "AF6", "AF9", "AF10", "F9", "F10", "FT9
 my_pippeline.config_montage(excluded_channels=excluded_channels, n_components = 5)
 my_pippeline.define_test_train(percentage=0.8)
 my_pippeline.train_model()
+my_pippeline.test_model()
 
 my_pippeline.save_dataset_train("train.csv")
 my_pippeline.save_dataset_test("test.csv")

@@ -22,7 +22,7 @@ for i in range(1,len(sys.argv)):
 excluded_channels = ["AF1","AF2", "AF5", "AF6", "AF9", "AF10", "F9", "F10", "FT9", "FT10", "A1", "A2", "M1", "M2", "TP9", "TP10", "P9", "P10", "PO1", "PO2", "PO5", "PO6", "PO9", "PO10", "O9", "O10"]
 my_pippeline.config_montage(excluded_channels=excluded_channels, n_components = 5)
 my_pippeline.define_test_train(percentage=0.8)
-my_pippeline.calculate_weights()
+my_pippeline.train_model()
 
 my_pippeline.save_dataset_train("train.csv")
 my_pippeline.save_dataset_test("test.csv")

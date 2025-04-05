@@ -7,7 +7,7 @@ from neural_network_class.optimizer import Optimizer
 from sklearn.model_selection import train_test_split
 
 
-data = pd.read_csv("train.csv").values
+data = pd.read_csv("./Total Perspective Vortex/train.csv").values
 Y = np.array([data[:, -1] == option for option in range(int(max(data[:,-1])) + 1)]).T.astype(int)
 X = data[:, :-1]
 X = X.reshape(-1, 1, 64, 64)
@@ -17,14 +17,17 @@ X = X.reshape(-1, 1, 64, 64)
 #print (f"Imprimo X {X}")
 X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.1)
 network = None
-network = Network(normalize = False)
+network = Network(normalize = True)
 
 #network.add_layer(layer = Layer(layer_type = "dense", input_shape = 64, data_shape=X_train.shape[1]))
 network.add_layer(layer_type = "conv", data_shape = (64,64), kernel_size = 4 , filters = 1, activation = "relu")
 network.add_layer(layer_type = "max_pool", kernel_size = 4, activation = "relu")
+network.add_layer(layer_type = "conv", kernel_size = 4 , filters = 1, activation = "relu")
+network.add_layer(layer_type = "max_pool", kernel_size = 2, activation = "relu")
+network.add_layer(layer_type = "conv", kernel_size = 2 , filters = 1, activation = "relu")
 network.add_layer(layer_type = "flattend")
-network.add_layer(layer_type = "dense", input_shape = 32)
-network.add_layer(layer_type = "dense", input_shape = 16)
+#network.add_layer(layer_type = "dense", input_shape = 32)
+#network.add_layer(layer_type = "dense", input_shape = 16)
 network.add_layer(layer_type = "dense", input_shape = 5, activation = "softmax")
 #optimizer = Optimizer(optimizer = "sgd", learning_rate = 0.001)
 #optimizer = Optimizer(optimizer = "momentum", learning_rate = 0.001, momentum = 0.9)

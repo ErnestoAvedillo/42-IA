@@ -20,7 +20,7 @@ class pipeline():
         self.csp_model_test = None
         self.csp_model_train = None
         self.n_components = None
-
+        self.raw  = None
         if folder is not None:
             self.add_files_from_folder(folder)
         if filename is None:
@@ -52,16 +52,23 @@ class pipeline():
         self.lfreq = lfreq
         self.hfreq = hfreq
 
-    def open_raw(self, file):
-        self.raw = io.read_raw_edf(file,preload=True)
+    def concat_raw(self, raws):
+        self.raw = io.concatenate_raws(raws)
         self.raw.rename_channels({old: new for old, new in zip(self.raw.ch_names, self.ch_names)})
         self.raw.set_montage(self.montage)
         self.raw = self.raw.filter(l_freq = self.lfreq, h_freq = self.hfreq , fir_design='firwin')
-    
-    def get_events(self):
-        self.events, self.event_id = events_from_annotations(self.raw)
-        self.event_names = {v: k for k, v in self.event_id.items()}  # Map IDs to event names
+        # Seleccionar solo los canales de EEG
+        self.raw.pick_types(eeg=True)
 
+    def get_events(self,raw = None):
+        if raw is None:
+            raw = self.raw
+        if raw is None:
+            print("No raw data available.")
+            return None
+        self.events, self.event_id = events_from_annotations(raw)
+        self.event_names = {v: k for k, v in self.event_id.items()}  # Map IDs to event names
+        return self.events
 
     def define_test_train(self, percentage = None, mask = None):
         if mask is None and percentage is None:
@@ -71,39 +78,43 @@ class pipeline():
             return
         self.mask = np.array(np.random.rand(len(self.files)) < percentage)
     
-    def fill_model(self, mask):
-        self.csp_model = CSPModel(self.n_components)
+    def fill_model(self, mask) -> CSPModel:
+        data_raws = []
         for file, is_train in zip(self.files, mask):
             if not is_train:
                 continue
-            self.open_raw(file)
-            self.get_events()
-            if self.events is None or self.events.size == 0:
+            my_raw = io.read_raw_edf(file, preload=True, verbose = "error")
+            event_list = self.get_events(my_raw)
+            if event_list is None or event_list.size == 0:
                 continue
-            tmin = -0.2  # 200 ms before the event
-            tmax = 4   # 500 ms after the event
-            event_types = Event_Type(file)
-            epochs = Epochs(self.raw, self.events, self.event_id, tmin, tmax, baseline=(None, 0), preload=True)
-            for i, (epoch, event_type) in enumerate(zip(epochs, epochs.events[:, 2])):
-                event_label = self.event_names.get(event_type, "Unknown")
-                psds, freqs = time_frequency.psd_array_multitaper(
-                    epoch, 
-                    sfreq=self.raw.info['sfreq'], 
-                    fmin=1, 
-                    fmax=40, 
-                    n_jobs=1,
-                    bandwidth=2,
-                    adaptive=True,
-                    normalization='full',
-                    verbose=0)
-                self.csp_model.add_data(psds, event_types.get_event_nr(event_label))
+            data_raws.append(my_raw)
+        self.concat_raw(data_raws)
+        tmin = -0.2  # 200 ms before the event
+        tmax = 4   # 500 ms after the event
+        self.epochs = Epochs(self.raw, self.events, self.event_id, tmin, tmax, baseline=(None, 0), preload=True, verbose = "error")
+        spectrum= self.raw.compute_psd(method="welch", fmin=4, fmax=40)
+        self.csp_model = CSPModel(self.n_components)
+        self.X = self.epochs.get_data()  # (n_trials, n_channels, n_samples)
+        self.Y = self.epochs.events[:, -1]  # Etiquetas
+        self.csp_model.add_data(self.X, self.Y)
         return self.csp_model
 
-    def calculate_weights(self):
+    def train_model(self):
         self.csp_model_train = self.fill_model( self.mask)
-        self.csp_model_train.fit()
+        self.csp_model_train.make_pipeline(self.epochs.info)
+        self.csp_model_train.fit_pipeline(self.X, self.Y)
+        self.csp_model_train.plot_patterns(self.epochs.info)
+        self.csp_model_train.save_model("csp_model.json")
+
+    def test_model(self):
+        parameters =self.csp_model_train.get_param_pipeline()
+        if parameters is None:
+            print("Train model first.")
+            return
         self.csp_model_test = self.fill_model( ~self.mask)
+        self.csp_model_test.set_param_pipeline(parameters)
         self.csp_model_test.set_weights(self.csp_model_train.get_weights())
+        self.csp_model_test.transform(self.csp_model_train.covs, self.csp_model_train.labels)
     
     def save_weights(self, filename):
         self.csp_model.save_model(filename)

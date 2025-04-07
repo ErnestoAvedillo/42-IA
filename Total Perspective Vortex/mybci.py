@@ -23,15 +23,14 @@ excluded_channels = ["AF1","AF2", "AF5", "AF6", "AF9", "AF10", "F9", "F10", "FT9
 my_pippeline.config_montage(excluded_channels=excluded_channels, n_components = 5)
 my_pippeline.define_test_train(percentage=0.8)
 my_pippeline.train_model()
+#my_pippeline.save_dataset("train.csv")
 my_pippeline.test_model()
-
-my_pippeline.save_dataset_train("train.csv")
-my_pippeline.save_dataset_test("test.csv")
+#my_pippeline.save_dataset("test.csv")
 
 data = my_pippeline.get_dataset_train()
 Y = np.array([data[:, -1] == option for option in range(int(max(data[:,-1])) + 1)]).T.astype(int)
 X = data[:, :-1]
-X = X.reshape(-1, 1, 64, 64)
+X = X.reshape(-1, 1, X.shape[1], X.shape[2])
 X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.1)
 print (f"Imprimo el shape de X {X.shape}")
 print (f"Imprimo el shape de Y {Y.shape}")
@@ -39,7 +38,7 @@ network = None
 network = Network()
 
 #network.add_layer(layer = Layer(layer_type = "dense", input_shape = 64, data_shape=X_train.shape[1]))
-network.add_layer(layer_type = "max_pool", data_shape = (64,64), kernel_size = 4, activation = "relu")
+network.add_layer(layer_type = "max_pool", data_shape = (X.shape[1],X.shape[2]), kernel_size = 4, activation = "relu")
 network.add_layer(layer_type = "conv", kernel_size = 8 , filters = 1, activation = "relu")
 network.add_layer(layer_type = "flattend")
 network.add_layer(layer_type = "dense", input_shape = 32)

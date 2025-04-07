@@ -22,6 +22,7 @@ from sklearn.svm import SVC
 from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.ensemble import RandomForestClassifier
 from reshape_transformer import ReshapeTransformer
+from Debugger import DebugTransformer
 class pipeline():
     def __init__(self, folder = None, filename=None):
         self.weights = None
@@ -143,6 +144,7 @@ class pipeline():
         y_pred = self.pipeline.predict(self.X)
         print(f"score: {self.pipeline.score(self.X, self.Y)}")
         print(f"accuracy: {np.mean(y_pred == self.Y)}")
+        return 
     """("estimator", GeneralizingEstimator(
                 LinearModel(SVC(kernel='poly', C=1, gamma='scale', probability=True)),
                 scoring="accuracy",
@@ -154,13 +156,16 @@ class pipeline():
     def make_pipeline(self):
 
         #("csp",CSPModel (n_components = self.n_components)),
+        self.csp = CSP (n_components = 10, reg = None, log = None, transform_into = "average_power", rank = {'eeg':64}, norm_trace = False)
+        self.learning = SVC(kernel='poly', C=1, gamma='scale', probability=True)
         pipeline = Pipeline([
-            ("csp",CSP (n_components = self.n_components, reg = None, log = None, transform_into = "average_power", rank = {'eeg':64}, norm_trace = False)),
-            ('reshape',ReshapeTransformer()),
-            ("scaler", StandardScaler()),
+            ("csp",self.csp),
+            #('reshape',ReshapeTransformer()),
+            #("scaler", StandardScaler()),
             #('classifier', LinearDiscriminantAnalysis())
-            #('classifier',SVC(kernel='rbf', C=1, gamma='scale', probability=True))  
-            ('classifier',RandomForestClassifier(n_estimators=100, random_state=42))  
+            ("debug", DebugTransformer()),
+            ('classifier',self.learning),  
+            #('classifier',RandomForestClassifier(n_estimators=100, random_state=42))  
             ])
         return pipeline
     

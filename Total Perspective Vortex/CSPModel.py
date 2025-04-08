@@ -5,7 +5,7 @@ from mne.decoding import CSP
 import matplotlib.pyplot as plt
 from sklearn.base import BaseEstimator, TransformerMixin
 from mne import channels, io, events_from_annotations, Epochs
-from pipeline.event_type import EventTypes
+from pipeline.event_type import Event_Type
 class CSPModel(BaseEstimator, TransformerMixin):
     def __init__(self, n_components):
         self.n_components = n_components
@@ -16,8 +16,16 @@ class CSPModel(BaseEstimator, TransformerMixin):
         self.covs_averaged = None
 
     def load_events(self, files):
+        """
+        This method uses the MNE library to read the raw data from the files and extract epochs based on the events.
+        It then computes the covariance matrices for each epoch and stores them in the `covs` attribute.
+        The method also converts the event labels into a format suitable for further processing.
+        The covariance matrices are normalized by the trace of each matrix.
+        Parameters:
+        files (list): List of file paths to load events from.
+        """
         labels = []
-        covs = []
+        cov_matrices = []
         for file in files:
             raw = io.read_raw_edf(file, preload=True)
             tmin = -0.2  # 200 ms before the event
@@ -29,17 +37,12 @@ class CSPModel(BaseEstimator, TransformerMixin):
             cov =  np.einsum('ijk,ikl->ijl', X, X.transpose(0, 2, 1))
             traces = np.sum(np.diagonal(cov, axis1=1, axis2=2), axis=1)
             trace_reshaped = traces[:,np.newaxis, np.newaxis]
-            covs.append(cov / trace_reshaped)
-            event_type = EventTypes(filename = file)
+            cov_matrices.append(cov / trace_reshaped)
+            event_type = Event_Type(filename = file)
             labels.append(event_type.convert_event_labels(Y))
-        self.covs = np.vstack(covs)
+        self.covs = np.vstack(cov_matrices)
         self.labels = np.stack(labels).flatten()
         return 
-    
-    def fill(self, X:np.array, Y:np.array):
-        covs_averaged = np.zeros(self.n_components)
-        cov_matrices = np.einsum('ijk,ikl->ijl', X, X.transpose(0, 2, 1))
-
     
     def fit(self):
         events = np.unique(self.labels)

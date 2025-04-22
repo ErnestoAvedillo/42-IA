@@ -1,9 +1,13 @@
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 import os
-from mne import  channels, io, events_from_annotations, Epochs, time_frequency
+import random
+from mne import  channels, io, events_from_annotations, Epochs, time_frequency, Annotations, concatenate_raws
+from mne.preprocessing import ICA, create_eog_epochs
 from .event_type import Event_Type
-from CSPModel import CSPModel
+from .classifiers import Classifier
+from Mandatory.CSPModel import CSPModel
 from mne.decoding import (
     CSP,
     GeneralizingEstimator,
@@ -11,35 +15,35 @@ from mne.decoding import (
     Scaler,
     SlidingEstimator,
     Vectorizer,
-    cross_val_multiscore
+    cross_val_multiscore,
+    PSDEstimator
 )
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
-from mne import io, Epochs, events_from_annotations
+from sklearn.decomposition import KernelPCA
 from mne.datasets import sample
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
-from sklearn.model_selection import train_test_split, cross_val_score
+from sklearn.model_selection import train_test_split, cross_val_score, GridSearchCV, ShuffleSplit
+from sklearn.multiclass import OneVsOneClassifier, OneVsRestClassifier
 from sklearn.ensemble import RandomForestClassifier
 from reshape_transformer import ReshapeTransformer
 from Debugger import DebugTransformer
+from sklearn.metrics import accuracy_score, precision_recall_fscore_support, classification_report
+from sklearn.linear_model import LogisticRegression
 class pipeline():
     def __init__(self, folder = None, filename=None):
         self.weights = None
         self.files = []
-        self.train_model = []
-        self.test_model = []
         self.ch_names = None
         self.montage = None
-        self.lfreq = 0.1
-        self.hfreq = 40
-        self.mask = None
-        self.events = None
-        self.event_id = None
-        self.event_names = None
-        self.csp_model_test = None
-        self.csp_model_train = None
+        self.lfreq = 1
+        self.hfreq = 30
         self.n_components = None
+        self.pipeline = None
+        self.csp = None
+        self.mycsp = None
+        self.learning = None
 
         if folder is not None:
             self.add_files_from_folder(folder)
@@ -67,51 +71,70 @@ class pipeline():
         if filename is None:
             return
         if os.path.exists(filename) and filename.endswith(".edf"):
-            try:
-                self.open_raw(filename)
-            except Exception as e:
-                print(f"Error opening file {filename}: {e}")
-                return
-            self.get_events()
-            if self.events is None or len(self.events) == 0:
-                return
+#            self.open_raw(filename)
+#            events, event_id = events_from_annotations(self.raw)
+#            if events is None or len(events) == 0:
+#                return
             self.files.append(filename)
         return
     
-    def config_montage(self, excluded_channels = None, n_components = None):
+    def config_montage(self, standard = "standard_1005", excluded_channels = None, n_components = None):
         # Step 1: Define the standard 10-10 montage
-        self.montage = channels.make_standard_montage("standard_1020")
+        self.montage = channels.make_standard_montage(standard)
         # Step 2: Remove excluded channels
-        self.ch_names = [ch for ch in self.montage.ch_names if ch not in excluded_channels]
+        if excluded_channels is not None:
+            self.ch_names = [ch for ch in self.montage.ch_names if ch not in excluded_channels]
         if n_components is None:
-            print("WARNING: Number of components not defined.Fit function may fail.")
-        else:
-            self.n_components = n_components
+            print("WARNING: Number of components asigned to default value.")
+            n_components = 4
+        self.n_components = n_components
         return 
     
-    def set_filter_freq (self, lfreq = 0.1, hfreq = 40):
+    def set_filter_freq (self, lfreq = 1, hfreq = 30):
         self.lfreq = lfreq
         self.hfreq = hfreq
+        return
 
     def open_raw(self, file):
         """
-        Open a raw file and apply the montage and filter settings.
+        Open a raw file, apply the montage, filter data and change the event names.
         Parameters:
-        file (str): Path to the raw file to be opened.
+            file (str): Path to the raw file to be opened.
+        Returns:
+            raw (mne.io.Raw): The raw data object after applying montage and filter.
         """
         # Open the raw file using MNE-Python
-        self.raw = io.read_raw_edf(file,preload=True)
-        self.raw.rename_channels({old: new for old, new in zip(self.raw.ch_names, self.ch_names)})
-        self.raw.set_montage(self.montage)
-        self.raw = self.raw.filter(l_freq = self.lfreq, h_freq = self.hfreq , fir_design='firwin')
+        raw = io.read_raw_edf(file,preload=True)
+        # Check if the file is valid and contains events
+        events, _ = events_from_annotations(raw)
+        if events is None or len(events[:,2]) <= 1:
+            return None
+        # Apply the montage to the raw data
+        raw.rename_channels({old: new for old, new in zip(raw.ch_names, self.montage.ch_names)})
+        raw.set_montage(self.montage)
+        # Filter the data
+        raw = raw.filter(l_freq = self.lfreq, h_freq = self.hfreq , fir_design='firwin')
         # Seleccionar solo los canales de EEG
-        self.raw.pick_types(eeg=True)
+        raw.pick_types(eeg=True)
+        # Change the event names to match the event type
+        event_type = Event_Type(filename = file)
+        keys = list(event_type.event_type.keys())
+        values = list(event_type.event_type.values())
+        events[events[:, 2] == 1, 2] = values[0]
+        events[events[:, 2] == 2, 2] = values[1]
+        events[events[:, 2] == 3, 2] = values[2]
+        inverted_event_id = event_type.get_inverted_event_labels()
+        onsets = events[:, 0] / raw.info['sfreq']
+        durations = np.zeros(events.shape[0])
+        durations[1:] = (events[1:,0] - events[:-1,0]) / raw.info['sfreq']
+        # create descriptions
+        descriptions = [inverted_event_id[int(eid)] for eid in events[:, 2]]
+        # Create new annotations
+        new_annotations = Annotations(onset=onsets, duration=durations, description=descriptions)
+        # Set them to the raw object
+        raw.set_annotations(new_annotations)
+        return raw
 
-    def get_events(self):
-        self.events, self.event_id = events_from_annotations(self.raw)
-        self.event_names = {v: k for k, v in self.event_id.items()}  # Map IDs to event names
-        return
-    
     def define_test_train(self, percentage = None, mask = None):
         """
         Define the test and train sets based on the provided percentage or mask.
@@ -119,97 +142,116 @@ class pipeline():
         percentage (float): Percentage of data to be used for training.
         mask (array-like): Boolean mask indicating which files to use for training. 
         """
+        train_model = []
+        test_model = []
         if mask is None and percentage is None:
-            percentage = 0.8
+            percentage = 0.7
         if mask is not None:
             self.mask = mask
-            return
-        self.mask = np.array(np.random.rand(len(self.files)) < percentage)
-
+        else:
+            self.mask = np.array(np.random.rand(len(self.files)) < percentage)
+            while self.mask.sum() == 0 or self.mask.sum() == len(self.files):
+                self.mask = np.array(np.random.rand(len(self.files)) < percentage)
         for i in range(len(self.files)):
             if self.mask[i]:
-                self.train_model.append(self.files[i])
+                train_model.append(self.files[i])
             else:
-                self.test_model.append(self.files[i])
-        self.csp_model_train = CSPModel(self.n_components)
-        self.csp_model_test = CSPModel(self.n_components)
-        return
+                test_model.append(self.files[i])
+        return train_model, test_model
 
-    """
-            tmin = -0.2  # 200 ms before the event
-            tmax = 4   # 500 ms after the event
-            #event_types = Event_Type(file)
-            self.epochs = Epochs(self.raw, self.events, self.event_id, tmin, tmax, baseline=(None, 0), preload=True, verbose = "error")
-            # Example: Compute the power spectral density (PSD) for each epoch
-            #spectrum= self.raw.compute_psd(method="welch", fmin=4, fmax=40)
-            #psds, freqs = spectrum.get_data(return_freqs=True)
-            # You can select specific frequency bands for further analysis
-            # Example: Extract alpha and beta band power
-            #alpha_band = (8, 12)  # Alpha band (8-12 Hz)
-            #beta_band = (13, 30)  # Beta band (13-30 Hz)
+    def generate_data(self, files):
+        """
+        Get the training data from the raw file.
+        Returns:
+        tuple: Tuple containing the training data (X) and labels (Y).
+        """
+        raws = []
+        for file in files:
+            raw = self.open_raw(file)
+            if raw is None:
+                continue
+            raws.append(raw)
+        self.raw = concatenate_raws(raws)
+        self.raw.set_eeg_reference(projection=True)
+        # remove unwanted artifacts
+        ica = ICA(n_components=0.95, random_state=97, max_iter=800)
+        ica.fit(self.raw, decim=3, reject_by_annotation=True)
+        eog_inds, scores = ica.find_bads_eog(self.raw, ch_name=['Fp1', 'Fp2', 'AF3', 'AF4'], measure = 'correlation', threshold = 0.85)  # use your frontal channel
+        print (f"ICA EOG indices are {eog_inds}")
+        print (f"ICA EOG scores are {scores}")
+        ica.exclude = eog_inds  # mark for exclusion
+        #ica.plot_components(inst=self.raw, title="ICA Components")
+        self.raw = ica.apply(self.raw)
+        events, event_id = events_from_annotations(self.raw)
+        print (f"Event id is {event_id}")
+        tmin = -0.2  # 200 ms before the event
+        tmax = 4
+        epochs = Epochs(self.raw, events, event_id, tmin, tmax, baseline=(None, 0), preload=True, verbose = "error")
+        X = epochs.get_data()
+        Y = epochs.events[:, 2]
+        # Remove the T0 events from the data 
+        #mask1 = np.array(np.random.rand(len(Y)) < 0.5)
+        mask = (Y==1)
+        #mask = mask & mask1
+        X = X[~mask]
+        Y = Y[~mask]
+        return X, Y
 
-            #alpha_power = psds[:, (freqs >= alpha_band[0]) & (freqs <= alpha_band[1])]
-            #beta_power = psds[:, (freqs >= beta_band[0]) & (freqs <= beta_band[1])]
-            # Convertir a numpy para CSP
-            X_curr = self.epochs.get_data()  # (n_trials, n_channels, n_samples)
-            #self.X  = np.hstack([alpha_power, beta_power])
+    def train_model(self,X,y):
+        X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.2, random_state=42)
+        X_to_plot = self.csp.fit_transform(X_train, y_train)
+        MY_X_to_plot = self.mycsp.fit_transform(X_train, y_train)
 
-            Y_curr = self.epochs.events[:, -1]  # Etiquetas
-            self.X, self.Y = self.csp_model.fill(X_curr, Y_curr)
-        return self.csp_model
-    """
+#        self.csp.plot_patterns(self.raw.info, ch_type='eeg', units='Patterns (AU)', size=1.5)
+#
+#        labels = np.unique(y)
+#        colors = np.random.rand(len(labels), 3)
+#        for label in labels:
+#            mask =  y_train == label
+#            X_to_plot_ = X_to_plot[mask]
+#            Y_to_plot_ = y_train[ mask]
+#            plt.scatter(X_to_plot_[0], X_to_plot_[1], color = colors[label])
+#        plt.show()
+        cv = ShuffleSplit(10, test_size=0.2, random_state=42)
+        self.scores = cross_val_multiscore(self.pipeline, X_train, y_train, cv=cv, n_jobs=None)
+        #self.scores = cross_val_score(self.pipeline, X_train, y_train, cv=cv, n_jobs=None)
+        print(f"Scores are {self.scores}")
+        self.pipeline.fit(X_train, y_train)
+        return self.test_model(X_val,y_val)
 
-    def train_model(self):
-        self.csp_model_train = CSPModel(self.n_components)
-        self.csp_model_train.load_events(self.files)
-        self.make_pipeline()
-        self.pipeline.fit(self.x_train, self.y_train)
+    def test_model(self, X, y):
+        y_pred = self.pipeline.predict(X)
+        return self.evaluate_prediction(y, y_pred)
+        
+    
+    def evaluate_prediction(self, Y, y_pred):
+        print("Classification report:")
+        print(classification_report(Y, y_pred)) 
+        print("Accuracy score:")
+        print(accuracy_score(Y, y_pred))
+        print("Precision, recall, f1-score:")
+        precision, recall, f1_score, _ = precision_recall_fscore_support(Y, y_pred, average='weighted')
+        results = [precision, recall, f1_score]
+        print(f"Precision: {precision:.4f}, Recall: {recall:.4f}, F1-score: {f1_score:.4f}")
+        return results
 
-        self.fit_pipeline(self.X, self.Y)
-        self.csp_model_train.plot_patterns(self.ch_names)
-        self.csp_model_train.plot_filters()
-        self.csp_model_train.plot_scores()
-        self.csp_model_train.plot_weights()
-        self.csp_model_train.save_model("csp_model.json")
-
-    def test_model(self):
-        self.fill_model( ~self.mask)
-        y_pred = self.pipeline.predict(self.X)
-        print(f"score: {self.pipeline.score(self.X, self.Y)}")
-        print(f"accuracy: {np.mean(y_pred == self.Y)}")
-        return 
-    """("estimator", GeneralizingEstimator(
-                LinearModel(SVC(kernel='poly', C=1, gamma='scale', probability=True)),
-                scoring="accuracy",
-                n_jobs=1,
-                verbose=True,
-            ))
-            ('classifier', RandomForestClassifier(n_estimators=100, random_state=42))  
-            """
-    def make_pipeline(self):
-
+    def make_pipeline(self, classifier = None):
+        self.learning = classifier
         #("csp",CSPModel (n_components = self.n_components)),
-        self.csp = CSP (n_components = 10, reg = None, log = None, transform_into = "average_power", rank = {'eeg':64}, norm_trace = False)
-        self.learning = SVC(kernel='poly', C=1, gamma='scale', probability=True)
-        pipeline = Pipeline([
+        #self.csp = CSP (n_components = 4, reg = None, log = None, transform_into = "average_power", rank = {'eeg':64}, norm_trace = False)
+        self.csp = CSP (n_components = 4, reg = None, log = True, norm_trace = False)
+        self.mycsp = CSPModel (n_components = 4)
+        self.pipeline = Pipeline([
             ("csp",self.csp),
             #('reshape',ReshapeTransformer()),
+            #("Debugger",DebugTransformer()),
             #("scaler", StandardScaler()),
-            #('classifier', LinearDiscriminantAnalysis())
-            ("debug", DebugTransformer()),
-            ('classifier',self.learning),  
-            #('classifier',RandomForestClassifier(n_estimators=100, random_state=42))  
+            ('classifier',self.learning)
             ])
         return pipeline
     
     def save_weights(self, filename):
         self.csp_model.save_model(filename)
-    
-    def get_dataset_test(self):
-        return self.csp_model_test.get_dataset()
-
-    def save_dataset_test(self, filename):
-        self.csp_model_test.save_dataset(filename)
     
     def get_dataset_train(self):
         return self.csp_model_train.get_dataset()

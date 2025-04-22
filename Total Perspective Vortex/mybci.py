@@ -2,9 +2,9 @@ import sys
 import os
 import numpy as np
 from pipeline.pipeline import pipeline
-from neural_network_class.network import Network
-from neural_network_class.layer import Layer
-from neural_network_class.optimizer import Optimizer
+from utils.neural_network_class.network import Network
+from utils.neural_network_class.layer import Layer
+from utils.neural_network_class.optimizer import Optimizer
 from sklearn.model_selection import train_test_split
 
 if len(sys.argv) < 2:

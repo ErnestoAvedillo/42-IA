@@ -13,22 +13,22 @@ if len(sys.argv) < 2:
 else:
     file_name = sys.argv[1]
 
-# Step 1: Define the standard 10-10 montage
-montage = mne.channels.make_standard_montage("standard_1020")
-# To print the original montage
-#montage.plot(kind="topomap", show_names=True)
-# Step 2: Remove excluded channels
-excluded_channels = ["AF1","AF2", "AF5", "AF6", "AF9", "AF10", "F9", "F10", "FT9", "FT10", "A1", "A2", "M1", "M2", "TP9", "TP10", "P9", "P10", "PO1", "PO2", "PO5", "PO6", "PO9", "PO10", "O9", "O10"]
-ch_names = [ch for ch in montage.ch_names if ch not in excluded_channels]
 if not file_name.endswith(".edf"):
     exit(1)
 #Open the file
 raw = mne.io.read_raw_edf(file_name,preload=True)
+# Step 1: Define the standard 10-10 montage
+montage = mne.channels.make_standard_montage("standard_1005")
+# To print the original montage
+#montage.plot(kind="topomap", show_names=True)
+# Step 2: Remove excluded channels
+excluded_channels = None
+ch_names = [ch for ch in montage.ch_names if ch not in excluded_channels]
 #configure the montage
 raw.rename_channels({old: new for old, new in zip(raw.ch_names, ch_names)})
 raw.set_montage(montage)
 # We can print the montage to see the changes
-raw.plot_sensors(show_names=True)
+raw.plot_sensors(block = True ,show_names=True)
 print(f"Imprimo el info del raw {raw.info}")
 
 events, event_id = mne.events_from_annotations(raw)
@@ -47,7 +47,7 @@ raw.plot(
     event_color={1: "r", 2: "g", 3: "b", 4: "m", 5: "y", 32: "k"},
     title="Raw Data",
 )
-filtered_raw = raw.filter(l_freq=1, h_freq=40, fir_design='firwin')
+filtered_raw = raw.filter(l_freq=1, h_freq=40, fir_design='firwin', skip_by_annotation='edge')
 filtered_raw.plot(
     events=events,
     start=5,

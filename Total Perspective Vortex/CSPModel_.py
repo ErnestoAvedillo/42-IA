@@ -15,55 +15,45 @@ class CSPModel(BaseEstimator, TransformerMixin):
         self.my_filename = None
         self.covs_averaged = None
 
-    def load_events(self, files):
+    def _calc_covariance(self, X, ddof=0):
         """
-        This method uses the MNE library to read the raw data from the files and extract epochs based on the events.
-        It then computes the covariance matrices for each epoch and stores them in the `covs` attribute.
-        The method also converts the event labels into a format suitable for further processing.
-        The covariance matrices are normalized by the trace of each matrix.
-        Parameters:
-        files (list): List of file paths to load events from.
+        Calculate the covariance based on numpy implementation
+
+        :param X:
+        :param ddof:ddof=1 will return the unbiased estimate, even if both fweights and aweights are specified
+                    ddof=0 will return the simple average
+        :return:
         """
-        labels = []
-        cov_matrices = []
-        for file in files:
-            raw = io.read_raw_edf(file, preload=True)
-            tmin = -0.2  # 200 ms before the event
-            tmax = 4   # 500 ms after the event
-            events, event_id = events_from_annotations(raw)
-            epochs = Epochs(raw, events, event_id, tmin, tmax, baseline=(None, 0), preload=True, verbose = "error")
-            X = epochs.get_data()
-            Y = epochs.events[:, -1]
-            cov =  np.einsum('ijk,ikl->ijl', X, X.transpose(0, 2, 1))
-            traces = np.sum(np.diagonal(cov, axis1=1, axis2=2), axis=1)
-            trace_reshaped = traces[:,np.newaxis, np.newaxis]
-            cov_matrices.append(cov / trace_reshaped)
-            event_type = Event_Type(filename = file)
-            labels.append(event_type.convert_event_labels(Y))
-        self.covs = np.vstack(cov_matrices)
-        self.labels = np.stack(labels).flatten()
-        return 
+        X -= X.mean(axis=1)[:, None]
+        N = X.shape[1]
+        return np.dot(X, X.T.conj()) / float(N - ddof)
     
-    def fit(self):
-        events = np.unique(self.labels)
+    def fit(self, X, Y):
+        cov =  np.einsum('ijk,ikl->ijl', X, X.transpose(0, 2, 1))
+        traces = np.sum(np.diagonal(cov, axis1=1, axis2=2), axis=1)
+        trace_reshaped = traces[:,np.newaxis, np.newaxis]
+        cov_matrices = cov / trace_reshaped
+        events = np.unique(Y)
         averaged =[]
         for event in events:
-            mask = self.labels == event
-            masked_covs = self.covs[mask].mean(axis = 0)
+            mask = Y == event
+            masked_covs = cov_matrices[mask].mean(axis = 0)
             averaged.append(masked_covs)
         covs_averaged = np.array(averaged)
-        global_cov = covs_averaged.sum(axis = 0)
+        global_cov_averaged = covs_averaged.sum(axis = 0)
+        global_eigenvalues, global_eigenvectors = np.linalg.eigh(global_cov_averaged)
+        P = np.divide(global_eigenvectors, np.sqrt(global_eigenvalues))
+        self.W = P @ global_cov_averaged @ P.T
         eigenvalues_arr = []
         eigenvectors_arr = []
         for i in range(covs_averaged.shape[0]):
-            eigenvalues, eigenvectors = np.linalg.eigh(covs_averaged[i],global_cov)
+            
+            eigenvalues, eigenvectors = np.linalg.eigh(global_cov_averaged)
             eigenvalues_arr.append(eigenvalues)
             eigenvectors_arr.append(eigenvectors)
         self.eigenvalues = np.array(eigenvalues_arr)
         self.eigenvectors = np.array(eigenvectors_arr)
         
-        global_eigenvalues, global_eigenvectors = np.linalg.eigh(global_cov)
-        P = np.divide(global_eigenvectors, np.sqrt(global_eigenvalues))
         B = P @ global_eigenvectors.T
         return
     

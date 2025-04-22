@@ -4,6 +4,7 @@ from .layer import Layer
 from .optimizer import Optimizer
 import json
 import copy
+import matplotlib.pyplot as plt
 
 
 class Network:
@@ -69,10 +70,10 @@ class Network:
         for layer in  self.layers:
             optimizer_copy = copy.deepcopy(optimizer)
             layer.set_optimizer(optimizer_copy)
-        array_looses = []
-        array_accuracies = []
-        array_looses_val = []
-        array_accuracies_val = []
+        self.array_looses = []
+        self.array_accuracies = []
+        self.array_looses_val = []
+        self.array_accuracies_val = []
         for _ in range(epochs):
             if batch_size is None:
                 y_pred = self.forward(X)
@@ -97,15 +98,15 @@ class Network:
             self.metrics_val = self.evaluate_prediction(y_test, test_pred)
             if verbose:
                 print(f" - Val loss: {self.metrics_val['loss']:.4f} - Val accuracy: { self.metrics_val['accuracy']:.4f}")
-            array_accuracies.append(self.metrics['accuracy'])
-            array_looses.append(self.metrics['loss'])
-            array_accuracies_val.append(self.metrics_val['accuracy'])
-            array_looses_val.append(self.metrics_val['loss'])
-            if len(array_accuracies) > int(0.1* epochs) and abs(self.metrics['accuracy'] - array_accuracies[-min(50,len(array_accuracies))]) < delta_accuracy :
+            self.array_accuracies.append(self.metrics['accuracy'])
+            self.array_looses.append(self.metrics['loss'])
+            self.array_accuracies_val.append(self.metrics_val['accuracy'])
+            self.array_looses_val.append(self.metrics_val['loss'])
+            if len(self.array_accuracies) > int(0.1* epochs) and abs(self.metrics['accuracy'] - self.array_accuracies[-min(50,len(self.array_accuracies))]) < delta_accuracy :
                 break
         if not verbose:
              print(f"Val loss: {self.metrics['loss']} - Val accuracy: { self.metrics['accuracy']:.4f}")
-        return np.array(array_looses), np.array(array_accuracies), np.array(array_looses_val), np.array(array_accuracies_val)
+        return np.array(self.array_looses), np.array(self.array_accuracies), np.array(self.array_looses_val), np.array(self.array_accuracies_val)
         
     def save_model(self, file_name):
         model = {}
@@ -150,12 +151,31 @@ class Network:
             model = json.load(archivo)
         self.set_model(model)
 
-    def predict(self, X, Y = None):
-        x = (X - self.mean) / self.std
+    def predict(self, X, Y = None, print_output = False):
+        if self.normalize:
+            x = (X - self.mean) / self.std
+        else:
+            x = X
         y_pred =  self.forward(x)
         if Y is not None:
             self.metrics = self.evaluate_prediction(Y, y_pred)
-        return np.round(y_pred).astype(int)
+            if print_output:
+                for item, val in self.metrics.items():
+                    print(f"{item}: {val}")
+        output = np.zeros_like(y_pred)
+
+        # Obtener los índices de la clase con mayor probabilidad
+        max_indices = np.argmax(y_pred, axis=1)
+
+        # Convertir a one-hot
+        output[np.arange(y_pred.shape[0]), max_indices] = 1
+        #one_hot_output = np.eye(output.shape[1])[predicted_indices]
+
+        for i in range(len(y_pred)):
+            if print_output:
+                print(f"Predicted: {y_pred[i]}, True: {output[i]}")
+
+        return output
 
     def evaluate_prediction(self, Y, y_pred):
         y_pred = y_pred +1e-10
@@ -174,3 +194,19 @@ class Network:
     def __str__(self):
         description = f"NN with optimizer{str(self.optimizer)}.\n"
         return description.join([str(layer) for layer in self.layers])
+    
+    def plot_losses(self):
+        plt.plot(self.array_looses, label = "Train loss")
+        plt.plot(self.array_looses_val, label = "Val loss")
+        plt.xlabel("Epochs")
+        plt.ylabel("Loss")
+        plt.legend()
+        plt.show()
+    
+    def plot_accuracies(self):
+        plt.plot(self.array_accuracies, label = "Train accuracy")
+        plt.plot(self.array_accuracies_val, label = "Val accuracy")
+        plt.xlabel("Epochs")
+        plt.ylabel("Accuracy")
+        plt.legend()
+        plt.show()

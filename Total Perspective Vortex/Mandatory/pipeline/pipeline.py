@@ -1,9 +1,13 @@
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 import os
 import random
-from mne import  channels, io, events_from_annotations, Epochs, time_frequency
+from mne import  channels, io, events_from_annotations, Epochs, time_frequency, Annotations, concatenate_raws
+from mne.preprocessing import ICA, create_eog_epochs
 from .event_type import Event_Type
+from .classifiers import Classifier
+from .CSPModel import CSPModel
 from mne.decoding import (
     CSP,
     GeneralizingEstimator,
@@ -11,31 +15,34 @@ from mne.decoding import (
     Scaler,
     SlidingEstimator,
     Vectorizer,
-    cross_val_multiscore
+    cross_val_multiscore,
+    PSDEstimator
 )
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.decomposition import KernelPCA
-from mne import io, Epochs, events_from_annotations
 from mne.datasets import sample
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
-from sklearn.model_selection import train_test_split, cross_val_score, GridSearchCV
+from sklearn.model_selection import train_test_split, cross_val_score, GridSearchCV, ShuffleSplit
+from sklearn.multiclass import OneVsOneClassifier, OneVsRestClassifier
 from sklearn.ensemble import RandomForestClassifier
 from reshape_transformer import ReshapeTransformer
 from Debugger import DebugTransformer
 from sklearn.metrics import accuracy_score, precision_recall_fscore_support, classification_report
+from sklearn.linear_model import LogisticRegression
 class pipeline():
     def __init__(self, folder = None, filename=None):
         self.weights = None
         self.files = []
         self.ch_names = None
         self.montage = None
-        self.lfreq = 0.1
-        self.hfreq = 40
+        self.lfreq = 1
+        self.hfreq = 30
         self.n_components = None
         self.pipeline = None
         self.csp = None
+        self.mycsp = None
         self.learning = None
 
         if folder is not None:
@@ -71,35 +78,62 @@ class pipeline():
             self.files.append(filename)
         return
     
-    def config_montage(self, excluded_channels = None, n_components = None):
+    def config_montage(self, standard = "standard_1005", excluded_channels = None, n_components = None):
         # Step 1: Define the standard 10-10 montage
-        self.montage = channels.make_standard_montage("standard_1020")
+        self.montage = channels.make_standard_montage(standard)
         # Step 2: Remove excluded channels
-        self.ch_names = [ch for ch in self.montage.ch_names if ch not in excluded_channels]
+        if excluded_channels is not None:
+            self.ch_names = [ch for ch in self.montage.ch_names if ch not in excluded_channels]
         if n_components is None:
-            print("WARNING: Number of components not defined.Fit function may fail.")
-        else:
-            self.n_components = n_components
+            print("WARNING: Number of components asigned to default value.")
+            n_components = 4
+        self.n_components = n_components
         return 
     
-    def set_filter_freq (self, lfreq = 0.1, hfreq = 40):
+    def set_filter_freq (self, lfreq = 1, hfreq = 30):
         self.lfreq = lfreq
         self.hfreq = hfreq
         return
 
     def open_raw(self, file):
         """
-        Open a raw file and apply the montage and filter settings.
+        Open a raw file, apply the montage, filter data and change the event names.
         Parameters:
-        file (str): Path to the raw file to be opened.
+            file (str): Path to the raw file to be opened.
+        Returns:
+            raw (mne.io.Raw): The raw data object after applying montage and filter.
         """
         # Open the raw file using MNE-Python
-        self.raw = io.read_raw_edf(file,preload=True)
-        self.raw.rename_channels({old: new for old, new in zip(self.raw.ch_names, self.ch_names)})
-        self.raw.set_montage(self.montage)
-        self.raw = self.raw.filter(l_freq = self.lfreq, h_freq = self.hfreq , fir_design='firwin')
+        raw = io.read_raw_edf(file,preload=True)
+        # Check if the file is valid and contains events
+        events, _ = events_from_annotations(raw)
+        if events is None or len(events[:,2]) <= 1:
+            return None
+        # Apply the montage to the raw data
+        raw.rename_channels({old: new for old, new in zip(raw.ch_names, self.montage.ch_names)})
+        raw.set_montage(self.montage)
+        # Filter the data
+        raw = raw.filter(l_freq = self.lfreq, h_freq = self.hfreq , fir_design='firwin')
         # Seleccionar solo los canales de EEG
-        self.raw.pick_types(eeg=True)
+        raw.pick_types(eeg=True)
+        # Change the event names to match the event type
+        event_type = Event_Type(filename = file)
+        keys = list(event_type.event_type.keys())
+        values = list(event_type.event_type.values())
+        events[events[:, 2] == 1, 2] = values[0]
+        events[events[:, 2] == 2, 2] = values[1]
+        events[events[:, 2] == 3, 2] = values[2]
+        inverted_event_id = event_type.get_inverted_event_labels()
+        onsets = events[:, 0] / raw.info['sfreq']
+        durations = np.zeros(events.shape[0])
+        durations[1:] = (events[1:,0] - events[:-1,0]) / raw.info['sfreq']
+        # create descriptions
+        descriptions = [inverted_event_id[int(eid)] for eid in events[:, 2]]
+        # Create new annotations
+        new_annotations = Annotations(onset=onsets, duration=durations, description=descriptions)
+        # Set them to the raw object
+        raw.set_annotations(new_annotations)
+        return raw
 
     def define_test_train(self, percentage = None, mask = None):
         """
@@ -111,12 +145,13 @@ class pipeline():
         train_model = []
         test_model = []
         if mask is None and percentage is None:
-            percentage = 0.8
+            percentage = 0.7
         if mask is not None:
             self.mask = mask
         else:
             self.mask = np.array(np.random.rand(len(self.files)) < percentage)
-            
+            while self.mask.sum() == 0 or self.mask.sum() == len(self.files):
+                self.mask = np.array(np.random.rand(len(self.files)) < percentage)
         for i in range(len(self.files)):
             if self.mask[i]:
                 train_model.append(self.files[i])
@@ -124,70 +159,59 @@ class pipeline():
                 test_model.append(self.files[i])
         return train_model, test_model
 
-    """
-            tmin = -0.2  # 200 ms before the event
-            tmax = 4   # 500 ms after the event
-            #event_types = Event_Type(file)
-            self.epochs = Epochs(self.raw, self.events, self.event_id, tmin, tmax, baseline=(None, 0), preload=True, verbose = "error")
-            # Example: Compute the power spectral density (PSD) for each epoch
-            #spectrum= self.raw.compute_psd(method="welch", fmin=4, fmax=40)
-            #psds, freqs = spectrum.get_data(return_freqs=True)
-            # You can select specific frequency bands for further analysis
-            # Example: Extract alpha and beta band power
-            #alpha_band = (8, 12)  # Alpha band (8-12 Hz)
-            #beta_band = (13, 30)  # Beta band (13-30 Hz)
-
-            #alpha_power = psds[:, (freqs >= alpha_band[0]) & (freqs <= alpha_band[1])]
-            #beta_power = psds[:, (freqs >= beta_band[0]) & (freqs <= beta_band[1])]
-            # Convertir a numpy para CSP
-            X_curr = self.epochs.get_data()  # (n_trials, n_channels, n_samples)
-            #self.X  = np.hstack([alpha_power, beta_power])
-
-            Y_curr = self.epochs.events[:, -1]  # Etiquetas
-            self.X, self.Y = self.csp_model.fill(X_curr, Y_curr)
-        return self.csp_model
-    """
-
     def generate_data(self, files):
         """
         Get the training data from the raw file.
         Returns:
         tuple: Tuple containing the training data (X) and labels (Y).
         """
-        labels = []
-        data = []
+        raws = []
         for file in files:
-            self.open_raw(file)
-            events, event_id = events_from_annotations(self.raw)
-            if events is None or len(events) == 0:
+            raw = self.open_raw(file)
+            if raw is None:
                 continue
-            tmin = -0.2  # 200 ms before the event
-            tmax = 4
-            epochs = Epochs(self.raw, events, event_id, tmin, tmax, baseline=(None, 0), preload=True, verbose = "error")
-            curr_label = epochs.events[:, -1]
-            if len(curr_label) == 0:
-                continue
-            data.append(epochs.get_data())
-            event_type = Event_Type(filename = file)
-            labels.append(event_type.convert_event_labels(curr_label))
-        X = np.vstack(data)
-        Y = np.stack(labels).flatten()
-        mask = np.array(np.random.rand(len(Y)) < 0.5)
-        mask1 = (Y==0)
-        mask = mask & mask1
+            raws.append(raw)
+        self.raw = concatenate_raws(raws)
+        self.raw.set_eeg_reference(projection=True)
+        # remove unwanted artifacts
+        ica = ICA(n_components=0.95, random_state=97, max_iter=800)
+        ica.fit(self.raw, decim=3, reject_by_annotation=True)
+        eog_inds, scores = ica.find_bads_eog(self.raw, ch_name=['Fp1', 'Fp2', 'AF3', 'AF4'], measure = 'correlation', threshold = 0.8)  # use your frontal channel
+        print (f"ICA EOG indices are {eog_inds}")
+        print (f"ICA EOG scores are {scores}")
+        ica.exclude = eog_inds  # mark for exclusion
+        #ica.plot_components(inst=self.raw, title="ICA Components")
+        self.raw = ica.apply(self.raw)
+        events, event_id = events_from_annotations(self.raw)
+        print (f"Event id is {event_id}")
+        tmin = -0.2  # 200 ms before the event
+        tmax = 4
+        epochs = Epochs(self.raw, events, event_id, tmin, tmax, baseline=(None, 0), preload=True, verbose = "error")
+        X = epochs.get_data()
+        Y = epochs.events[:, 2]
+        # Remove the T0 events from the data 
+        #mask1 = np.array(np.random.rand(len(Y)) < 0.5)
+        mask = (Y==1)
+        #mask = mask & mask1
         X = X[~mask]
         Y = Y[~mask]
         return X, Y
 
     def train_model(self,X,y):
         X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.2, random_state=42)
+        X_to_plot = self.csp.fit_transform(X_train, y_train)
+        MY_X_to_plot = self.mycsp.fit_transform(X_train, y_train)
+        cv = ShuffleSplit(10, test_size=0.2, random_state=42)
+        self.scores = cross_val_multiscore(self.pipeline, X_train, y_train, cv=cv, n_jobs=None)
+        #self.scores = cross_val_score(self.pipeline, X_train, y_train, cv=cv, n_jobs=None)
+        print(f"Scores are {self.scores}")
         self.pipeline.fit(X_train, y_train)
-        self.test_model(X_val,y_val)
+        return self.test_model(X_val,y_val)
 
     def test_model(self, X, y):
         y_pred = self.pipeline.predict(X)
-        self.evaluate_prediction(y, y_pred)
-        return 
+        return self.evaluate_prediction(y, y_pred)
+        
     
     def evaluate_prediction(self, Y, y_pred):
         print("Classification report:")
@@ -196,36 +220,21 @@ class pipeline():
         print(accuracy_score(Y, y_pred))
         print("Precision, recall, f1-score:")
         precision, recall, f1_score, _ = precision_recall_fscore_support(Y, y_pred, average='weighted')
+        results = [precision, recall, f1_score]
         print(f"Precision: {precision:.4f}, Recall: {recall:.4f}, F1-score: {f1_score:.4f}")
-        return
-    """("estimator", GeneralizingEstimator(
-                LinearModel(SVC(kernel='poly', C=1, gamma='scale', probability=True)),
-                scoring="accuracy",
-                n_jobs=1,
-                verbose=True,
-            ))
-            ('classifier', RandomForestClassifier(n_estimators=100, random_state=42))  
-            """
-    def make_pipeline(self):
-        params_grid = [{'kernel': ['rbf'], 'gamma': [1e-3, 1e-4],
-                     'C': [1, 10, 100, 1000]},
-                    {'kernel': ['linear'], 'C': [1, 10, 100, 1000]}]
-        
-        #("csp",CSPModel (n_components = self.n_components)),
-        self.csp = CSP (n_components = 5, reg = None, log = None, transform_into = "average_power", rank = {'eeg':64}, norm_trace = False)
-        #self.learning = GridSearchCV(SVC(kernel='rbf', gamma=0.5, C=0.1), params_grid, cv=9)
-        self.learning = SVC(kernel='rbf', C=0.1, gamma=0.5, probability=True)
-        #self.learning = RandomForestClassifier(n_estimators=100, random_state=42)
-        #self.learning = KernelPCA(n_components=5, kernel='rbf', gamma=0.5)
-        #self.learning = LinearDiscriminantAnalysis()
-        #self.learning = LinearModel(SVC(kernel='rbf', C=1, gamma='scale', probability=True))
-        #self.learning = GeneralizingEstimator(SVC(kernel='rbf', C=1, gamma='scale', probability=True), scoring="accuracy", n_jobs=1, verbose=True)
+        return results
 
+    def make_pipeline(self, classifier = None):
+        self.learning = classifier
+        #("csp",CSPModel (n_components = self.n_components)),
+        #self.csp = CSP (n_components = 4, reg = None, log = None, transform_into = "average_power", rank = {'eeg':64}, norm_trace = False)
+        self.csp = CSP (n_components = 4, reg = None, log = True, norm_trace = False)
+        self.mycsp = CSPModel (n_components = 4)
         self.pipeline = Pipeline([
             ("csp",self.csp),
             #('reshape',ReshapeTransformer()),
-            ("scaler", StandardScaler()),
-            #('classifier', LinearDiscriminantAnalysis())
+            #("Debugger",DebugTransformer()),
+            #("scaler", StandardScaler()),
             ('classifier',self.learning)
             ])
         return pipeline

@@ -1,7 +1,7 @@
 import sys
 import os
 from pipeline.pipeline import pipeline
-from create_list_files import create_list_files
+from utils.create_list_files import create_list_files
 import ast  # Abstract Syntax Trees
 from pipeline.classifiers import Classifier
 

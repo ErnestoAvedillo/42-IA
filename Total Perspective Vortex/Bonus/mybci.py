@@ -1,12 +1,12 @@
 import sys
 import os
 import numpy as np
-from pipeline.pipeline import pipeline
-from utils.create_list_files import create_list_files
+from ..pipeline.pipeline import pipeline
+from ..utils.create_list_files import create_list_files
 import ast  # Abstract Syntax Trees
-from utils.neural_network_class.network import Network
-from utils.neural_network_class.layer import Layer
-from utils.neural_network_class.optimizer import Optimizer
+from ..utils.neural_network_class.network import Network
+from ..utils.neural_network_class.layer import Layer
+from ..utils.neural_network_class.optimizer import Optimizer
 from sklearn.model_selection import train_test_split
 from mne.decoding import CSP
 from sklearn.decomposition import PCA
@@ -25,11 +25,12 @@ arg = sys.argv[2]
 # Convert string to list
 runs = ast.literal_eval(arg)  # Safer than eval()
 
-root = "/home/ernesto/mne_data/physionet/files/eegmmidb/1.0.0/"
+#root = "/home/ernesto/mne_data/physionet/files/eegmmidb/1.0.0/"
+root = "/home/eavedill/sgoinfre/mne_data/files/"
 list_files = create_list_files(subjects=subjects, runs=runs, root=root)
 
-if list_files is None:
-    print("No files to be downloaded")
+if list_files is None or len(list_files) == 0:
+    print("No files opened")
     sys.exit(1)
 my_pippeline = pipeline()
 my_pippeline.config_montage(n_components = 5)
@@ -69,7 +70,7 @@ network.add_layer(layer_type = "dense", input_shape = output_len, activation = "
 #optimizer = Optimizer(optimizer = "nesterov", learning_rate = 0.001, momentum = 0.4)
 #optimizer = Optimizer(optimizer = "rmsprop", learning_rate = 0.01, beta = 0.4, epsilon = 1e-8)
 optimizer = Optimizer(optimizer = "adam", learning_rate = 0.001, beta1 = 0.9, beta2 = 0.99, epsilon = 1e-8)
-network.train(X_train, y_train_NN, X_val, y_val_NN, epochs=500,  optimizer = optimizer, verbose = True)
+network.train(X_train, y_train_NN, X_val, y_val_NN, epochs=200,  optimizer = optimizer, verbose = True)
 
 network.plot_accuracies()
 network.plot_losses()

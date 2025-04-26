@@ -1,7 +1,8 @@
 
 import numpy as np
+from sklearn.base import BaseEstimator, TransformerMixin
 
-class PCAModel:
+class PCAModel(TransformerMixin, BaseEstimator):
     """
     Principal component analysis (PCA)
     
@@ -31,6 +32,6 @@ class PCAModel:
     def transform(self, X):
         X = X.copy()
         X = (X - self.mean) / self.scale
-        X_pca = X @ self.components
+        X_pca = X @ self.explained_variance_ratio
         return X_pca
     

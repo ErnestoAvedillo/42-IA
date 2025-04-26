@@ -12,41 +12,23 @@ class CSPModel(TransformerMixin, BaseEstimator):
 
     https://github.com/mne-tools/mne-python/blob/f87be3000ce333ff9ccfddc45b47a2da7d92d69c/mne/decoding/csp.py#L565
     """
-    def __init__(self, n_components=4, reg=None, log=None, cov_est='concat',
-                 transform_into='average_power', norm_trace=False,
-                 cov_method_params=None, rank=None,
-                 component_order='mutual_info'):
+    def __init__(self, n_components=4, log=None, transform_into='average_power'):
         """
         Initializing the different optional parameters.
         Some checks might not be full, and all options not implemented.
         We just created the parser based on the original implementation of the CSP of MNE.
 
         :param n_components:
-        :param reg:
         :param log:
-        :param cov_est:
         :param transform_into:
-        :param norm_trace:
-        :param cov_method_params:
-        :param rank:
-        :param component_order:
         """
         if not isinstance(n_components, int):
             raise ValueError('n_components must be an integer.')
         self.n_components = n_components
 
-        self.reg = reg
         self.log = log
 
-        if not (cov_est == "concat" or cov_est == "epoch"):
-            raise ValueError("unknown covariance estimation method")
-        self.cov_est = cov_est
-
         self.transform_into = transform_into
-        self.norm_trace = norm_trace
-        self.cov_method_params = cov_method_params
-        self.rank = rank
-        self.component_order = component_order
         self._classes = 0
         self.filters_ = None
         self.mean_ = 0
@@ -85,6 +67,7 @@ class CSPModel(TransformerMixin, BaseEstimator):
             x_class = x_class.reshape(n_channels, -1)
             # calc covar matrix for class
             covar_matrix = self._calc_covariance(x_class)
+            is_hermitian = np.allclose(covar_matrix, covar_matrix.conj().T)
             covs.append(covar_matrix)
         return np.stack(covs)
 
@@ -148,7 +131,7 @@ class CSPModel(TransformerMixin, BaseEstimator):
 
     def fit_transform(self, X, y):
         """
-        Appluy fit and transform
+        Apply fit and transform
 
         :param X:
         :param y:
@@ -186,3 +169,32 @@ class CSPModel(TransformerMixin, BaseEstimator):
         else:
             raise Exception("Not Handled")
         return ix
+    
+"""    def get_model_params(self, deep = True):
+        csp_params = {}
+        csp_params['filters_'] = self.filters_
+        csp_params['n_components'] = self.n_components
+        csp_params['log'] = self.log
+        csp_params['transform_into'] = self.transform_into
+        csp_params['mean_'] = self.mean_
+        csp_params['std_'] = self.std_
+        csp_params['classes_'] = self._classes
+        params = {}
+        params['super'] = super().get_params(deep)
+        params['csp_params'] = csp_params
+        return params
+    
+    def set_model_params(self, **params):
+        csp_params = params.pop('csp_params', {})
+        self.filters_ = csp_params.get('filters_', None)
+        self.n_components = csp_params.get('n_components', 4)
+        self.log = csp_params.get('log', None)
+        self.transform_into = csp_params.get('transform_into', 'average_power')
+        self.mean_ = csp_params.get('mean_', 0)
+        self.std_ = csp_params.get('std_', 1)
+        self._classes = csp_params.get('classes_', 0)
+
+        # Call the parent class's set_params method
+        # to ensure that any other parameters are set correctly
+        super().set_params(**params['super'])
+        return """

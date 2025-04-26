@@ -5,8 +5,8 @@ from mne.decoding import CSP
 import matplotlib.pyplot as plt
 from sklearn.base import BaseEstimator, TransformerMixin
 from mne import channels, io, events_from_annotations, Epochs
-from pipeline.event_type import Event_Type
-class CSPModel(BaseEstimator, TransformerMixin):
+from .event_type import Event_Type
+class CSPModel_(BaseEstimator, TransformerMixin):
     def __init__(self, n_components):
         self.n_components = n_components
         self.covs = np.array([])
@@ -14,8 +14,9 @@ class CSPModel(BaseEstimator, TransformerMixin):
         self.W = []
         self.my_filename = None
         self.covs_averaged = None
+        self.clases = None
 
-    def _calc_covariance(self, X, ddof=0):
+    def _CalculateCovariance(self, X, y, ddof=0):
         """
         Calculate the covariance based on numpy implementation
 
@@ -24,18 +25,26 @@ class CSPModel(BaseEstimator, TransformerMixin):
                     ddof=0 will return the simple average
         :return:
         """
-        X -= X.mean(axis=1)[:, None]
-        N = X.shape[1]
-        return np.dot(X, X.T.conj()) / float(N - ddof)
-    
+        self.clases, count = np.unique(y, return_counts=True)
+        n_classes = len(self.clases)
+        if n_classes < 2:
+            raise ValueError("n_classes must be >= 2.")
+        cov = []
+        if n_classes >= 2:
+            for i in range(n_classes):
+                mask = y == self.clases[i]
+                aux = X[mask].mean(axis=1)[:, np.newaxis]
+                X [mask] = (X[mask] - aux) / (count[i]- ddof)
+                cov.append(np.einsum('ijk,ikl->ijl', X, X.transpose(0, 2, 1)))
+        return cov
+
     def fit(self, X, Y):
-        cov =  np.einsum('ijk,ikl->ijl', X, X.transpose(0, 2, 1))
+        cov =  self._CalculateCovariance(X, Y)
         traces = np.sum(np.diagonal(cov, axis1=1, axis2=2), axis=1)
         trace_reshaped = traces[:,np.newaxis, np.newaxis]
         cov_matrices = cov / trace_reshaped
-        events = np.unique(Y)
         averaged =[]
-        for event in events:
+        for event in self.clases:
             mask = Y == event
             masked_covs = cov_matrices[mask].mean(axis = 0)
             averaged.append(masked_covs)

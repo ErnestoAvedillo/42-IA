@@ -27,6 +27,9 @@ arg = sys.argv[2]
 # Convert string to list
 runs = ast.literal_eval(arg)  # Safer than eval()
 
+# Get the argument (excluding the script name itself)
+type = sys.argv[3]
+
 #root = "/home/ernesto/mne_data/physionet/files/eegmmidb/1.0.0/"
 root = "/home/eavedill/sgoinfre/mne_data/files/"
 list_files = create_list_files(subjects=subjects, runs=runs, root=root)
@@ -46,16 +49,23 @@ for item in list_files:
 train_model, test_model  = my_process_data.define_test_train(percentage=0.8)
 X_train, y_train = my_process_data.generate_data(train_model)
 X_test, y_test = my_process_data.generate_data(test_model)
-X_train, _ = norm(X_train, y_train, ddof=0)[:,:,:160]
-X_test, _ = norm(X_test, y_test, ddof=0)[:,:,:160]
-X_train = X_train.reshape(-1, 1, X_train.shape[1], X_test.shape[2])
-X_test = X_test.reshape(-1, 1, X_test.shape[1], X_test.shape[2])
-"""
-csp = CSP(n_components=63, reg=None, log=True, norm_trace=False)
-csp.fit(X_train, y_train)
-X_train = csp.transform(X_train)
-X_test = csp.transform(X_test)  
-"""
+if type == "cov":
+    X_train= cov(X_train[:,:,:160], y_train[:160], ddof=0)
+    X_test= cov(X_test[:,:,:160], y_test[:160], ddof=0)
+    X_train = X_train.reshape(-1, 1, X_train.shape[1], X_test.shape[2])
+    X_test = X_test.reshape(-1, 1, X_test.shape[1], X_test.shape[2])
+elif type == "norm":
+    X_train, _ = norm(X_train[:,:,:160], y_train[:160])
+    X_test, _ = norm(X_test[:,:,:160], y_test[:160])
+    X_train = X_train.reshape(-1, 1, X_train.shape[1], X_test.shape[2])
+    X_test = X_test.reshape(-1, 1, X_test.shape[1], X_test.shape[2])
+elif type == "csp":
+    csp = CSP(n_components=63, reg=None, log=True, norm_trace=False)
+    csp.fit(X_train, y_train)
+    X_train = csp.transform(X_train)
+    X_test = csp.transform(X_test)  
+else:
+    raise ValueError("Invalid type. Choose 'cov', 'norm', or 'csp'.")
 outputs = np.unique(y_train)
 output_len = len(np.unique(y_train))
 y_train_NN = np.zeros((y_train.shape[0], output_len))
@@ -65,11 +75,12 @@ for i in range(output_len):
     y_test_NN[y_test == outputs[i], i] = 1
 X_train, X_val, y_train_NN, y_val_NN = train_test_split(X_train, y_train_NN, test_size=0.2, random_state=42)
 network = Network()
-network.add_layer(layer_type='conv', data_shape = (X_train.shape[2],X_train.shape[3]), filters=1, kernel_size=4)
-network.add_layer(layer_type='conv', filters=1, kernel_size=4, activation='relu')
-#network.add_layer(layer_type='max_pool', filters=1, kernel_size=16)
-network.add_layer(layer_type='flattend')
-#network.add_layer(layer = Layer(layer_type = "dense", input_shape = 128, data_shape=X_train.shape[1]))
+if type == "csp":
+    network.add_layer(layer = Layer(layer_type = "dense", input_shape = 160, data_shape=X_train.shape[1]))
+else:
+    network.add_layer(layer_type='conv', data_shape = (X_train.shape[2],X_train.shape[3]), filters=1, kernel_size=4, activation='relu')
+    network.add_layer(layer_type='max_pool', filters=1, kernel_size=4, activation='relu')
+    network.add_layer(layer_type='flattend')
 network.add_layer(layer_type = "dense", input_shape = 64)
 network.add_layer(layer_type = "dense", input_shape = 32)
 network.add_layer(layer_type = "dense", input_shape = 16)

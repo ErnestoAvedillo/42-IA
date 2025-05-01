@@ -1,0 +1,2 @@
+#!/bin/bash
+python -m Total\ Perspective\ Vortex.Bonus.mybci "[1,2,3,4,5,6]" "[3,5,7,9,11,13]" "csp"

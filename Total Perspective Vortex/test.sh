@@ -42,13 +42,13 @@ elif [ "$1" == "2" ]; then
     elif [ "$2" == "5" ]; then
         echo "Running mandatory test 1 for left versus right hand for several subjects"
         python -m Code.Mandatory.mybci "[1,2,3,4]" "[3,7,11]" "KNN"
-    elif [ "$2" == "2" ]; then
+    elif [ "$2" == "6" ]; then
         echo "Running mandatory test 1 for imaginary left versus right hand for several subjects"
         python -m Code.Mandatory.mybci "[1,2,3,4]" "[4,8,12]" "KNN"
-    elif [ "$2" == "3" ]; then
+    elif [ "$2" == "7" ]; then
         echo "Running mandatory test 1 for both hands versus feet for several subjects"
         python -m Code.Mandatory.mybci "[1,2,3,4]" "[5,9,13]" "KNN" --plot
-    elif [ "$2" == "4" ]; then
+    elif [ "$2" == "8" ]; then
         echo "Running mandatory test 1 for imaginary both hands versus feet for several subjects"
         python -m Code.Mandatory.mybci "[1,2,3,4]" "[6,10,14]" "KNN" --plot
     fi

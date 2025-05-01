@@ -53,7 +53,7 @@ class ProcessData():
             self.files.append(filename)
         return
     
-    def config_montage(self, standard = "standard_1005", excluded_channels = None, n_components = 0.95):
+    def config_montage(self, standard = "standard_1020", excluded_channels = None, n_components = 0.95):
         """
         Configure the montage for the EEG data.
         Parameters:
@@ -111,6 +111,8 @@ class ProcessData():
         new_annotations = Annotations(onset=onsets, duration=durations, description=descriptions)
         # Set them to the raw object
         raw.set_annotations(new_annotations)
+        raw.plot_sensors(block = True ,show_names=True)
+
         return raw
 
     def define_test_train(self, percentage = None, mask = None):

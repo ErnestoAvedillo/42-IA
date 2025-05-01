@@ -26,8 +26,8 @@ if classifier not in classifiers:
     print(f"The classifier {classifier} is not implemented. See below the accepted list.")
     for item in classifiers:
         print(item)
-#root = "/home/ernesto/mne_data/physionet/files/eegmmidb/1.0.0/"
-root = "/home/eavedill/sgoinfre/mne_data/files/"
+root = "/home/ernesto/mne_data/physionet/files/eegmmidb/1.0.0/"
+#root = "/home/eavedill/sgoinfre/mne_data/files/"
 list_files = create_list_files(subjects=subjects, runs=runs, root=root)
 
 if list_files is None or len(list_files) == 0:

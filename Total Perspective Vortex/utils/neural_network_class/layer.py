@@ -2,6 +2,7 @@ from .layers.dense import Dense
 from .layers.conv import Conv2D
 from .layers.flattend import Flattend
 from .layers.max_pool import MaxPool
+from .layers.input import Input
 
 class Layer():
     def __init__(self, layer_type = None, **kwargs):
@@ -9,7 +10,8 @@ class Layer():
             'dense': Dense,
             'conv': Conv2D,
             'flattend': Flattend,
-            'max_pool': MaxPool
+            'max_pool': MaxPool,
+            'input': Input
         }
         if layer_type not in layers:
             raise ValueError(f"Invalid layer_type: {layer_type}.")

@@ -1,3 +1,4 @@
+from pandas import DataFrame
 import numpy as np
 from .layers.dense import Dense
 from .layer import Layer
@@ -5,6 +6,7 @@ from .optimizer import Optimizer
 import json
 import copy
 import matplotlib.pyplot as plt
+from sklearn.metrics import classification_report, accuracy_score, log_loss
 
 
 class Network:
@@ -45,7 +47,7 @@ class Network:
         for i in range(len(self.layers[:-1]) - 1, -1, -1):
             self.layers[i].backward_calculation(self.layers[i+1])
 
-    def train(self, X, Y, X_test, y_test, epochs=1000, delta_accuracy=0.000001, batch_size=None, optimizer=Optimizer(optimizer = "sgd"), verbose = False):
+    def fit(self, X, Y, X_test, y_test, epochs=1000, delta_accuracy=0.000001, batch_size=None, optimizer=Optimizer(optimizer = "sgd"), verbose = False):
         m = Y.shape[0]
         if X.ndim == 1:
             X = X.reshape(m, 1)
@@ -86,22 +88,19 @@ class Network:
                     y = self.forward(batches_x[i])
                     delta = batches_y[i] - y
                     self.backward(delta)
-                    y = self.forward(batches_x[i])
-                    self.metrics = self.evaluate_prediction(Y, y_pred)
+                    y = self.evaluate_prediction(batches_x[i])
                     if verbose:
                         print(f"Epoch {_} -batch {i} - Train loss: {self.metrics['loss']:.4f}", end="\r")
-            y_pred = self.forward(X)
-            self.metrics = self.evaluate_prediction(Y, y_pred)
-            if verbose:
-                print(f"Epoch {_} - Train loss: { self.metrics['loss']:.4f}", end="\t")
-            test_pred = self.forward(x_test)
-            self.metrics_val = self.evaluate_prediction(y_test, test_pred)
-            if verbose:
-                print(f" - Val loss: {self.metrics_val['loss']:.4f} - Val accuracy: { self.metrics_val['accuracy']:.4f}")
+            self.predict(X, Y)
             self.array_accuracies.append(self.metrics['accuracy'])
             self.array_looses.append(self.metrics['loss'])
-            self.array_accuracies_val.append(self.metrics_val['accuracy'])
-            self.array_looses_val.append(self.metrics_val['loss'])
+            if verbose:
+                print(f"Epoch {_} - Train loss: { self.metrics['loss']:.4f} - Train accuracy: { self.metrics['accuracy']:.4f}", end="\t")
+            self.predict(x_test, y_test)
+            if verbose:
+                print(f" - Val loss: {self.metrics['loss']:.4f} - Val accuracy: { self.metrics['accuracy']:.4f}")
+            self.array_accuracies_val.append(self.metrics['accuracy'])
+            self.array_looses_val.append(self.metrics['loss'])
             if len(self.array_accuracies) > int(0.1* epochs) and abs(self.metrics['accuracy'] - self.array_accuracies[-min(50,len(self.array_accuracies))]) < delta_accuracy :
                 break
         if not verbose:
@@ -157,39 +156,44 @@ class Network:
         else:
             x = X
         y_pred =  self.forward(x)
-        if Y is not None:
-            self.metrics = self.evaluate_prediction(Y, y_pred)
-            if print_output:
-                for item, val in self.metrics.items():
-                    print(f"{item}: {val}")
-        output = np.zeros_like(y_pred)
+        
+        y_converted = np.zeros_like(y_pred)
 
         # Obtener los índices de la clase con mayor probabilidad
         max_indices = np.argmax(y_pred, axis=1)
 
         # Convertir a one-hot
-        output[np.arange(y_pred.shape[0]), max_indices] = 1
+        y_converted[np.arange(y_pred.shape[0]), max_indices] = 1
         #one_hot_output = np.eye(output.shape[1])[predicted_indices]
 
-        for i in range(len(y_pred)):
-            if print_output:
-                print(f"Predicted: {y_pred[i]}, True: {output[i]}")
+        if Y is None:
+            return y_converted, None
+        
+        self.evaluate_prediction(Y, y_pred, y_converted)
+        if print_output:
+            for item, val in self.metrics.items():
+                print(f"{item}: {val}")
+        if print_output:
+            for i in range(len(y_pred)):
+                iguales = Y[i] == y_converted[i]
+                iguales = np.where(iguales == False)[0]
+                print(f"Predicted: {Y[i]}, True: {y_converted[i]}, Indices diferentes: {iguales}")
 
-        return output
+        return y_converted, self.metrics
 
-    def evaluate_prediction(self, Y, y_pred):
+    def evaluate_prediction(self, Y, y_pred, y_pred_rounded = None):
         y_pred = y_pred +1e-10
-        y_pred_rounded = np.round(y_pred)
         not_Y = np.logical_not(Y).astype(int)
         not_y_pred_rounded = np.logical_not(y_pred_rounded).astype(int)
-        metrics = {
-            "loss": -np.mean(np.sum(Y * np.log(y_pred + 1e-9), axis=1)),
-            "accuracy": np.mean(np.round(y_pred).astype(int) == Y),
-            "f_1 score": 2 * np.sum(Y * y_pred_rounded) /(2 *np.sum(Y * y_pred_rounded) + np.sum(not_Y * y_pred_rounded) + np.sum(Y * not_y_pred_rounded) + +1e-10),
-            "precision": np.sum(Y * y_pred_rounded) / (np.sum(Y * y_pred_rounded) + np.sum(not_Y * y_pred_rounded) +1e-10),
-            "recall": np.sum(Y * y_pred_rounded) / (np.sum(Y * y_pred_rounded) + np.sum( Y * not_y_pred_rounded) +1e-10)
-        }
-        return metrics
+        if y_pred_rounded is None:
+            self.metrics = {"loss": -np.mean(np.sum(Y * np.log(y_pred + 1e-9), axis=1))}
+        else:
+
+            self.metrics = {
+                "loss": -np.mean(np.sum(Y * np.log(y_pred + 1e-9), axis=1)),
+                "sk_loss": log_loss(Y, y_pred),
+                "accuracy": accuracy_score(Y, y_pred_rounded)}
+        return self.metrics
             
     def __str__(self):
         description = f"NN with optimizer{str(self.optimizer)}.\n"

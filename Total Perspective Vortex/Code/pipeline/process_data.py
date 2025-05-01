@@ -1,5 +1,6 @@
 import numpy as np
 import os
+from matplotlib import pyplot as plt
 import random
 from mne import  channels, io, events_from_annotations, Epochs, time_frequency, Annotations, concatenate_raws
 from mne.preprocessing import ICA, create_eog_epochs
@@ -60,12 +61,21 @@ class ProcessData():
         standard (str): Standard montage to be used (e.g., "standard_1005").
         excluded_channels (list): List of channels to be excluded from the montage.
         n_components (int): Number of components to be used in the ICA."""
+        self.n_components = n_components
         # Step 1: Define the standard 10-10 montage
-        self.montage = channels.make_standard_montage(standard)
+        montage_std = channels.make_standard_montage(standard)
         # Step 2: Remove excluded channels
         if excluded_channels is not None:
-            self.ch_names = [ch for ch in self.montage.ch_names if ch not in excluded_channels]
-        self.n_components = n_components
+            self.ch_names = [ch for ch in montage_std.ch_names if ch not in excluded_channels]
+        # Step 2: Remove excluded channels
+        ch_names = [ch for ch in montage_std.ch_names if ch not in excluded_channels]
+        # Get the positions dictionary and filter it
+        filtered_pos = {ch: pos for ch, pos in montage_std.get_positions()['ch_pos'].items()
+                        if ch in ch_names}
+        self.montage = channels.make_dig_montage(ch_pos=filtered_pos, coord_frame='head')
+        self.montage.plot()
+        plt.suptitle("standard_1020")       # Add title using matplotlib
+        plt.show()
         return 
     
     def set_filter_freq (self, lfreq = 1, hfreq = 30):
@@ -111,7 +121,7 @@ class ProcessData():
         new_annotations = Annotations(onset=onsets, duration=durations, description=descriptions)
         # Set them to the raw object
         raw.set_annotations(new_annotations)
-        raw.plot_sensors(block = True ,show_names=True)
+        #raw.plot_sensors(block = True ,show_names=True)
 
         return raw
 

@@ -34,7 +34,8 @@ if list_files is None or len(list_files) == 0:
     print("No files opened")
     sys.exit(1)
 my_process_data = ProcessData()
-my_process_data.config_montage()
+excluded_channels = ['AF9', 'AF10','AF5', 'AF1','AF2', 'AF6','F9', 'F10','FT9', 'FT10','A1', 'A2','M1', 'M2','TP9', 'TP10','P9', 'P10','PO5', 'PO1','PO2', 'PO6','PO9', 'PO10','O9', 'O10']
+my_process_data.config_montage(excluded_channels=excluded_channels)
 
 for item in list_files:
     if os.path.isdir(item):

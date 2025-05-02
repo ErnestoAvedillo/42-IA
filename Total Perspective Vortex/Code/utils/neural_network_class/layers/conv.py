@@ -7,8 +7,11 @@ from ..optimizer import Optimizer
 
 class Conv2D(Activation):
     def __init__(self, **kwargs):
+        if kwargs.get('model', None) is not None:
+            self.set_model(**kwargs.get("model", None))
+            return
         self.data_shape = kwargs.get("data_shape", None)
-        self.kernel_size = kwargs.get("kernel_size", None)
+        self.kernel_size = kwargs.get("kernel_size", 1)
         self.filters = kwargs.get("filters", 1)
         self.stride = kwargs.get("stride", 1)
         self.padding = kwargs.get("padding", 0)
@@ -38,14 +41,18 @@ class Conv2D(Activation):
                  "padding": self.padding}
         return model
 
-    def set_model(self, model):
-        self.weights = np.array(model["weights"])
-        self.bias = np.array(model["bias"])
-        self.data_shape = model["data_shape"]
-        self.kernel_size = model["kernel_size"]
-        self.filters = model["filters"]
-        self.stride = model["stride"]
-        self.padding = model["padding"]
+    def set_model(self, **kwargs):
+        keys = ["weights", "bias", "data_shape", "kernel_size", "filters", "stride", "padding"]
+        for key in keys:
+            if key not in kwargs:
+                raise ValueError(f"Missing key: {key} in model.")   
+        self.weights = np.array(kwargs.get("weights", None))
+        self.bias = np.array(kwargs.get("bias", None))
+        self.data_shape = kwargs.get("data_shape", None)
+        self.kernel_size = kwargs.get("kernel_size", None)
+        self.filters = kwargs.get("filters", None)
+        self.stride = kwargs.get("stride", None)
+        self.padding = kwargs.get("padding", None)
 
     def get_weights(self):
         return self.weights

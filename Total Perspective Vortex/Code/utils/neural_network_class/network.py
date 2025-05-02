@@ -137,7 +137,7 @@ class Network:
         self.std = np.array(model["std"])
         self.learning_rate = model["learning_rate"]
         for layer in model["layers"]:
-            new_layer= Dense(model = layer)
+            new_layer= Layer(layer_type = layer['layer_type'],**layer['model'])
             self.layers.append(new_layer)
 
     def save_model(self, file_name):

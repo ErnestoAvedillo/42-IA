@@ -6,18 +6,18 @@ from .layers.input import Input
 
 class Layer():
     def __init__(self, layer_type = None, **kwargs):
-        layers ={
+        self.layers ={
             'dense': Dense,
             'conv': Conv2D,
             'flattend': Flattend,
             'max_pool': MaxPool,
             'input': Input
         }
-        if layer_type not in layers:
+        if layer_type not in self.layers:
             raise ValueError(f"Invalid layer_type: {layer_type}.")
         self.layer_type = layer_type
         #self.layer = layers[layer_type](**kwargs)
-        self.layer = layers[layer_type](**kwargs)
+        self.layer = self.layers[layer_type](**kwargs)
 
     def forward_calculation(self, X):
         return self.layer.forward_calculation(X)
@@ -38,7 +38,9 @@ class Layer():
         return self.layer.get_delta()
     
     def get_model(self):
-        return self.layer.get_model()
+        model ={"layer_type": self.layer_type,
+                "model": self.layer.get_model()}
+        return model
 
     def calculate_delta_on_input(self):
         return self.layer.calculate_delta_on_input()
@@ -49,8 +51,9 @@ class Layer():
     def get_output_shape(self):
         return self.layer.get_output_shape()
     
-    def set_model(self, model):
-        return self.layer.set_model(model)
+    def set_model(self, **model):
+        self.layer.set_model(**model)
+        return
 
     def set_optimizer(self, optimizer):
         return self.layer.set_optimizer(optimizer)

@@ -184,3 +184,30 @@ class CSPModel(TransformerMixin, BaseEstimator):
         else:
             raise Exception("Not Handled")
         return ix
+    
+    def get_params(self, deep = True):
+        params = {"super_CSPModel":super.get_params(deep),
+                  "n_components":self.n_components,
+                  "log":self.log,
+                  "cov_est":self.cov_est,
+                  "transform_into":self.transform_into,
+                  "classes_":self._classes,
+                  "mean_":self.mean_,
+                  "std_":self.std_,
+                  "filters_":self.filters_}
+        return params
+    def set_params(self, **params):
+        required_params = ["super_CSPModel", "n_components", "log", "cov_est", "transform_into", "classes_", "mean_", "std_", "filters_"]
+        for param in required_params:
+            if param not in params:
+                raise KeyError(f"Missing parameter: {param}")
+        super().set_params(params.get("super_CSPModel"))
+        self.n_components = params.get("n_components")
+        self.log = params.get("log")
+        self.cov_est = params.get("cov_est")
+        self.transform_into = params.get("transform_into")
+        self._classes = params.get("classes_")
+        self.mean_ = params.get("mean_")
+        self.std_ = params.get("std_")
+        self.filters_ = params.get("filters_")
+    

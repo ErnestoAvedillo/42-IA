@@ -12,7 +12,7 @@ from mne.decoding import CSP
 from sklearn.decomposition import PCA
 from sklearn.metrics import classification_report, accuracy_score
 from .cov import CalculateCovariance as cov, Normalize as norm
-
+import json
 
 if len(sys.argv) < 2:
     print("plese enter list to be analysed.")
@@ -39,7 +39,7 @@ if list_files is None or len(list_files) == 0:
     sys.exit(1)
 my_process_data = ProcessData()
 excluded_channels = ['AF9', 'AF10','AF5', 'AF1','AF2', 'AF6','F9', 'F10','FT9', 'FT10','A1', 'A2','M1', 'M2','TP9', 'TP10','P9', 'P10','PO5', 'PO1','PO2', 'PO6','PO9', 'PO10','O9', 'O10']
-my_process_data.config_montage(n_components = 5)
+my_process_data.config_montage(n_components = 5, excluded_channels = excluded_channels)
 
 for item in list_files:
     if os.path.isdir(item):
@@ -109,6 +109,22 @@ print(f"Accuracy val: {metrics['accuracy']}")
 y_pred, metrics = network.predict(X_test, y_test_NN)
 print(classification_report(y_test_NN, y_pred))
 print(f"Accuracy test: {accuracy_score(y_test_NN, y_pred)}")
+
+if type == "csp":
+    bci_model = {"type": type,
+                "csp": csp.get_params(),
+                "csp_filters": csp.filters_.tolist(),
+                "csp_patterns": csp.patterns_.tolist(),
+                "output_len": output_len,
+                "outputs": outputs.tolist(),
+                "network": network.get_model()}
+else:
+    bci_model = {"type": type,
+                "output_len": output_len,
+                "outputs": outputs.tolist(),
+                "network": network.get_model()}
+with open("bci_Bonus.json", "w") as archivo:
+    json.dump(bci_model, archivo)
 
 """
 import tensorflow as tf

@@ -54,7 +54,7 @@ class ProcessData():
             self.files.append(filename)
         return
     
-    def config_montage(self, standard = "standard_1020", excluded_channels = None, n_components = 0.95):
+    def config_montage(self, standard = "standard_1020", excluded_channels = None, n_components = 0.95, plot_montage = False):
         """
         Configure the montage for the EEG data.
         Parameters:
@@ -67,15 +67,15 @@ class ProcessData():
         # Step 2: Remove excluded channels
         if excluded_channels is not None:
             self.ch_names = [ch for ch in montage_std.ch_names if ch not in excluded_channels]
-        # Step 2: Remove excluded channels
-        ch_names = [ch for ch in montage_std.ch_names if ch not in excluded_channels]
+        else:
+            self.ch_names = montage_std.ch_names
         # Get the positions dictionary and filter it
-        filtered_pos = {ch: pos for ch, pos in montage_std.get_positions()['ch_pos'].items()
-                        if ch in ch_names}
+        filtered_pos = {ch: pos for ch, pos in montage_std.get_positions()['ch_pos'].items() if ch in self.ch_names}
         self.montage = channels.make_dig_montage(ch_pos=filtered_pos, coord_frame='head')
-        self.montage.plot()
-        plt.suptitle("standard_1020")       # Add title using matplotlib
-        plt.show()
+        if plot_montage:
+            self.montage.plot()
+            plt.suptitle("standard_1020")       # Add title using matplotlib
+            plt.show()
         return 
     
     def set_filter_freq (self, lfreq = 1, hfreq = 30):
@@ -142,8 +142,9 @@ class ProcessData():
             self.mask = np.array(np.random.rand(len(self.files)) < percentage)
             if self.mask.sum() == 0:
                 raise ValueError("The list of array files is empty.")
-            while self.mask.sum() == 0 or self.mask.sum() == len(self.files):
-                self.mask = np.array(np.random.rand(len(self.files)) < percentage)
+            if percentage < 1:
+                while self.mask.sum() == 0 or self.mask.sum() == len(self.files):
+                    self.mask = np.array(np.random.rand(len(self.files)) < percentage)
         for i in range(len(self.files)):
             if self.mask[i]:
                 train_model.append(self.files[i])

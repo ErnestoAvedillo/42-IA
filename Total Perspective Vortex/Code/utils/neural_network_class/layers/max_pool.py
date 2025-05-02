@@ -19,13 +19,25 @@ class MaxPool(Activation):
     def get_model(self):
         model = {
             "kernel" : self.kernel,
+            "data_shape": self.data_shape,
+            "filters": self.filters,
+            "shape_h": self.shape_h,
+            "shape_v": self.shape_v,
         #    "step_v" : self.step_v,
         #    "step_h" : self.step_h
         }
         return model
     
     def set_model(self, **kwargs):
+        keys = ["kernel", "data_shape", "filters", "shape_h", "shape_v"]
+        for key in keys:
+            if key not in kwargs:
+                raise ValueError(f"{key} is required")
         self.kernel = kwargs.get("kernel", 2)
+        self.data_shape = kwargs.get("data_shape", None)
+        self.filters = kwargs.get("filters", 1)
+        self.shape_h = kwargs.get("shape_h", self.data_shape[0] // self.kernel + int(self.data_shape[0] % self.kernel > 0))
+        self.shape_v = kwargs.get("shape_v", self.data_shape[1] // self.kernel + int(self.data_shape[1] % self.kernel > 0))
         #self.step_v = kwargs.get("step_v", 1)
         #self.step_h = kwargs.get("step_h", 1)
         return

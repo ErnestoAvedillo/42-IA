@@ -38,12 +38,16 @@ class Dense(Activation):
                  "input_shape": self.input_shape}
         return model
 
-    def set_model(self, model):
-        self.set_activation(type = model["activation"])
-        self.weights = np.array(model["weights"])
-        self.bias = np.array(model["bias"])
-        self.data_shape = model["data_shape"]
-        self.input_shape = model["input_shape"]
+    def set_model(self, **kwargs):
+        keys = ["activation", "weights", "bias", "data_shape", "input_shape"]
+        for key in keys:
+            if key not in kwargs:
+                raise ValueError(f"Missing key: {key} in model.")
+        self.set_activation(type = kwargs.get("activation", None))
+        self.weights = np.array(kwargs.get("weights", None))
+        self.bias = np.array(kwargs.get("bias", None))
+        self.data_shape = kwargs.get("data_shape", None)
+        self.input_shape = kwargs.get("input_shape", None)
 
     def get_weights(self):
         return self.weights

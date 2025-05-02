@@ -3,6 +3,10 @@ import numpy as np
 class Input:
     def __init__(self, **kwargs):
         incomming_shape = kwargs.get("data_shape", None)
+        if incomming_shape is None:
+            self.data_shape = None
+            self.filters = None
+            return
         if len(incomming_shape) == 1:
             self.data_shape = incomming_shape
             self.filters = None
@@ -11,9 +15,17 @@ class Input:
             self.filters = incomming_shape[0]
 
     def get_model(self):
-        return None
+        model = {"data_shape": self.data_shape,
+                 "filters": self.filters}
+        return model
     
-    def set_model(self, model):
+    def set_model(self, **kwargs):
+        if "data_shape" not in kwargs:
+            raise ValueError("data_shape is required")
+        if "filters" not in kwargs:
+            raise ValueError("filters is required")
+        self.data_shape = kwargs["data_shape"]
+        self.filters = kwargs["filters"]
         return
     
     def set_optimizer(self, optimizer):

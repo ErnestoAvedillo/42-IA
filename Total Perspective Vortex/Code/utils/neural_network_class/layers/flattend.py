@@ -7,9 +7,17 @@ class Flattend:
         self.delta = None
 
     def get_model(self):
-        return None
+        model = {"data_shape": self.data_shape,
+                 "filters": self.filters}
+        return model
     
-    def set_model(self, model):
+    def set_model(self, **kwargs):
+        if "data_shape" not in kwargs:
+            raise ValueError("data_shape is required")
+        if "filters" not in kwargs:
+            raise ValueError("filters is required")
+        self.data_shape = kwargs.get("data_shape",None)
+        self.filters = kwargs.get("filters",None)
         return
     
     def set_optimizer(self, optimizer):

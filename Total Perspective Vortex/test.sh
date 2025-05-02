@@ -60,16 +60,17 @@ elif [ "$1" == "3" ]; then
     fi
     if [ "$2" == "1" ]; then
         echo "Running bonus test 1 for left versus right hand for one subject"
-        python -m Code.Bonus.mybci "[1]" "[3,7,11]" "csp"
+        python -m Code.Bonus.mybci "[1,2]" "[3,7,11]" "csp"
+        python -m Code.Bonus.mybci_predict "[1]" "[3]"
     elif [ "$2" == "2" ]; then
         echo "Running bonus test 1 for imaginary left versus right hand for one subjects"
         python -m Code.Bonus.mybci "[1]" "[4,8,12]" "csp"
     elif [ "$2" == "3" ]; then
         echo "Running bonus test 1 for both hands versus feet for one subject"
-        python -m Code.Bonus.mybci "[1]" "[5,9,13]" "csp" --plot
+        python -m Code.Bonus.mybci "[1]" "[5,9,13]" "csp" 
     elif [ "$2" == "4" ]; then
         echo "Running bonus test 1 for imaginary both hands versus feet for one subject"
-        python -m Code.Bonus.mybci "[1]" "[6,10,14]" "csp" --plot
+        python -m Code.Bonus.mybci "[1]" "[6,10,14]" "csp" 
     elif [ "$2" == "5" ]; then
         echo "Running bonus test 1 for left versus right hand for several subjects"
         python -m Code.Bonus.mybci "[1,2,3,4]" "[3,7,11]" "csp"
@@ -78,10 +79,10 @@ elif [ "$1" == "3" ]; then
         python -m Code.Bonus.mybci "[1,2,3,4]" "[4,8,12]" "csp"
     elif [ "$2" == "7" ]; then
         echo "Running bonus test 1 for both hands versus feet for several subjects"
-        python -m Code.Bonus.mybci "[1,2,3,4]" "[5,9,13]" "csp" --plot
+        python -m Code.Bonus.mybci "[1,2,3,4]" "[5,9,13]" "csp"
     elif [ "$2" == "8" ]; then
         echo "Running bonus test 1 for imaginary both hands versus feet for several subjects"
-        python -m Code.Bonus.mybci "[1,2,3,4]" "[6,10,14]" "csp" --plot
+        python -m Code.Bonus.mybci "[1,2,3,4]" "[4,6,8,10,12,14]" "csp" 
     fi
 elif [ "$1" == "4" ]; then
     if [ -z "$2" ]; then
@@ -104,6 +105,9 @@ elif [ "$1" == "4" ]; then
     elif [ "$2" == "5" ]; then
         echo "Running analysis test 1 for left versus right hand for several subjects"
         python -m Code.Analysis.mybci "[1,2,3,4]" "[3,7,11]"
+    elif [ "$2" == "6" ]; then
+        echo "Running analysis test 1 for left versus right hand real and imaginary for several subjects"
+        python -m Code.Analysis.mybci "[1,2,3,4,5,6,7,8]" "[3,5,7,9,11,13]"
     fi
 else
     echo "Invalid test part. Use 1, 2,  3 or 4."

@@ -1,5 +1,6 @@
 __pycache__
 *.json
+*.pkl
 .vscode
 data_cleaned.csv
 data_test.csv

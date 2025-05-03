@@ -31,21 +31,19 @@ from sklearn.metrics import accuracy_score, precision_recall_fscore_support, cla
 from sklearn.linear_model import LogisticRegression
 class My_Pipeline():
     def __init__(self, n_components = 4):
-        self.weights = None
         self.n_components = n_components
         self.pipeline = None
         self.csp = None
-        self.mycsp = None
         self.learning = None
 
     def make_pipeline(self, classifier = None):
         self.learning = classifier
         #("csp",CSPModel (n_components = self.n_components)),
         #self.csp = CSP (n_components = 4, reg = None, log = None, transform_into = "average_power", rank = {'eeg':64}, norm_trace = False)
-        self.csp = CSP (n_components = 4, reg = None, log = True, norm_trace = False)
-        self.mycsp = CSPModel (n_components = 4)
+        #self.csp = CSP (n_components = 4, reg = None, log = True, norm_trace = False)
+        self.csp = CSPModel (n_components = 4)
         self.pipeline = Pipeline([
-            ("csp",self.mycsp),
+            ("csp",self.csp),
             #('reshape',ReshapeTransformer()),
             #("Debugger",DebugTransformer()),
             #("scaler", StandardScaler()),
@@ -77,13 +75,3 @@ class My_Pipeline():
         print(f"Precision: {precision:.4f}, Recall: {recall:.4f}, F1-score: {f1_score:.4f}")
         return results
 
-    def get_weights(self):
-        pipeline_params = {}
-        for key, value in self.pipeline.get_params().items():
-            pipeline_params[key] = value
-        return pipeline_params
-    
-    def set_weights(self, **params):
-        for key, value in params.items():
-            value.set_params(**{key: value})
-        return self.pipeline

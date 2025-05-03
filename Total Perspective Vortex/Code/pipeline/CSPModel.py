@@ -14,7 +14,7 @@ class CSPModel(TransformerMixin, BaseEstimator):
     https://github.com/mne-tools/mne-python/blob/f87be3000ce333ff9ccfddc45b47a2da7d92d69c/mne/decoding/csp.py#L565
     """
     def __init__(self, n_components=4, log=None, cov_est='concat',
-                 transform_into='average_power'):
+                 transform_into='average_power',classes = None, filters = None, mean = 0, std = 0):
         """
         Initializing the different optional parameters.
         Some checks might not be full, and all options not implemented.
@@ -36,10 +36,10 @@ class CSPModel(TransformerMixin, BaseEstimator):
         self.cov_est = cov_est
 
         self.transform_into = transform_into
-        self._classes = 0
-        self.filters_ = None
-        self.mean_ = 0
-        self.std_ = 0
+        self._classes = classes
+        self.filters_ = filters
+        self.mean_ = mean
+        self.std_ = std
 
     def _calc_covariance(self, X, ddof=0):
         """
@@ -186,28 +186,26 @@ class CSPModel(TransformerMixin, BaseEstimator):
         return ix
     
     def get_params(self, deep = True):
-        params = {"super_CSPModel":super.get_params(deep),
-                  "n_components":self.n_components,
+        params = {"n_components":self.n_components,
                   "log":self.log,
                   "cov_est":self.cov_est,
                   "transform_into":self.transform_into,
-                  "classes_":self._classes,
-                  "mean_":self.mean_,
-                  "std_":self.std_,
-                  "filters_":self.filters_}
+                  "classes":self._classes,
+                  "mean":self.mean_,
+                  "std":self.std_,
+                  "filters":self.filters_}
         return params
     def set_params(self, **params):
         required_params = ["super_CSPModel", "n_components", "log", "cov_est", "transform_into", "classes_", "mean_", "std_", "filters_"]
         for param in required_params:
             if param not in params:
                 raise KeyError(f"Missing parameter: {param}")
-        super().set_params(params.get("super_CSPModel"))
         self.n_components = params.get("n_components")
         self.log = params.get("log")
         self.cov_est = params.get("cov_est")
         self.transform_into = params.get("transform_into")
-        self._classes = params.get("classes_")
-        self.mean_ = params.get("mean_")
-        self.std_ = params.get("std_")
-        self.filters_ = params.get("filters_")
+        self._classes = params.get("classes")
+        self.mean_ = params.get("mean")
+        self.std_ = params.get("std")
+        self.filters_ = params.get("filters")
     

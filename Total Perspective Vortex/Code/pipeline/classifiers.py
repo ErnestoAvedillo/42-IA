@@ -87,3 +87,78 @@ class Classifier:
         self.classifier_key = classifier
         self.classifier_type = self.dict_classifiers[classifier]
         return self.classifier_type
+    
+    def get_model(self):
+        """
+        Returns the classifier model.
+        
+        Args:
+            None
+        
+        Returns:
+            object: The classifier model.
+        """
+        
+        return self.classifier_type
+
+    def get_coefficients(self):
+        """
+        Returns the coefficients of the classifier if available.
+
+        Returns:
+            np.ndarray or None: The coefficients or feature importances, if supported.
+        """
+        if not hasattr(self, 'classifier_type'):
+            raise ValueError("Classifier not set. Use set_classifier() first.")
+        
+        clf = self.classifier_type
+
+        # Handle OneVsOne and OneVsRest wrappers
+        if isinstance(clf, (OneVsOneClassifier, OneVsRestClassifier)):
+            # Get underlying estimator
+            base_estimator = clf.estimator
+        else:
+            base_estimator = clf
+
+        # Linear models like SVC, LogisticRegression, LDA
+        if hasattr(base_estimator, 'coef_'):
+            return base_estimator.coef_
+
+        # Tree-based models like DecisionTree and RandomForest
+        elif hasattr(base_estimator, 'feature_importances_'):
+            return base_estimator.feature_importances_
+
+        else:
+            raise NotImplementedError(f"Coefficient extraction not supported for classifier: {type(base_estimator).__name__}")
+        
+    def set_coefficients(self, coefs):
+        """
+        Manually sets the coefficients or feature importances for supported classifiers.
+
+        Args:
+            coefs (np.ndarray): The coefficients or feature importances to set.
+        
+        Raises:
+            ValueError or NotImplementedError: If the classifier doesn't support manual coefficient setting.
+        """
+        if not hasattr(self, 'classifier_type'):
+            raise ValueError("Classifier not set. Use set_classifier() first.")
+        
+        clf = self.classifier_type
+
+        # Handle OneVsOne and OneVsRest wrappers
+        if isinstance(clf, (OneVsOneClassifier, OneVsRestClassifier)):
+            base_estimator = clf.estimator
+        else:
+            base_estimator = clf
+
+        # Set .coef_ for linear models
+        if hasattr(base_estimator, 'coef_'):
+            if not hasattr(base_estimator, 'classes_'):
+                raise ValueError("You must fit the model before setting coefficients.")
+            base_estimator.coef_ = coefs
+        # Set feature_importances_ for tree-based models
+        elif hasattr(base_estimator, 'feature_importances_'):
+            base_estimator.feature_importances_ = coefs
+        else:
+            raise NotImplementedError(f"Setting coefficients not supported for classifier: {type(base_estimator).__name__}")

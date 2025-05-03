@@ -115,6 +115,8 @@ if type == "csp":
                 "csp": csp.get_params(),
                 "csp_filters": csp.filters_.tolist(),
                 "csp_patterns": csp.patterns_.tolist(),
+                "csp_means": csp.means_.tolist(),
+                "csp_std": csp.std_.tolist(),
                 "output_len": output_len,
                 "outputs": outputs.tolist(),
                 "network": network.get_model()}

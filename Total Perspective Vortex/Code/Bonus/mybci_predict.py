@@ -55,6 +55,8 @@ try:
         csp_model = model.get("csp",None)
         csp_patterns = model.get("csp_patterns",None)
         csp_filters = model.get("csp_filters",None)
+        csp_means = model.get("csp_means",None)
+        csp_std = model.get("csp_std",None)
     output_len = model.get("output_len")
     outputs = model.get("outputs")
     network_model = model.get("network")
@@ -69,7 +71,9 @@ elif type == "norm":
 elif type == "csp":
     csp = CSP(n_components=63, reg=None, log=True, norm_trace=False)
     csp.set_params(**csp_model)
-    csp.filters_ = np.array(csp_filters)
+    csp.means_ = np.array(csp_means)
+    csp.std_ = np.array(csp_model["csp_std"])
+    csp.filters_ = np.array(csp_std)
     csp.patterns_ = np.array(csp_patterns)
     X_test = csp.transform(X_test)  
 else:

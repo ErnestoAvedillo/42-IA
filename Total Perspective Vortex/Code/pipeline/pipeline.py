@@ -1,34 +1,9 @@
-import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
-from mne import  channels, io, events_from_annotations, Epochs, time_frequency, Annotations, concatenate_raws
-from mne.preprocessing import ICA, create_eog_epochs
-from .event_type import Event_Type
-from .classifiers import Classifier
 from .CSPModel import CSPModel
-from mne.decoding import (
-    CSP,
-    GeneralizingEstimator,
-    LinearModel,
-    Scaler,
-    SlidingEstimator,
-    Vectorizer,
-    cross_val_multiscore,
-    PSDEstimator
-)
-from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
-from sklearn.decomposition import KernelPCA
-from mne.datasets import sample
+from mne.decoding import CSP
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
-from sklearn.svm import SVC
-from sklearn.model_selection import train_test_split, cross_val_score, GridSearchCV, ShuffleSplit
-from sklearn.multiclass import OneVsOneClassifier, OneVsRestClassifier
-from sklearn.ensemble import RandomForestClassifier
-from .reshape_transformer import ReshapeTransformer
-from .Debugger import DebugTransformer
+from sklearn.model_selection import cross_val_score, ShuffleSplit
 from sklearn.metrics import accuracy_score, precision_recall_fscore_support, classification_report
-from sklearn.linear_model import LogisticRegression
 class My_Pipeline():
     def __init__(self, n_components = 4):
         self.n_components = n_components
@@ -37,12 +12,6 @@ class My_Pipeline():
         self.learning = None
 
     def make_pipeline(self, classifier = None):
-        from pyriemann.estimation import Covariances
-        covs = Covariances(estimator='lwf')#.transform(X)  # shape: (n_trials, n_channels, n_channels)
-
-        from pyriemann.tangentspace import TangentSpace
-        ts = TangentSpace()#.fit_transform(covs)
-
         self.learning = classifier
         #("csp",CSPModel (n_components = self.n_components)),
         #self.csp = CSP (n_components = 4, reg = None, log = None, transform_into = "average_power", rank = {'eeg':64}, norm_trace = False)
@@ -53,8 +22,6 @@ class My_Pipeline():
             ("scaler", StandardScaler()),
             #('reshape',ReshapeTransformer()),
             #("Debugger",DebugTransformer()),
-            #("covs", covs),
-            #("ts", ts),
             ('classifier',self.learning)
             ])
 

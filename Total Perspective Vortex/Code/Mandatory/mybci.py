@@ -27,8 +27,10 @@ if classifier not in classifiers:
     print(f"The classifier {classifier} is not implemented. See below the accepted list.")
     for item in classifiers:
         print(item)
-root = "/home/ernesto/mne_data/physionet/files/eegmmidb/1.0.0/"
-#root = "/home/eavedill/sgoinfre/mne_data/files/"
+
+root = os.getenv('MNE_DATA')
+print (f"searching data in folder {root}")
+
 list_files = create_list_files(subjects=subjects, runs=runs, root=root)
 
 if list_files is None or len(list_files) == 0:
@@ -44,7 +46,7 @@ for item in list_files:
     else:
         my_process_data.add_file(filename = item)
 
-train_model, test_model  = my_process_data.define_test_train(percentage=0.8)
+train_model, test_model  = my_process_data.define_test_train(percentage=0.9)
 X_train, y_train = my_process_data.generate_data(train_model)
 X_test, y_test = my_process_data.generate_data(test_model)
 my_classifier = Classifier()

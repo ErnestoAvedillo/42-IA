@@ -22,8 +22,11 @@ arg = sys.argv[2]
 # Convert string to list
 runs = ast.literal_eval(arg)  # Safer than eval()
 
-root = "/home/ernesto/mne_data/physionet/files/eegmmidb/1.0.0/"
+#root = "/home/ernesto/mne_data/physionet/files/eegmmidb/1.0.0/"
 #root = "/home/eavedill/sgoinfre/mne_data/files/"
+
+root = os.getenv('MNE_DATA')
+print (f"searching data in folder {root}")
 
 """
 #We can print all montages available in mne

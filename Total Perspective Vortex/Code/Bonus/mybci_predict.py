@@ -28,8 +28,9 @@ arg = sys.argv[2]
 runs = ast.literal_eval(arg)  # Safer than eval()
 
 
-root = "/home/ernesto/mne_data/physionet/files/eegmmidb/1.0.0/"
-#root = "/home/eavedill/sgoinfre/mne_data/files/"
+root = os.getenv('MNE_DATA')
+print (f"searching data in folder {root}")
+
 list_files = create_list_files(subjects=subjects, runs=runs, root=root)
 
 if list_files is None or len(list_files) == 0:
@@ -71,9 +72,9 @@ elif type == "norm":
 elif type == "csp":
     csp = CSP(n_components=63, reg=None, log=True, norm_trace=False)
     csp.set_params(**csp_model)
-    csp.means_ = np.array(csp_means)
-    csp.std_ = np.array(csp_model["csp_std"])
-    csp.filters_ = np.array(csp_std)
+    csp.mean_ = np.array(csp_means)
+    csp.std_ = np.array(csp_std)
+    csp.filters_ = np.array(csp_filters)
     csp.patterns_ = np.array(csp_patterns)
     X_test = csp.transform(X_test)  
 else:

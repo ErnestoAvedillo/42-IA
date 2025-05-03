@@ -30,8 +30,9 @@ runs = ast.literal_eval(arg)  # Safer than eval()
 # Get the argument (excluding the script name itself)
 type = sys.argv[3]
 
-root = "/home/ernesto/mne_data/physionet/files/eegmmidb/1.0.0/"
-#root = "/home/eavedill/sgoinfre/mne_data/files/"
+root = os.getenv('MNE_DATA')
+print (f"searching data in folder {root}")
+
 list_files = create_list_files(subjects=subjects, runs=runs, root=root)
 
 if list_files is None or len(list_files) == 0:
@@ -61,7 +62,7 @@ elif type == "norm":
     X_train = X_train.reshape(-1, 1, X_train.shape[1], X_test.shape[2])
     X_test = X_test.reshape(-1, 1, X_test.shape[1], X_test.shape[2])
 elif type == "csp":
-    csp = CSP(n_components=63, reg=None, log=True, norm_trace=False)
+    csp = CSP(n_components=4, reg=None, log=True, norm_trace=False)
     csp.fit(X_train, y_train)
     X_train = csp.transform(X_train)
     X_test = csp.transform(X_test)  
@@ -115,7 +116,7 @@ if type == "csp":
                 "csp": csp.get_params(),
                 "csp_filters": csp.filters_.tolist(),
                 "csp_patterns": csp.patterns_.tolist(),
-                "csp_means": csp.means_.tolist(),
+                "csp_means": csp.mean_.tolist(),
                 "csp_std": csp.std_.tolist(),
                 "output_len": output_len,
                 "outputs": outputs.tolist(),

@@ -37,6 +37,12 @@ class My_Pipeline():
         self.learning = None
 
     def make_pipeline(self, classifier = None):
+        from pyriemann.estimation import Covariances
+        covs = Covariances(estimator='lwf')#.transform(X)  # shape: (n_trials, n_channels, n_channels)
+
+        from pyriemann.tangentspace import TangentSpace
+        ts = TangentSpace()#.fit_transform(covs)
+
         self.learning = classifier
         #("csp",CSPModel (n_components = self.n_components)),
         #self.csp = CSP (n_components = 4, reg = None, log = None, transform_into = "average_power", rank = {'eeg':64}, norm_trace = False)
@@ -44,21 +50,23 @@ class My_Pipeline():
         self.csp = CSPModel (n_components = 4)
         self.pipeline = Pipeline([
             ("csp",self.csp),
+            ("scaler", StandardScaler()),
             #('reshape',ReshapeTransformer()),
             #("Debugger",DebugTransformer()),
-            #("scaler", StandardScaler()),
+            #("covs", covs),
+            #("ts", ts),
             ('classifier',self.learning)
             ])
 
-    def train_model(self,X,y):
-        X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.2, random_state=42)
+    def train_model(self,X_train,y_train):
+        #X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.3, random_state=42)
         cv = ShuffleSplit(10, test_size=0.2, random_state=42)
         #self.scores = cross_val_multiscore(self.pipeline, X_train, y_train, cv=cv, n_jobs=None)
         self.scores = cross_val_score(self.pipeline, X_train, y_train, cv=cv, n_jobs=None)
-        print(f"Scores are {self.scores}")
         self.pipeline.fit(X_train, y_train)
-        return self.test_model(X_val,y_val)
-
+        print(f"Pipeline fitted {self.scores}")
+        return
+    
     def test_model(self, X, y):
         y_pred = self.pipeline.predict(X)
         return self.evaluate_prediction(y, y_pred)

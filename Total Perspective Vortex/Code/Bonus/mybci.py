@@ -62,12 +62,20 @@ elif type == "norm":
     X_train = X_train.reshape(-1, 1, X_train.shape[1], X_test.shape[2])
     X_test = X_test.reshape(-1, 1, X_test.shape[1], X_test.shape[2])
 elif type == "csp":
-    csp = CSP(n_components=4, reg=None, log=True, norm_trace=False)
+    #csp = CSP(n_components=4, reg=None, log=True, norm_trace=False)
+    input("Press Enter to continue0...")
+    csp = CSP(n_components=8, reg=None, log=None, rank="full", transform_into="csp_space")
+    input("Press Enter to continue1...")
+
     csp.fit(X_train, y_train)
+    input("Press Enter to continue2...")
     X_train = csp.transform(X_train)
+    print(f"Fitting CSP with {X_train.shape[1]} channels and {X_train.shape[2]} samples")
+    input("Press Enter to continue3...")
     X_test = csp.transform(X_test)  
 else:
     raise ValueError("Invalid type. Choose 'cov', 'norm', or 'csp'.")
+input("Press Enter to continue3...")
 outputs = np.unique(y_train)
 output_len = len(np.unique(y_train))
 y_train_NN = np.zeros((y_train.shape[0], output_len))
@@ -75,8 +83,8 @@ y_test_NN = np.zeros((y_test.shape[0], output_len))
 for i in range(output_len):
     y_train_NN[y_train == outputs[i], i] = 1
     y_test_NN[y_test == outputs[i], i] = 1
-X_train, X_val, y_train_NN, y_val_NN = train_test_split(X_train, y_train_NN, test_size=0.5, random_state=42)
-#X_test, X_val, y_test_NN, y_val_NN = train_test_split(X_test, y_test_NN, test_size=0.5, random_state=42)
+#X_train, X_val, y_train_NN, y_val_NN = train_test_split(X_train, y_train_NN, test_size=0.5, random_state=42)
+X_test, X_val, y_test_NN, y_val_NN = train_test_split(X_test, y_test_NN, test_size=0.5, random_state=42)
 
 network = Network()
 if type == "csp":

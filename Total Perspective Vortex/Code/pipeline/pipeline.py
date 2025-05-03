@@ -1,8 +1,9 @@
 from .CSPModel import CSPModel
-from mne.decoding import CSP
+from mne.decoding import CSP, cross_val_multiscore
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import cross_val_score, ShuffleSplit
+
 from sklearn.metrics import accuracy_score, precision_recall_fscore_support, classification_report
 class My_Pipeline():
     def __init__(self, n_components = 4):

@@ -162,11 +162,14 @@ class CSPModel(TransformerMixin, BaseEstimator):
         # to work properly
         aa = np.linalg.eigvalsh(covs.sum(0))
         if np.any(aa < 0):
-            aux = covs.sum(0) + 1e-6 * np.eye(covs.shape[-1])
+            aux = covs.sum(0) + 1e-5 * np.eye(covs.shape[-1])
         else:
             aux = covs.sum(0)
+        assert (aux > 0).any(), "fon values <0 in cov must be positive definite, got "
+        assert not np.isnan(aux).any(), "NaN values in aux"
+        assert not np.isinf(aux).any(), "Inf values in aux"
         if n_classes == 2:
-            eigen_values, eigen_vectors = linalg.eigh(covs[0], aux)
+            eigen_values, eigen_vectors = linalg.eig(covs[0], aux)
         else:
             raise Exception("Not Handled")
         return eigen_vectors, eigen_values

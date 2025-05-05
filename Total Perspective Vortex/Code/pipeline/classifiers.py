@@ -6,6 +6,8 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.multiclass import OneVsOneClassifier, OneVsRestClassifier
 from sklearn.pipeline import make_pipeline
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+from sklearn.gaussian_process import GaussianProcessClassifier
+from sklearn.gaussian_process.kernels import RBF
 class Classifier:
     def __init__(self, classifier = None):
         """
@@ -15,6 +17,9 @@ class Classifier:
             classifier_type (str): The type of classifier to be used.
         """
         self.dict_classifiers = {
+            "GAUSSIAN":          GaussianProcessClassifier(1.0 * RBF(1.0), random_state=42),
+            "GAUSSIAN_O_Vs_O":   OneVsOneClassifier(GaussianProcessClassifier(1.0 * RBF(1.0), random_state=42)),
+            "GAUSSIAN_O_Vs_R":   OneVsRestClassifier(GaussianProcessClassifier(1.0 * RBF(1.0), random_state=42)),
             "KNN":               KNeighborsClassifier(n_neighbors=5),
             "KNN_O_Vs_O":        OneVsOneClassifier(KNeighborsClassifier(n_neighbors=5)),
             "KNN_O_Vs_R":        OneVsRestClassifier(KNeighborsClassifier(n_neighbors=5)),

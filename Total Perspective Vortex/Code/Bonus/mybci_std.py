@@ -104,7 +104,7 @@ clf = make_pipeline(
     #StandardScaler(),
 #    clasiffier
     MLPClassifier(hidden_layer_sizes=(128, 64, 32, 16), 
-                  activation='logistic',
+                  activation='relu',
                   alpha=1e-3,      # L2 regularization
                   max_iter=200)
 )

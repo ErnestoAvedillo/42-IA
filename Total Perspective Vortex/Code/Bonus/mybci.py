@@ -86,7 +86,6 @@ X_test, X_val, y_test_NN, y_val_NN = train_test_split(X_test, y_test_NN, test_si
 network = Network()
 if type == "csp":
     network.add_layer(layer_type = "input", data_shape = X_train.shape[1:])
-    network.add_layer(layer_type = "dense", input_shape = 160)
 else:
     network.add_layer(layer_type = "input", filters=1, data_shape = X_train.shape[1:])
     network.add_layer(layer_type='conv', kernel_size=4, activation='relu')

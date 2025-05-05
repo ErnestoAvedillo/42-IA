@@ -133,15 +133,8 @@ elif [ "$1" == "4" ]; then
         echo "Running analysis test 1 for left versus right hand real and imaginary for several subjects"
         python3 -m Code.Analysis.mybci "[1,2,3,4,5,6,7,8]" "[3,5,7,9,11,13]"
     fi
-elif [ "$1" == "3" ]; then
-# Bonus tests
-
-   if [ -z "$2" ]; then
-        echo "Usage: $0 2 <test_number[1-8]>"
-        echo "example: $0 2 2 for test 2 of part 2"
-        exit 1
-    fi
 elif  [ "$1" == "5" ]; then
+# Bonus tests alternative
     if [ -z "$2" ]; then
         echo "Usage: $0 4 <test_number[1-2]>"
         echo "example: $0 4 2 for test 2 of part 4"

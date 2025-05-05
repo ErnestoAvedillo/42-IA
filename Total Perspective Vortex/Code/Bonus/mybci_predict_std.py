@@ -48,7 +48,7 @@ for item in list_files:
 test_model, _ = my_process_data.define_test_train(percentage=1)
 X_test, y_test = my_process_data.generate_data(test_model)
 
-my_pipeline = joblib.load('bci_Bonus.pkl')
+my_pipeline = joblib.load('bci_Bonus_std.pkl')
 #classifier = model["classifier"]
 #pipeline_model = model["pipeline_model"]
 #

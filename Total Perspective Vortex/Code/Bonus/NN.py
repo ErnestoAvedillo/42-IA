@@ -1,7 +1,8 @@
 
 import torch, torch.nn as nn
+from sklearn.base import BaseEstimator, TransformerMixin
 
-class SmallCSPCNN(nn.Module):
+class SmallCSPCNN(nn.Module, BaseEstimator, TransformerMixin):
     def __init__(self, n_components, n_times, n_classes):
         super().__init__()
         self.net = nn.Sequential(

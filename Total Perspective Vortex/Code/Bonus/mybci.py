@@ -68,7 +68,7 @@ elif type == "csp":
 
     csp.fit(X_train, y_train)
     X_train = csp.transform(X_train)
-    print(f"Fitting CSP with {X_train.shape[1]} channels and {X_train.shape[2]} samples")
+    print(f"Fitting CSP with {X_train.shape[1]} components")
     X_test = csp.transform(X_test)  
 else:
     raise ValueError("Invalid type. Choose 'cov', 'norm', or 'csp'.")

@@ -63,15 +63,12 @@ elif type == "norm":
     X_test = X_test.reshape(-1, 1, X_test.shape[1], X_test.shape[2])
 elif type == "csp":
     #csp = CSP(n_components=4, reg=None, log=True, norm_trace=False)
-    input("Press Enter to continue0...")
-    csp = CSP(n_components=8, reg=None, log=None, rank="full", transform_into="csp_space")
-    input("Press Enter to continue1...")
+    #csp = CSP(n_components=8, reg=None, log=None, rank="full", transform_into="csp_space")
+    csp = CSP (n_components = 8, reg = None, log = None, transform_into = "average_power", rank = {'eeg':64}, norm_trace = False)
 
     csp.fit(X_train, y_train)
-    input("Press Enter to continue2...")
     X_train = csp.transform(X_train)
     print(f"Fitting CSP with {X_train.shape[1]} channels and {X_train.shape[2]} samples")
-    input("Press Enter to continue3...")
     X_test = csp.transform(X_test)  
 else:
     raise ValueError("Invalid type. Choose 'cov', 'norm', or 'csp'.")

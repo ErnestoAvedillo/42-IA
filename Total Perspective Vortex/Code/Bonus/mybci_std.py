@@ -15,6 +15,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.neural_network import MLPClassifier
 from .NN import SmallCSPCNN
 from ..pipeline.reshape_transformer import ReshapeTransformer
+import torch, torch.nn as nn
 import joblib
 
 if len(sys.argv) < 2:
@@ -31,7 +32,6 @@ arg = sys.argv[2]
 runs = ast.literal_eval(arg)  # Safer than eval()
 
 # Get the argument (excluding the script name itself)
-type = sys.argv[3]
 
 root = os.getenv('MNE_DATA')
 print (f"searching data in folder {root}")
@@ -59,33 +59,58 @@ class FlattenTransformer(BaseEstimator, TransformerMixin):
     def transform(self, X):
         n = X.shape[0]
         return X.reshape(n, -1)
+
 train_model, test_model  = my_process_data.define_test_train(percentage=0.80)
 X_train, y_train = my_process_data.generate_data(train_model)
 X_test, y_test = my_process_data.generate_data(test_model)
 #csp = CSP(n_components=4, reg=None, log=True, norm_trace=False)
-csp = CSP(n_components=8, reg="ledoit_wolf", log=None, rank="full", transform_into="csp_space")
 
-csp.fit(X_train, y_train)
-X_train = csp.transform(X_train)
-X_test = csp.transform(X_test)  
-
+#csp.fit(X_train, y_train)
+#X_train = csp.transform(X_train)
+#X_test = csp.transform(X_test)  
+outputs = np.unique(y_train)
+output_len = len(np.unique(y_train))
+#y_train_NN = np.zeros((y_train.shape[0], output_len))
+#y_test_NN = np.zeros((y_test.shape[0], output_len))
+#for i in range(output_len):
+#    y_train_NN[y_train == outputs[i], i] = 1
+#    y_test_NN[y_test == outputs[i], i] = 1
 #X_train, X_val, y_train_NN, y_val_NN = train_test_split(X_train, y_train_NN, test_size=0.5, random_state=42)
+#X_test, X_val, y_test_NN, y_val_NN = train_test_split(X_test, y_test_NN, test_size=0.5, random_state=42)
 X_test, X_val, y_test, y_val = train_test_split(X_test, y_test, test_size=0.5, random_state=42)
 
-print(f"Data fitted and dvided in: Train {X_train.shape} and test {X_test}")
+
+print(f"Data fitted and dvided in: Train {X_train.shape} and test {X_test.shape}")
+
+#csp = CSP(n_components=8, reg="ledoit_wolf", log=None, rank="full", transform_into="csp_space")
+#csp = CSP(n_components=8, reg=None, log=None, rank="full", transform_into="average_power")
+csp = CSP (n_components = 8, reg = None, log = None, transform_into = "average_power", rank = {'eeg':64}, norm_trace = False)
+
+#clasiffier = nn.Sequential(
+#            nn.Conv1d(8, 16, kernel_size=3, padding=1),
+#            nn.ReLU(),
+#            nn.MaxPool1d(2),
+#            nn.Conv1d(16, 32, 3, padding=1),
+#            nn.ReLU(),
+#            nn.AdaptiveAvgPool1d(1),
+#            nn.Flatten(),
+#            nn.Linear(32, len(np.unique(y_train)))
+#        )
+#clasiffier = SmallCSPCNN(n_components=8, n_times=X_train.shape[2], y_train_NN.shape[1])
 
 clf = make_pipeline(
     csp,                         # yields (n_trials, n_components) features
-    ReshapeTransformer(),
-    StandardScaler(),
-    MLPClassifier(hidden_layer_sizes=(50, ), 
-                  activation='relu',
+    #ReshapeTransformer(),
+    #StandardScaler(),
+#    clasiffier
+    MLPClassifier(hidden_layer_sizes=(128, 64, 32, 16), 
+                  activation='logistic',
                   alpha=1e-3,      # L2 regularization
                   max_iter=200)
 )
 cv = ShuffleSplit(10, test_size=0.2, random_state=42)
 scores = cross_val_multiscore(clf, X_train, y_train, cv=cv, n_jobs=None)
-scores = cross_val_score(clf, X_train, y_train, cv=cv, n_jobs=None)
+#scores = cross_val_score(clf, X_train, y_train, cv=cv, n_jobs=None)
 clf.fit(X_train, y_train)
 
 y_pred = clf.predict(X_test)
@@ -99,4 +124,4 @@ results = [precision, recall, f1_score]
 print(f"Precision: {precision:.4f}, Recall: {recall:.4f}, F1-score: {f1_score:.4f}")
 
 
-joblib.dump(clf, 'bci_Bonus.pkl')
+joblib.dump(clf, 'bci_Bonus_std.pkl')

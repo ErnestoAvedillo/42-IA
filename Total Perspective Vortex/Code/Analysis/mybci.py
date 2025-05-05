@@ -44,7 +44,7 @@ results = {}
 for classifier in my_classifier.get_dict_keys():
     my_classifier.set_classifier(classifier)
     print(f"Classifier: {classifier} --> Classifier type: {my_classifier.get_classifier_type(classifier)}")
-    my_pipeline = My_Pipeline()
+    my_pipeline = My_Pipeline(own_csp=False)
     my_pipeline.make_pipeline(my_classifier.get_classifier())
     train_results = my_pipeline.train_model(X_train, y_train)
     test_results = my_pipeline.test_model(X_test, y_test)

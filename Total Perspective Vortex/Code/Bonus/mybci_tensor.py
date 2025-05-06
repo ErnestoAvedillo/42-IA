@@ -51,7 +51,7 @@ train_model, test_model  = my_process_data.define_test_train(percentage=0.80)
 X_train, y_train = my_process_data.generate_data(train_model)
 X_test, y_test = my_process_data.generate_data(test_model)
 
-csp = CSP(n_components=8, reg=None, log=None, rank="full", transform_into="csp_space")
+csp = CSP(n_components=16, reg=None, log=None, rank="full", transform_into="csp_space")
 #csp = CSP (n_components = 8, reg = None, log = None, transform_into = "average_power", rank = {'eeg':64}, norm_trace = False)
 
 csp.fit(X_train, y_train)

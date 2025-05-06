@@ -145,6 +145,18 @@ elif  [ "$1" == "5" ]; then
         python3 -m Code.Bonus.mybci_std "[1]" "[3,5,7,9,11,13]" "csp"
         python3 -m Code.Bonus.mybci_predict_std "[1]" "[5]"
     fi
+elif  [ "$1" == "6" ]; then
+# Bonus tests alternative
+    if [ -z "$2" ]; then
+        echo "Usage: $0 4 <test_number[1-2]>"
+        echo "example: $0 4 2 for test 2 of part 4"
+        exit 1
+    fi
+    if [ "$2" == "1" ]; then
+        echo "Running bonus test 5 for left versus right hand for one subject"
+        python3 -m Code.Bonus.mybci_tensor "[1]" "[3,5,7,9,11,13]" "csp"
+        #python3 -m Code.Bonus.mybci_predict_std "[1]" "[5]"
+    fi
 else
     echo "Invalid test part. Use 1, 2,  3 or 4."
     exit 1

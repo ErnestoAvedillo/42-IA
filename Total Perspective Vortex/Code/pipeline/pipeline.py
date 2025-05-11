@@ -24,15 +24,12 @@ class My_Pipeline(own_csp=True):
         self.pipeline = Pipeline([
             ("csp",self.csp),
             ("scaler", StandardScaler()),
-            #('reshape',ReshapeTransformer()),
             #("Debugger",DebugTransformer()),
             ('classifier',self.learning)
             ])
 
     def train_model(self,X_train,y_train):
-        #X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.3, random_state=42)
         cv = ShuffleSplit(10, test_size=0.2, random_state=42)
-        #self.scores = cross_val_multiscore(self.pipeline, X_train, y_train, cv=cv, n_jobs=None)
         self.scores = cross_val_score(self.pipeline, X_train, y_train, cv=cv, n_jobs=None)
         self.pipeline.fit(X_train, y_train)
         print(f"Pipeline fitted {self.scores}")

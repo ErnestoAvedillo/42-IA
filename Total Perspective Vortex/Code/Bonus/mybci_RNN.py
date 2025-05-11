@@ -52,29 +52,16 @@ train_model, test_model  = my_process_data.define_test_train(percentage=0.80)
 X_train, y_train = my_process_data.generate_data(train_model)
 X_test, y_test = my_process_data.generate_data(test_model)
 
-#csp = CSP(n_components=16, reg=None, log=None, rank="full", transform_into="csp_space")
-#csp = CSP (n_components = 8, reg = None, log = None, transform_into = "average_power", rank = {'eeg':64}, norm_trace = False)
-
-#csp.fit(X_train, y_train)
-#X_train = csp.transform(X_train)
-#print(f"Fitting CSP with {X_train.shape[1]} components")
-#X_test = csp.transform(X_test)  
-#print(f"Transforming test data with {X_test.shape[1]} components")
-
-
 le = LabelEncoder()
 y_train = le.fit_transform(y_train)
 y_test = le.transform(y_test)
 n_classes = len(le.classes_)
 
-#X_train = X_train.reshape(X_train.shape[0], X_train.shape[1], X_train.shape[2], 1)
-#X_test = X_test.reshape(X_test.shape[0], X_test.shape[1], X_test.shape[2], 1)
 X_test, X_val, y_test, y_val = train_test_split(X_test, y_test, test_size=0.5, random_state=42)
 
 y_train_cat = tf.keras.utils.to_categorical(y_train, n_classes)
 y_val_cat = tf.keras.utils.to_categorical(y_val, n_classes)
 y_test_cat = tf.keras.utils.to_categorical(y_test, n_classes)
-
 
 # Define the model
 model = Sequential()

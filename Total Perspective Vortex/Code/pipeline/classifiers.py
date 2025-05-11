@@ -45,11 +45,6 @@ class Classifier:
             "LR_O_Vs_O":         OneVsOneClassifier(LogisticRegression(solver="liblinear")),
             "LR_O_Vs_R":         OneVsRestClassifier(LogisticRegression(solver="liblinear"))
             }
-#        params_grid = [{'kernel': ['rbf'], 'gamma': [1e-3, 1e-4],
-#                     'C': [1, 10, 100, 1000]},
-#                    {'kernel': ['linear'], 'C': [1, 10, 100, 1000]}]
-#            "": KernelPCA(n_components=5, kernel='rbf', gamma=0.5)
-#            "": GridSearchCV(SVC(kernel='rbf', gamma=0.5, C=0.1), params_grid, cv=9)
  
     def get_dict_keys(self):
         return self.dict_classifiers.keys()

@@ -46,14 +46,6 @@ test_model, _ = my_process_data.define_test_train(percentage=1)
 X_test, y_test = my_process_data.generate_data(test_model)
 
 my_pipeline = joblib.load('bci_Mandatory.pkl')
-#classifier = model["classifier"]
-#pipeline_model = model["pipeline_model"]
-#
-#my_classifier = Classifier()
-#my_classifier.set_classifier(classifier)
-#my_pipeline = My_Pipeline()
-#my_pipeline.make_pipeline(my_classifier.get_classifier())
-#my_pipeline.set_weights(pipeline_model)
 
 test_results = my_pipeline.test_model(X_test, y_test)
 

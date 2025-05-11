@@ -95,6 +95,7 @@ network.add_layer(layer_type = "dense", input_shape = 64)
 network.add_layer(layer_type = "dense", input_shape = 32)
 network.add_layer(layer_type = "dense", input_shape = 16)
 network.add_layer(layer_type = "dense", input_shape = output_len, activation = "softmax")
+#I maintain te comments for the optimizers that I have tested
 #optimizer = Optimizer(optimizer = "sgd", learning_rate = 0.001)
 #optimizer = Optimizer(optimizer = "momentum", learning_rate = 0.001, momentum = 0.9)
 #optimizer = Optimizer(optimizer = "adagrad", learning_rate = 0.01)

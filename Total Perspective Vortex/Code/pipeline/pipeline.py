@@ -45,7 +45,7 @@ class My_Pipeline(own_csp=True):
     
     def evaluate_prediction(self, Y, y_pred):
         print("Classification report:")
-        print(classification_report(Y, y_pred)) 
+        print(classification_report(Y, y_pred, zero_division=0)) 
         print("Accuracy score:")
         print(accuracy_score(Y, y_pred))
         print("Precision, recall, f1-score:")

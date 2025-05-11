@@ -86,5 +86,5 @@ for i in range(output_len):
 network = Network()
 network.set_model(network_model)
 y_pred, metrics = network.predict(X_test, y_test_NN)
-print(classification_report(y_test_NN, y_pred))
+print(classification_report(y_test_NN, y_pred, zero_division=0))
 print(f"Accuracy test: {accuracy_score(y_test_NN, y_pred)}")

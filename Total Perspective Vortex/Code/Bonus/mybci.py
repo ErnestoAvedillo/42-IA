@@ -106,13 +106,13 @@ network.fit(X_train, y_train_NN, X_val, y_val_NN, epochs=500,  optimizer = optim
 network.plot_accuracies()
 network.plot_losses()
 y_pred, metrics  = network.predict(X_train, y_train_NN)
-print(classification_report(y_train_NN, y_pred))
+print(classification_report(y_train_NN, y_pred, zero_division=0))
 print(f"Accuracy train : {accuracy_score(y_train_NN, y_pred)}")
 y_pred, metrics = network.predict(X_val, y_val_NN)
-print(classification_report(y_val_NN, y_pred))
+print(classification_report(y_val_NN, y_pred, zero_division=0))
 print(f"Accuracy val: {metrics['accuracy']}")
 y_pred, metrics = network.predict(X_test, y_test_NN)
-print(classification_report(y_test_NN, y_pred))
+print(classification_report(y_test_NN, y_pred, zero_division=0))
 print(f"Accuracy test: {accuracy_score(y_test_NN, y_pred)}")
 
 if type == "csp":

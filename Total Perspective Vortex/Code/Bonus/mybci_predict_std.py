@@ -61,7 +61,7 @@ my_pipeline = joblib.load('bci_Bonus_std.pkl')
 
 y_pred = my_pipeline.predict(X_test)
 print("Classification report:")
-print(classification_report(y_test, y_pred))
+print(classification_report(y_test, y_pred, zero_division=0))
 print("Accuracy score:")
 print(accuracy_score(y_test, y_pred))
 print("Precision, recall, f1-score:")

@@ -54,7 +54,7 @@ for i in range(5, 50, 5):
 	print("Confusion Matrix:\n", conf_matrix)
 
 	# Classification Report (Precision, Recall, F1-score)
-	report = classification_report(Y_test, predictions)
+	report = classification_report(Y_test, predictions, zero_division=0)
 	print("Classification Report:\n", report)
 	input("Press Enter to continue...")
 

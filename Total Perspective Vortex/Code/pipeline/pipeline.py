@@ -5,8 +5,8 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import cross_val_score, ShuffleSplit
 
 from sklearn.metrics import accuracy_score, precision_recall_fscore_support, classification_report
-class My_Pipeline(own_csp=True):
-    def __init__(self, n_components = 4):
+class My_Pipeline():
+    def __init__(self, own_csp=True, n_components = 4):
         self.n_components = n_components
         self.pipeline = None
         self.csp = None
@@ -19,7 +19,7 @@ class My_Pipeline(own_csp=True):
         if self.own_csp:
             self.csp = CSPModel (n_components = 4)
         else:    
-            self.csp = CSP (n_components = 4, reg = None, log = None, transform_into = "average_power", rank = {'eeg':64}, norm_trace = False)
+            self.csp = CSP (n_components = 4, reg = None, log = None, transform_into = "average_power")
         #self.csp = CSP (n_components = 4, reg = None, log = True, norm_trace = False)
         self.pipeline = Pipeline([
             ("csp",self.csp),

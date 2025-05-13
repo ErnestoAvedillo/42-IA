@@ -46,11 +46,12 @@ for classifier in my_classifier.get_dict_keys():
     print(f"Classifier: {classifier} --> Classifier type: {my_classifier.get_classifier_type(classifier)}")
     my_pipeline = My_Pipeline(own_csp=False)
     my_pipeline.make_pipeline(my_classifier.get_classifier())
-    train_results = my_pipeline.train_model(X_train, y_train)
+    my_pipeline.train_model(X_train, y_train)
+    train_results = my_pipeline.test_model(X_train, y_train)
     test_results = my_pipeline.test_model(X_test, y_test)
     results [classifier] = [train_results, test_results]
 
 print(f"|Clasifier | Validation precision | Test Precision|")
 print(f"|----------|----------------------|---------------|")
 for key , result in results.items():
-    print(f"| {key} | {result[0][0]} | {result[1][0]} |")
+    print(f"| {key} | {result[0][0]:.2f} | {result[1][0]:.2f} |")

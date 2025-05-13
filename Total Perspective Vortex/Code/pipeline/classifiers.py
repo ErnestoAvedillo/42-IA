@@ -35,7 +35,7 @@ class Classifier:
             "SIG_SVM":           SVC(kernel='sigmoid', C=0.1, gamma=0.5, probability=True),
             "SIG_SVM_O_Vs_O":    OneVsOneClassifier(SVC(kernel='sigmoid', C=0.1, gamma=0.5, probability=True)),
             "SIG_SVM_O_Vs_R":    OneVsRestClassifier(SVC(kernel='sigmoid', C=0.1, gamma='scale', probability=True)),
-            "RF":                OneVsOneClassifier(RandomForestClassifier(n_estimators=100, random_state=42)),
+            "RF":                RandomForestClassifier(n_estimators=100, random_state=42),
             "RF_O_Vs_O":         OneVsOneClassifier(RandomForestClassifier(n_estimators=100, random_state=42)),
             "RF_O_Vs_R":         OneVsRestClassifier(RandomForestClassifier(n_estimators=100, random_state=42)),
             "LDA":               LinearDiscriminantAnalysis(),

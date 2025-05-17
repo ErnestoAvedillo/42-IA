@@ -53,7 +53,7 @@ conf_matrix = confusion_matrix(Y, predictions)
 print("Confusion Matrix:\n", conf_matrix)
 
 # Classification Report (Precision, Recall, F1-score)
-report = classification_report(Y, predictions)
+report = classification_report(Y, predictions, zero_division=0)
 print("Classification Report:\n", report)
 
 

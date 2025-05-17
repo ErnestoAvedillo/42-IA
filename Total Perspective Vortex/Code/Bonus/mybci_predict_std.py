@@ -49,19 +49,10 @@ test_model, _ = my_process_data.define_test_train(percentage=1)
 X_test, y_test = my_process_data.generate_data(test_model)
 
 my_pipeline = joblib.load('bci_Bonus_std.pkl')
-#classifier = model["classifier"]
-#pipeline_model = model["pipeline_model"]
-#
-#my_classifier = Classifier()
-#my_classifier.set_classifier(classifier)
-#my_pipeline = My_Pipeline()
-#my_pipeline.make_pipeline(my_classifier.get_classifier())
-#my_pipeline.set_weights(pipeline_model)
-
 
 y_pred = my_pipeline.predict(X_test)
 print("Classification report:")
-print(classification_report(y_test, y_pred))
+print(classification_report(y_test, y_pred, zero_division=0))
 print("Accuracy score:")
 print(accuracy_score(y_test, y_pred))
 print("Precision, recall, f1-score:")

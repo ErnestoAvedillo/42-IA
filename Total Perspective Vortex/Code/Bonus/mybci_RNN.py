@@ -75,14 +75,11 @@ y_train = le.fit_transform(y_train)
 y_test = le.transform(y_test)
 n_classes = len(le.classes_)
 
-#X_train = X_train.reshape(X_train.shape[0], X_train.shape[1], X_train.shape[2], 1)
-#X_test = X_test.reshape(X_test.shape[0], X_test.shape[1], X_test.shape[2], 1)
 X_test, X_val, y_test, y_val = train_test_split(X_test, y_test, test_size=0.5, random_state=42)
 
 y_train_cat = tf.keras.utils.to_categorical(y_train, n_classes)
 y_val_cat = tf.keras.utils.to_categorical(y_val, n_classes)
 y_test_cat = tf.keras.utils.to_categorical(y_test, n_classes)
-
 
 # Define the model
 model = Sequential()
@@ -115,4 +112,4 @@ val_loss, val_acc = model.evaluate(X_test, y_test_cat)
 print(f"Test accuracy: {val_acc:.2%}")
 y_pred = model.predict(X_test)
 y_pred_classes = np.argmax(y_pred, axis=1)
-print(classification_report(y_test, y_pred_classes))
+print(classification_report(y_test, y_pred_classes,zero_division=0))

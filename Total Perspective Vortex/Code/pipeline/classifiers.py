@@ -35,7 +35,7 @@ class Classifier:
             "SIG_SVM":           SVC(kernel='sigmoid', C=0.1, gamma=0.5, probability=True),
             "SIG_SVM_O_Vs_O":    OneVsOneClassifier(SVC(kernel='sigmoid', C=0.1, gamma=0.5, probability=True)),
             "SIG_SVM_O_Vs_R":    OneVsRestClassifier(SVC(kernel='sigmoid', C=0.1, gamma='scale', probability=True)),
-            "RF":                OneVsOneClassifier(RandomForestClassifier(n_estimators=100, random_state=42)),
+            "RF":                RandomForestClassifier(n_estimators=100, random_state=42),
             "RF_O_Vs_O":         OneVsOneClassifier(RandomForestClassifier(n_estimators=100, random_state=42)),
             "RF_O_Vs_R":         OneVsRestClassifier(RandomForestClassifier(n_estimators=100, random_state=42)),
             "LDA":               LinearDiscriminantAnalysis(),
@@ -45,11 +45,6 @@ class Classifier:
             "LR_O_Vs_O":         OneVsOneClassifier(LogisticRegression(solver="liblinear")),
             "LR_O_Vs_R":         OneVsRestClassifier(LogisticRegression(solver="liblinear"))
             }
-#        params_grid = [{'kernel': ['rbf'], 'gamma': [1e-3, 1e-4],
-#                     'C': [1, 10, 100, 1000]},
-#                    {'kernel': ['linear'], 'C': [1, 10, 100, 1000]}]
-#            "": KernelPCA(n_components=5, kernel='rbf', gamma=0.5)
-#            "": GridSearchCV(SVC(kernel='rbf', gamma=0.5, C=0.1), params_grid, cv=9)
  
     def get_dict_keys(self):
         return self.dict_classifiers.keys()

@@ -5,8 +5,8 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import cross_val_score, ShuffleSplit
 
 from sklearn.metrics import accuracy_score, precision_recall_fscore_support, classification_report
-class My_Pipeline(own_csp=True):
-    def __init__(self, n_components = 4):
+class My_Pipeline():
+    def __init__(self, own_csp=True, n_components = 4):
         self.n_components = n_components
         self.pipeline = None
         self.csp = None
@@ -19,20 +19,17 @@ class My_Pipeline(own_csp=True):
         if self.own_csp:
             self.csp = CSPModel (n_components = 4)
         else:    
-            self.csp = CSP (n_components = 4, reg = None, log = None, transform_into = "average_power", rank = {'eeg':64}, norm_trace = False)
+            self.csp = CSP (n_components = 4, reg = None, log = None, transform_into = "average_power")
         #self.csp = CSP (n_components = 4, reg = None, log = True, norm_trace = False)
         self.pipeline = Pipeline([
             ("csp",self.csp),
             ("scaler", StandardScaler()),
-            #('reshape',ReshapeTransformer()),
             #("Debugger",DebugTransformer()),
             ('classifier',self.learning)
             ])
 
     def train_model(self,X_train,y_train):
-        #X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.3, random_state=42)
         cv = ShuffleSplit(10, test_size=0.2, random_state=42)
-        #self.scores = cross_val_multiscore(self.pipeline, X_train, y_train, cv=cv, n_jobs=None)
         self.scores = cross_val_score(self.pipeline, X_train, y_train, cv=cv, n_jobs=None)
         self.pipeline.fit(X_train, y_train)
         print(f"Pipeline fitted {self.scores}")
@@ -45,7 +42,7 @@ class My_Pipeline(own_csp=True):
     
     def evaluate_prediction(self, Y, y_pred):
         print("Classification report:")
-        print(classification_report(Y, y_pred)) 
+        print(classification_report(Y, y_pred, zero_division=0)) 
         print("Accuracy score:")
         print(accuracy_score(Y, y_pred))
         print("Precision, recall, f1-score:")

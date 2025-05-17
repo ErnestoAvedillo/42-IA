@@ -57,6 +57,9 @@ if type == "cov":
     X_train = X_train.reshape(-1, 1, X_train.shape[1], X_test.shape[2])
     X_test = X_test.reshape(-1, 1, X_test.shape[1], X_test.shape[2])
 elif type == "norm":
+    csp = CSP(n_components=8, reg="ledoit_wolf", transform_into = "csp_space")
+    csp.fit(X_train, y_train)
+    pp = csp.transform(X_train)
     X_train, _ = norm(X_train[:,:,:160], y_train)
     X_test, _ = norm(X_test[:,:,:160], y_test)
     X_train = X_train.reshape(-1, 1, X_train.shape[1], X_test.shape[2])
@@ -106,13 +109,13 @@ network.fit(X_train, y_train_NN, X_val, y_val_NN, epochs=500,  optimizer = optim
 network.plot_accuracies()
 network.plot_losses()
 y_pred, metrics  = network.predict(X_train, y_train_NN)
-print(classification_report(y_train_NN, y_pred))
+print(classification_report(y_train_NN, y_pred, zero_division=0))
 print(f"Accuracy train : {accuracy_score(y_train_NN, y_pred)}")
 y_pred, metrics = network.predict(X_val, y_val_NN)
-print(classification_report(y_val_NN, y_pred))
+print(classification_report(y_val_NN, y_pred, zero_division=0))
 print(f"Accuracy val: {metrics['accuracy']}")
 y_pred, metrics = network.predict(X_test, y_test_NN)
-print(classification_report(y_test_NN, y_pred))
+print(classification_report(y_test_NN, y_pred, zero_division=0))
 print(f"Accuracy test: {accuracy_score(y_test_NN, y_pred)}")
 
 if type == "csp":

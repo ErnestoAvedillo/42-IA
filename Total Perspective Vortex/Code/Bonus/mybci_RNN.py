@@ -52,15 +52,23 @@ train_model, test_model  = my_process_data.define_test_train(percentage=0.80)
 X_train, y_train = my_process_data.generate_data(train_model)
 X_test, y_test = my_process_data.generate_data(test_model)
 
-#csp = CSP(n_components=16, reg=None, log=None, rank="full", transform_into="csp_space")
+csp = CSP(n_components=8, reg="ledoit_wolf", transform_into = "csp_space")
 #csp = CSP (n_components = 8, reg = None, log = None, transform_into = "average_power", rank = {'eeg':64}, norm_trace = False)
 
-#csp.fit(X_train, y_train)
-#X_train = csp.transform(X_train)
-#print(f"Fitting CSP with {X_train.shape[1]} components")
-#X_test = csp.transform(X_test)  
-#print(f"Transforming test data with {X_test.shape[1]} components")
+csp.fit(X_train, y_train)
+X_train = csp.transform(X_train)
+print(f"Fitting CSP with {X_train.shape[1]} components")
+X_test = csp.transform(X_test)  
+print(f"Transforming test data with {X_test.shape[1]} components")
 
+X_train = np.linalg.norm(X_train, axis = 1)
+X_test = np.linalg.norm(X_test, axis = 1)
+
+X_train = np.expand_dims(X_train, axis=-1)
+X_test = np.expand_dims(X_test, axis=-1)
+
+#X_train = np.transpose(X_train,(0,2,1))
+#X_test = np.transpose(X_test,(0,2,1))
 
 le = LabelEncoder()
 y_train = le.fit_transform(y_train)
@@ -78,14 +86,14 @@ y_test_cat = tf.keras.utils.to_categorical(y_test, n_classes)
 
 # Define the model
 model = Sequential()
-model.add(Input(shape=(X_train.shape[1], X_train.shape[2])))
-model.add(LSTM(64, return_sequences=True))
-model.add(LSTM(64))
+model.add(Input(shape=(X_train.shape[1],X_train.shape[2])))
+model.add(GRU(64, return_sequences=True))
+model.add(GRU(64))
 
 model.add(Dense(y_train_cat.shape[1], activation='softmax'))
 
-# Compile the model
-model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+# Compile the model sparse_
+model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
 
 # Summary of the model
 model.summary()
@@ -93,7 +101,7 @@ model.summary()
 # Train the model
 model.fit(
     X_train, y_train_cat,
-    epochs=10,
+    epochs=50,
     batch_size=16,
     validation_data=(X_val, y_val_cat)
 )

@@ -14,7 +14,8 @@ ALL = 0
 GREEN = 1
 RED = 2
 
-ACTIONS =["NONE", "UP", "DOWN", "LEFT", "RIGHT"]
+ACTIONS = ["UP", "DOWN", "LEFT", "RIGHT"]
+
 
 class Snake(pg.sprite.Sprite):
     def __init__(self, x, y, Nr_cells=[10, 10]):
@@ -52,7 +53,7 @@ class Snake(pg.sprite.Sprite):
         col = [row[self.worn[1]] for row in self.map]
         observation = raw + col
         reward = -abs(self.state)
-        return reward, 
+        return observation, reward
 
     def _create_map(self):
         self.map = [["O" for _ in range(self.nr_cells[0] + 2)]
@@ -70,7 +71,7 @@ class Snake(pg.sprite.Sprite):
         letter = "H"
         first = True
         for pos in self.worn:
-            self.map[pos[1] + 1] [pos[0] + 1]= letter
+            self.map[pos[1] + 1][pos[0] + 1] = letter
             if first:
                 letter = "S"
 

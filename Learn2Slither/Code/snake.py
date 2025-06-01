@@ -18,7 +18,8 @@ ACTIONS = ["NONE", "UP", "DOWN", "LEFT", "RIGHT"]
 class Snake(pg.sprite.Sprite, MotorSnake):
     def __init__(self, x, y, Nr_cells=[10, 10]):
         pg.sprite.Sprite.__init__(self)
-        MotorSnake.__init__(self, x, y, Nr_cells)
+        MotorSnake.__init__(self, Nr_cells)
+        self.size_cells = [x // self.nr_cells[0], y // self.nr_cells[1]]
         pg.display.set_caption("Snake Game")
         pg.font.init()
         self.font = pg.font.Font(None, 36)

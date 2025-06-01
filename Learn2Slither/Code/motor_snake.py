@@ -10,14 +10,13 @@ RED = 2
 
 
 class MotorSnake():
-    def __init__(self, x, y, Nr_cells=[10, 10]):
+    def __init__(self, Nr_cells=[10, 10]):
         self.nr_cells = Nr_cells
-        self.size_cells = [x // self.nr_cells[0], y // self.nr_cells[1]]
         self.direction = Directions.get_random_direction()
         self.worn = deque()
         self.red_apples = []
         self.green_apples = []
-        self.reset()
+        MotorSnake.reset(self)
         self._create_map()
 
     def reset(self):
@@ -27,15 +26,15 @@ class MotorSnake():
         self.green_apples.clear()
         self._place_apple(type=ALL)
         self.collision = Collision.NONE
-        self.state = 0
+        self.running = True
 
     def _place_worn(self):
         self.direction = Directions.get_random_direction()
         position = self._get_rand_pos()
         position[0] = max(2, position[0])
-        position[0] = min(self.nr_cells[0] - 2, position[0])
+        position[0] = min(self.nr_cells[0] - 3, position[0])
         position[1] = max(2, position[1])
-        position[1] = min(self.nr_cells[1] - 2, position[1])
+        position[1] = min(self.nr_cells[1] - 3, position[1])
         self.worn.append(position)
         self.worn.append([position[0] - self.direction[0],
                           position[1] - self.direction[1]])
@@ -76,8 +75,8 @@ class MotorSnake():
             self.red_apples.append(posicion)
 
     def _get_rand_pos(self):
-        return [random.randint(0, self.nr_cells[0] - 1),
-                random.randint(0, self.nr_cells[1] - 1)]
+        return [random.randint(0, self.nr_cells[0] - 2),
+                random.randint(0, self.nr_cells[1] - 2)]
 
     def _move(self):
         new_position = [self.worn[0][0] + self.direction[0],
@@ -85,7 +84,7 @@ class MotorSnake():
         self._check_collisions(new_position)
         if (self.collision == Collision.WALL or
                 self.collision == Collision.BODY):
-            return
+            return self.collision, not self.running
         self.worn.appendleft(new_position)
         match self.collision:
             case Collision.GREEN_APPLE:
@@ -95,6 +94,7 @@ class MotorSnake():
                 self.worn.pop()
             case Collision.NONE:
                 self.worn.pop()
+        return self.collision, not self.running
 
     def _check_collisions(self, head_pos):
         # No collision == 0
@@ -125,7 +125,7 @@ class MotorSnake():
                     for _ in range(self.nr_cells[1] + 2)]
         for i in range(self.nr_cells[0] + 2):
             self.map[0][i] = "W"
-            self.map[self.nr_cells[0]][i] = "W"
+            self.map[self.nr_cells[0] + 1][i] = "W"
         for i in range(self.nr_cells[1] + 2):
             self.map[i][0] = "W"
             self.map[i][self.nr_cells[0] + 1] = "W"

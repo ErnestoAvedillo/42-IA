@@ -4,15 +4,15 @@ from collisions import Collision
 
 class Reward(Enum):
     # No reward
-    NONE = 0
+    NONE = 1
     # Reward for eating a red apple
-    RED_APPLE = 1
+    RED_APPLE = -2
     # Reward for eating a green apple
-    GREEN_APPLE = 2
+    GREEN_APPLE = 10
     # Penalty for hitting a wall or body
-    WALL_PENALTY = -1
+    WALL_PENALTY = -7
     # Penalty for hitting the snake's own body
-    BODY_PENALTY = -2
+    BODY_PENALTY = -7
 
     def get_reward(self, collision: Collision):
         match collision:

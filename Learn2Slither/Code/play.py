@@ -51,13 +51,17 @@ class SnakeGame:
 
     def place_food(self):
         while True:
-            pos = (random.randint(0, GRID_SIZE - 1), random.randint(0, GRID_SIZE - 1))
+            pos = (random.randint(0, GRID_SIZE - 1),
+                   random.randint(0, GRID_SIZE - 1))
             if pos not in self.snake:
                 return pos
 
     def change_direction(self, event):
         new_dir = event.keysym
-        opposites = {"Up": "Down", "Down": "Up", "Left": "Right", "Right": "Left"}
+        opposites = {"Up": "Down",
+                     "Down": "Up",
+                     "Left": "Right",
+                     "Right": "Left"}
         if new_dir in DIRECTIONS and new_dir != opposites.get(self.direction):
             self.direction = new_dir
 
@@ -85,7 +89,11 @@ class SnakeGame:
 
     def game_over(self):
         self.running = False
-        self.canvas.create_text(WIDTH//2, HEIGHT//2, text="GAME OVER", fill="white", font=("Arial", 24))
+        self.canvas.create_text(WIDTH//2,
+                                HEIGHT//2,
+                                text="GAME OVER",
+                                fill="white",
+                                font=("Arial", 24))
 
     def game_loop(self):
         if self.running:

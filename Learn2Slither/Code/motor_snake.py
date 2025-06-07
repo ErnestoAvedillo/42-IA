@@ -3,6 +3,7 @@ from collections import deque
 import os
 from directions import Directions
 from collisions import Collision
+import platform
 
 ALL = 0
 GREEN = 1
@@ -18,6 +19,7 @@ class MotorSnake():
         self.green_apples = []
         MotorSnake.reset(self)
         self._create_map()
+        self.moves = 0
 
     def reset(self):
         self.worn.clear()
@@ -27,6 +29,8 @@ class MotorSnake():
         self._place_apple(type=ALL)
         self.collision = Collision.NONE
         self.running = True
+        self.moves = 0
+        self._create_map()
 
     def _place_worn(self):
         self.direction = Directions.get_random_direction()
@@ -79,6 +83,7 @@ class MotorSnake():
                 random.randint(0, self.nr_cells[1] - 2)]
 
     def _move(self):
+        self.moves += 1
         new_position = [self.worn[0][0] + self.direction[0],
                         self.worn[0][1] + self.direction[1]]
         self._check_collisions(new_position)
@@ -141,7 +146,13 @@ class MotorSnake():
                 letter = "S"
 
     def print_map_in_shell(self):
-        os.system('clear')
+        if platform.system() == "Windows":
+            os.system("cls")
+        else:
+            os.system('clear')
         print("\033[H", end="")
         for fila in self.map:
             print(" ".join(f"{celda:2}" for celda in fila))
+
+    def get_moves(self):
+        return self.moves

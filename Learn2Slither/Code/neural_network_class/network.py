@@ -8,7 +8,7 @@ import copy
 import matplotlib.pyplot as plt
 from sklearn.metrics import classification_report, accuracy_score, log_loss, mean_squared_error
 
-LEARNING_RATE = 0.01
+LEARNING_RATE = 0.0001
 
 class Network:
     #def __init__(self,layers = None, x = None, y = None, learning_rate = 0.001):
@@ -16,8 +16,8 @@ class Network:
         if layers is None:
             self.layers = []
         self.normalize = normalize
-        self.mean = 0
-        self.std = 1
+        self.mean = np.zeros(2)
+        self.std = np.ones(2)
         self.learning_rate = LEARNING_RATE
         self.metrics = {}
         self.metrics_val = {}
@@ -66,6 +66,7 @@ class Network:
         if self.normalize:
             self.mean = X.mean(axis = 0)
             self.std = X.std(axis = 0)
+            self.std = np.where(self.std < 1e-8, 1.0, self.std)
             X = (X - self.mean) / (self.std)
             if self.validate:
                 x_test = (X_test - self.mean) / (self.std)

@@ -79,8 +79,11 @@ class Dense(Activation):
     def backward_calculation_last_layer(self, error):
         activation = self.backward(np.dot(self.input, self.weights))
         self.delta = error * activation
-        self.delta_weights = np.einsum('ij,ik->ikj', self.delta, self.input).sum(axis=0)
+        #self.delta_weights = np.einsum('ij,ik->ikj', self.delta, self.input).sum(axis=0)
+        self.delta_weights = np.dot(self.delta.T, self.input).T
         self.delta_bias = np.sum(self.delta, axis=0)
+        np.clip(self.delta_weights, -1.0, 1.0, out=self.delta_weights)
+        np.clip(self.delta_bias, -1.0, 1.0, out=self.delta_bias)
         velocity_weight, velocity_bias = self.optimizer.calculate_optimizer(self.delta_weights, self.delta_bias)
         self.weights -= velocity_weight
         self.bias -=  velocity_bias
@@ -94,8 +97,11 @@ class Dense(Activation):
         aux0 = np.dot(self.input, self.weights)
         aux1 = self.backward(aux0)
         self.delta = aux * aux1
-        self.delta_weights = np.einsum('ij,ik->ikj', self.delta, self.input).sum(axis=0)
+        #self.delta_weights = np.einsum('ij,ik->ikj', self.delta, self.input).sum(axis=0)
+        self.delta_weights = np.dot(self.delta.T, self.input).T
         self.delta_bias = np.sum(self.delta, axis=0)
+        np.clip(self.delta_weights, -1.0, 1.0, out=self.delta_weights)
+        np.clip(self.delta_bias, -1.0, 1.0, out=self.delta_bias)
         velocity_weight, velocity_bias = self.optimizer.calculate_optimizer(self.delta_weights, self.delta_bias)
         self.weights -= velocity_weight
         self.bias -=  velocity_bias

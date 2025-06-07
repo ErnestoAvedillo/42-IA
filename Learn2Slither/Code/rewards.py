@@ -10,7 +10,7 @@ class Reward(Enum):
     # Reward for eating a green apple
     GREEN_APPLE = 400
     # Penalty for hitting a wall or body
-    WALL_PENALTY = -100
+    WALL_PENALTY = -200
     # Penalty for hitting the snake's own body
     BODY_PENALTY = -200
 

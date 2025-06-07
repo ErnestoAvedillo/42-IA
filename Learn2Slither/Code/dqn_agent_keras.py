@@ -104,7 +104,7 @@ class DQNAgent():
             self.training_steps = TARGET_UPDATE_FREQ
         else:
             self.training_steps -= 1
-        
+        del target_q_values
         if self.filename is not None and self.save_srteps == 0:
             self.save_model(self.filename)
             self.save_srteps = TARGET_SAVE_FREQ

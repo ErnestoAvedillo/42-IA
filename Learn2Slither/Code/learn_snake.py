@@ -7,6 +7,14 @@ import time
 import sys
 NUM_EPISODES = 100000       # Total episodes to train for
 
+def Usage():
+    print ("Usage:")
+    print ("python learn_snake.py <type of learn> <model name to save")
+    print ("Where:")
+    print ("type to learn can be 'Q_LEARNING' or 'SARSA'")
+    print ("Example:")
+    print ("python learn_snake.py 'SARSA' 'model.py'")
+
 if len(sys.argv) > 1:
     try:
         Learn_Type = sys.argv[1]

@@ -3,17 +3,22 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 
+HIDDEN_LAYERS = 2
+NUMBER_OF_NEURONS = 64
 
 class DLQModel(nn.Module):
     def __init__(self, state_shape, nr_actions):
         super(DLQModel, self).__init__()
-        self.model = nn.Sequential(
-                      nn.Linear(state_shape, 128),  # Input layer
-                      nn.ReLU(), # Add activation
-                      nn.Linear(128, 64),  # Hidden layer
-                      nn.ReLU(), # Add activation
-                      nn.Linear(64, nr_actions)  # Output layer
-        )
+        layers = []
+        layers.append(nn.Linear(state_shape, NUMBER_OF_NEURONS))
+        layers.append(nn.ReLU())
+        neurons = NUMBER_OF_NEURONS
+        for i in range(HIDDEN_LAYERS):
+            layers.append(nn.Linear(neurons, neurons // 2))
+            layers.append(nn.ReLU())
+            neurons //= 2
+        layers.append(nn.Linear(neurons, nr_actions))
+        self.model = nn.Sequential(*layers)
 
     def forward(self, x):
         if isinstance(x, np.ndarray):

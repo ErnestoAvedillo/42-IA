@@ -6,7 +6,7 @@ class Reward(Enum):
     # No reward
     NONE = -0.1
     # Green apple reward on th way
-    RED_APPLE = -5
+    RED_APPLE = -50
     # Reward for eating a green apple
     GREEN_APPLE = 400
     # Penalty for hitting a wall or body

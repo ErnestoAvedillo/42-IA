@@ -21,9 +21,9 @@ class DQNAgent():
         self.num_actions = num_actions
         self.policy_model = CreateDLQModel((BATCH_SIZE, state_shape), num_actions)
         self.target_model = CreateDLQModel((BATCH_SIZE, state_shape), num_actions)
-        # model = self.policy_model.get_model()
-        # self.target_model.set_model(model)
-        self.target_model.set_weights(self.policy_model.get_weights())
+        model = self.policy_model.get_model()
+        self.target_model.set_model(model)
+        # self.target_model.set_weights(self.policy_model.get_weights())
         self.epsilon = EPSILON_START
         self.replay_buffer = []
         self.filename = filename
@@ -37,7 +37,7 @@ class DQNAgent():
             # for linear activation, the output is a vector of Q-values
             # q_values = self.policy_model.forward(np.array(state))
             current_state = np.array(state)[np.newaxis, np.newaxis, ...]
-            q_values = self.policy_model.predict(current_state, verbose=0)
+            q_values = self.policy_model.forward(current_state)
             # in case just take directly the max Q-value
             return np.argmax(q_values)
             # in case we want to sample aleatory an action based on the Q-values weights
@@ -61,12 +61,14 @@ class DQNAgent():
         dones = np.array(dones)
 
         # Predict Q-values for current and next states
-        # current_q_values = self.policy_model.forward(states)
-        # current_q_values = self.policy_model.forward(states)
-        current_q_values = self.policy_model.predict(states[np.newaxis, ...])
-        next_q_values = self.target_model.predict(next_states[np.newaxis, ...])
-        current_q_values = current_q_values.reshape(BATCH_SIZE, self.num_actions)
-        next_q_values = next_q_values.reshape(BATCH_SIZE, self.num_actions)
+        # using my neural network class
+        current_q_values = self.policy_model.forward(states)
+        next_q_values = self.target_model.forward(next_states)
+        # if using keras model directly
+        # current_q_values = self.policy_model.predict(states[np.newaxis, ...])
+        # next_q_values = self.target_model.predict(next_states[np.newaxis, ...])
+        # current_q_values = current_q_values.reshape(BATCH_SIZE, self.num_actions)
+        # next_q_values = next_q_values.reshape(BATCH_SIZE, self.num_actions)
         # Update Q-values using Bellman equation
         target_q_values = np.copy(current_q_values)
         for i in range(BATCH_SIZE):
@@ -81,19 +83,23 @@ class DQNAgent():
         # q_values_copy = np.zeros_like(q_values)
         # max_indices = q_values.argmax(axis=1)
         # q_values_copy[np.arange(BATCH_SIZE), max_indices] = 1
-        # self.policy_model.fit(states, q_values_copy, epochs=5, verbose=0)
+        # using my neural network class
+        self.policy_model.fit(states, target_q_values, epochs=10, verbose=0)
         # for linear activation, we can use the Q-values directly
 #        print("Training with states shape:", states, "and q_values shape:", target_q_values)
-        self.policy_model.fit(states[np.newaxis, ...], target_q_values[np.newaxis, ...], epochs=5, verbose=0)
+        # if using keras model directly
+        # self.policy_model.fit(states[np.newaxis, ...], target_q_values[np.newaxis, ...], epochs=5, verbose=0)
 
         # Update epsilon
         if self.epsilon > EPSILON_END:
             self.epsilon *= EPSILON_DECAY
         
         if self.training_steps == 0:
-            # model = self.policy_model.get_model()
-            # self.target_model.set_model(model)
-            self.target_model.set_weights(self.policy_model.get_weights())
+            # using my neural network class
+            model = self.policy_model.get_model()
+            self.target_model.set_model(model)
+            # if using keras model directly
+            # self.target_model.set_weights(self.policy_model.get_weights())
             self.training_steps = TARGET_UPDATE_FREQ
         else:
             self.training_steps -= 1

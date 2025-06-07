@@ -4,6 +4,7 @@ import numpy as np
 from env_snake import EnvSnake
 from dqn_agent_keras import DQNAgent
 from actions import Action
+from directions import Directions
 import time
 import sys
 
@@ -260,10 +261,11 @@ class Snake(pg.sprite.Sprite, MotorSnake):
         while not episode_over:
             action, _ = self.agent.choose_action(observation)
             observation, reward, terminated, truncated, _ = self.env.step(action)
+            self._move()
             self._print_grass()
             self._render()
             pg.display.flip()
-            self.clock.tick(2)
+            #self.clock.tick(2)
             episode_over = terminated or truncated
             print(f"Action: {Action(action).get_action_name()}, Aleatory {terminated}, Reward: {reward}, Episode Over: {truncated}")
             time.sleep(1)
@@ -310,3 +312,4 @@ if __name__ == "__main__":
     game.load_corner_worn("./icons/corner1.png")
 
     game._select_mode()
+

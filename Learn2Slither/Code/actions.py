@@ -26,6 +26,6 @@ class Action(Enum):
     def get_len_actions():
         return len(Action)
 
-    def get_action_name(self):
+    def get_action_name(self, action: int=None):
         """Print the name of the action."""
         return (NAMES[self.value])

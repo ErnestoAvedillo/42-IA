@@ -12,12 +12,19 @@ class DLQModel(nn.Module):
         layers = []
         layers.append(nn.Linear(state_shape, NUMBER_OF_NEURONS))
         layers.append(nn.ReLU())
-        neurons = NUMBER_OF_NEURONS
-        for i in range(HIDDEN_LAYERS):
-            layers.append(nn.Linear(neurons, neurons // 2))
-            layers.append(nn.ReLU())
-            neurons //= 2
-        layers.append(nn.Linear(neurons, nr_actions))
+        layers.append(nn.Linear(NUMBER_OF_NEURONS, NUMBER_OF_NEURONS))
+        layers.append(nn.ReLU())
+        layers.append(nn.Linear(NUMBER_OF_NEURONS, NUMBER_OF_NEURONS))
+        layers.append(nn.ReLU())
+        layers.append(nn.Linear(NUMBER_OF_NEURONS, nr_actions))
+
+        #neurons = NUMBER_OF_NEURONS
+        #for i in range(HIDDEN_LAYERS):
+        #    layers.append(nn.Linear(neurons, neurons // 2))
+        #    layers.append(nn.ReLU())
+        #    neurons //= 2
+        #layers.append(nn.Linear(neurons, nr_actions))
+
         self.model = nn.Sequential(*layers)
 
     def forward(self, x):

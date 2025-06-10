@@ -21,8 +21,9 @@ with open("houses.json", "r", encoding="utf-8") as myfile:
     data = json.load(myfile)
     options = data["houses"]
 # remove all the rows with missing values
-df = df.dropna(axis=1, how = 'all')
-df = df.dropna(axis = 0)
+#df = df.dropna(axis=1, how = 'all')
+#df = df.dropna(axis = 0)
+df = df.fillna(df.mean(numeric_only=True))
 
 #extract the features
 X = df[['Astronomy', 
@@ -43,3 +44,14 @@ list_of_houses = predict(X, theta,options)
 #save the predictions in a csv file
 df_houses = pd.DataFrame(list_of_houses, columns = ["Hogwarts House"])
 df_houses.to_csv("houses.csv", index = True, index_label="Index")
+
+df_houses_truth = pd.read_csv("dataset_truth.csv")
+df_houses_truth = df_houses_truth["Hogwarts House"].to_numpy()
+
+df_predictions = df_houses["Hogwarts House"].to_numpy()
+
+match_array = (df_houses_truth == df_predictions)
+match_count = np.sum(match_array)
+total_count = match_array.size
+accuracy = match_count / total_count
+print(f"Accuracy of the predictions: {accuracy:.2%} ({match_count}/{total_count})")

@@ -78,7 +78,7 @@ for i in range(NUM_EPISODES):
     lengths.append(env.get_length_worn())
 episode_over = False
 lengths = np.array(lengths)
-pd.to_csv(pd.DataFrame(lengths), "lengths.csv", index=False)
+pd.DataFrame(lengths, columns=["length"]).to_csv("lengths.csv", index=False)
 plt.plot(lengths, label='Length of Snake')
 plt.xlabel('Episode')
 plt.ylabel('Length')

@@ -4,22 +4,22 @@ import random
 from dl_q_model_keras import DLQModel
 import joblib
 from collections import deque
-
+import os
 
 # --- Hyperparameters ---
-GAMMA = 0.90                    # Discount factor
-LEARNING_RATE = 0.01           # Learning rate for the neural network
-AGENT_LEARNING_RATE = 0.001      # Learning rate for the agent
-REPLAY_BUFFER_SIZE = 100000       # Max experiences in replay buffer
-BATCH_SIZE = 64                 # Number of experiences to sample for training
+GAMMA = 0.95                    # Discount factor
+LEARNING_RATE = 0.01            # Learning rate for the neural network
+AGENT_LEARNING_RATE = 0.1       # Learning rate for the agent
+REPLAY_BUFFER_SIZE = 1000       # Max experiences in replay buffer
+BATCH_SIZE = 1000               # Number of experiences to sample for training
 EPSILON_START = 1.0             # Initial exploration rate
 EPSILON_END = 0.01              # Minimum exploration rate
 EPSILON_DECAY = 0.999           # Rate at which epsilon decays per episode
 TARGET_UPDATE_FREQ = 100        # How often to update the target network
                                 # (in training steps)
-TARGET_SAVE_FREQ = 1000         # How often to save the target model
-EPOCHS = 30                      # Number of epochs to train the model per batch
-MAX_MOVES = 1000                  # Max number of moves per episode
+TARGET_SAVE_FREQ = 100          # How often to save the target model
+EPOCHS = 10                     # Number of epochs to train the model per batch
+MAX_MOVES = 1000                # Max number of moves per episode
 
 class DQNAgent():
     def __init__(self, state_shape, num_actions,filename=None,learning_type="Q_LEARNING"):
@@ -40,7 +40,13 @@ class DQNAgent():
             raise ValueError("Invalid learning type. Choose 'Q_LEARNING' or 'SARSA'.")
         self.epsilon = EPSILON_START
         self.replay_buffer = deque(maxlen=REPLAY_BUFFER_SIZE)
-        self.filename = filename
+        if filename is not None:
+            self.filename = filename
+            if os.path.isfile(filename):
+                self.load_model(filename)
+            else:
+                print(f"File {filename} does not exist. Starting with a new model.")
+                self.filename = None
         self.training_steps = TARGET_UPDATE_FREQ
         self.save_srteps = TARGET_SAVE_FREQ
         self.moves = 0

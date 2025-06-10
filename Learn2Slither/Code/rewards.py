@@ -4,6 +4,7 @@ from collisions import Collision
 DICCTIONARY = {
     Collision.NONE: "No collision",
     Collision.IS_THE_WAY: "Is the way",
+    Collision.IS_ALLIGNED_WITH_GREEN_APPLE: "Is aligned with green apple",
     Collision.RED_APPLE: "Red apple",
     Collision.GREEN_APPLE: "Green apple",
     Collision.WALL: "Wall",

@@ -12,6 +12,12 @@ class Collision(Enum):
     WALL = 3
     # Collision with body
     BODY = 4
+    # No collision, Green appla in Row or col
+    IS_THE_WAY = 5
+    # No collision, repeated position
+    REPEATED_POSITION = 6
+    # No collision, alligned with green apple
+    IS_ALLIGNED_WITH_GREEN_APPLE = 7
 
     def __str__(self):
         return self.name.replace("_", " ").title()

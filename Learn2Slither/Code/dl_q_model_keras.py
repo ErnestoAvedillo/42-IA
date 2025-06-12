@@ -24,8 +24,8 @@ class DLQModel(nn.Module):
         #    layers.append(nn.ReLU())
         #    neurons //= 2
         #layers.append(nn.Linear(neurons, nr_actions))
-        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-        self.model = nn.Sequential(*layers).to(device)
+        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        self.model = nn.Sequential(*layers).to(self.device)
 
     def forward(self, x):
         if isinstance(x, np.ndarray):
@@ -50,7 +50,8 @@ class DLQModel(nn.Module):
             Y_tensor = torch.tensor(Y, dtype=torch.float32)
         else:
             Y_tensor = Y
-
+        X_tensor = X_tensor.to(self.device)
+        Y_tensor = Y_tensor.to(self.device)
         # Define loss function and optimizer
         criterion = nn.MSELoss()
         optimizer = optim.Adam(self.parameters(), lr=learning_rate)

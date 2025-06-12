@@ -27,17 +27,18 @@ class DLQModel(nn.Module):
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.model = nn.Sequential(*layers).to(self.device)
 
-    def forward(self, x):
-        if isinstance(x, np.ndarray):
-            x = torch.tensor(x, dtype=torch.float32)
-        elif not isinstance(x, torch.Tensor):
-            raise ValueError("Input must be a numpy array or a PyTorch tensor")
-        if x.ndim == 1:
-            x = x.unsqueeze(0)
-        elif x.ndim > 2:
+    def forward(self, X):
+        if not isinstance(X, torch.Tensor):
+            X_tensor = torch.tensor(x, dtype=torch.float32)
+        else:
+            X_tensor = X
+        X_tensor = X_tensor.to(self.device)
+        if X_tensor.ndim == 1:
+            X_tensor = X_tensor.unsqueeze(0)
+        elif X_tensor.ndim > 2:
             raise ValueError("Input tensor must be 1D or 2D")
-        x = x.view(x.size(0), -1) # Flatten the input
-        return self.model(x)  # Set the model to training mode
+        X_tensor = X_tensor.view(X_tensor.size(0), -1) # Flatten the input
+        return self.model(X_tensor)  # Set the model to training mode
         
     
     def fit(self, X, Y, epochs=1000, batch_size=32, learning_rate=0.001):

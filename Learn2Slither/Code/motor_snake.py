@@ -200,11 +200,12 @@ class MotorSnake():
             if first:
                 letter = "S"
 
-    def print_map_in_shell(self):
-        if platform.system() == "Windows":
-            os.system("cls")
-        else:
-            os.system('clear')
+    def print_map_in_shell(self, clear=True):
+        if clear:
+            if platform.system() == "Windows":
+                os.system("cls")
+            else:
+                os.system('clear')
         print("\033[H", end="")
         for fila in self.map:
             print(" ".join(f"{celda:2}" for celda in fila))

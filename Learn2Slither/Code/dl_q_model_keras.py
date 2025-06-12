@@ -65,7 +65,7 @@ class DLQModel(nn.Module):
             outputs = self.forward(X_tensor)  # Forward pass
             loss = criterion(outputs, Y_tensor)  # Compute loss
 
-            loss.backward()  # Backward pass
+            loss.backward(retain_graph=True)  # Backward pass
             optimizer.step()  # Update weights
 
             if (epoch + 1) % 100 == 0:

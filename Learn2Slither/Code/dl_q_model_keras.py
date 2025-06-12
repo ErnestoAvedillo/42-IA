@@ -42,6 +42,7 @@ class DLQModel(nn.Module):
         
     
     def fit(self, X, Y, epochs=1000, batch_size=32, learning_rate=0.001):
+        torch.autograd.set_detect_anomaly(True)
         # Convert numpy arrays to PyTorch tensors
         if not isinstance(X, torch.Tensor):
             X_tensor = torch.tensor(X, dtype=torch.float32)

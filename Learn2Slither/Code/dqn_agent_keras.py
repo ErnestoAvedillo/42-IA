@@ -81,26 +81,26 @@ class DQNAgent():
         rewards = np.array(rewards)
         dones = np.array(dones)
 
-        # Predict Q-values for current and next states
-        current_q_values = self.policy_model.forward(states)
-        next_q_values = self.target_model.forward(next_states)
-        # Update Q-values using Bellman equation
-        target_q_values = current_q_values.clone()
         # Update epsilon
         if self.epsilon > EPSILON_END:
             self.epsilon *= EPSILON_DECAY
 
-        for i in range(BATCH_SIZE):
-            if dones[i]:
-                target_q_values[i][actions[i]] = rewards[i]
-            else:
-                if self.load_type == "Q_LEARNING":
-                    target_q_values[i][actions[i]] = current_q_values[i][actions[i]] * (1 - AGENT_LEARNING_RATE) + AGENT_LEARNING_RATE * (rewards[i] + GAMMA *
-                                           torch.max(next_q_values[i]))
-                elif self.load_type == "SARSA":
-                    # SARSA update rule
-                    target_q_values[i][actions[i]] = (current_q_values[i][actions[i]] * (1 - AGENT_LEARNING_RATE) +
-                        AGENT_LEARNING_RATE * (rewards[i] + GAMMA * next_q_values[i][actions[i]]))
+        # Predict Q-values for current and next states
+        with torch.no_grad():
+            target_q_values = self.policy_model.forward(states)
+            next_q_values = self.target_model.forward(next_states)
+
+            for i in range(BATCH_SIZE):
+                if dones[i]:
+                    target_q_values[i][actions[i]] = rewards[i]
+                else:
+                    if self.load_type == "Q_LEARNING":
+                        target_q_values[i][actions[i]] = target_q_values[i][actions[i]] * (1 - AGENT_LEARNING_RATE) + AGENT_LEARNING_RATE * (rewards[i] + GAMMA *
+                                               torch.max(next_q_values[i]))
+                    elif self.load_type == "SARSA":
+                        # SARSA update rule
+                        target_q_values[i][actions[i]] = (target_q_values[i][actions[i]] * (1 - AGENT_LEARNING_RATE) +
+                            AGENT_LEARNING_RATE * (rewards[i] + GAMMA * next_q_values[i][actions[i]]))
 
         
         if self.training_steps == 0:

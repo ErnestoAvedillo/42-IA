@@ -13,8 +13,8 @@ class DLQModel(nn.Module):
         layers.append(nn.Linear(state_shape, NUMBER_OF_NEURONS))
         layers.append(nn.ReLU())
         layers.append(nn.Linear(NUMBER_OF_NEURONS, NUMBER_OF_NEURONS))
-        layers.append(nn.ReLU())
-        layers.append(nn.Linear(NUMBER_OF_NEURONS, NUMBER_OF_NEURONS))
+        #layers.append(nn.ReLU())
+        #layers.append(nn.Linear(NUMBER_OF_NEURONS, NUMBER_OF_NEURONS))
         layers.append(nn.ReLU())
         layers.append(nn.Linear(NUMBER_OF_NEURONS, nr_actions))
 
@@ -24,8 +24,8 @@ class DLQModel(nn.Module):
         #    layers.append(nn.ReLU())
         #    neurons //= 2
         #layers.append(nn.Linear(neurons, nr_actions))
-
-        self.model = nn.Sequential(*layers)
+        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        self.model = nn.Sequential(*layers).to(device)
 
     def forward(self, x):
         if isinstance(x, np.ndarray):
@@ -42,8 +42,14 @@ class DLQModel(nn.Module):
     
     def fit(self, X, Y, epochs=1000, batch_size=32, learning_rate=0.001):
         # Convert numpy arrays to PyTorch tensors
-        X_tensor = torch.tensor(X, dtype=torch.float32)
-        Y_tensor = torch.tensor(Y, dtype=torch.float32)
+        if not isinstance(X, torch.Tensor):
+            X_tensor = torch.tensor(X, dtype=torch.float32)
+        else:
+            X_tensor = X
+        if not isinstance(Y, torch.Tensor):
+            Y_tensor = torch.tensor(Y, dtype=torch.float32)
+        else:
+            Y_tensor = Y
 
         # Define loss function and optimizer
         criterion = nn.MSELoss()

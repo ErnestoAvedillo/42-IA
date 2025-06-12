@@ -29,7 +29,7 @@ class DLQModel(nn.Module):
 
     def forward(self, X):
         if not isinstance(X, torch.Tensor):
-            X_tensor = torch.tensor(x, dtype=torch.float32)
+            X_tensor = torch.tensor(X, dtype=torch.float32)
         else:
             X_tensor = X
         X_tensor = X_tensor.to(self.device)

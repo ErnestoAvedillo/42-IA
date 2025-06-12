@@ -8,8 +8,11 @@ import sys
 from matplotlib import pyplot as plt
 import numpy as np
 import pandas as pd
+import platform
+import os
 
-NUM_EPISODES = 400000       # Total episodes to train for
+
+NUM_EPISODES = 2000000       # Total episodes to train for
 
 def Usage():
     print ("Usage:")
@@ -67,7 +70,11 @@ for i in range(NUM_EPISODES):
             case _:
                 rewards[8] += 1  # Unhandled reward case
         agent.train()
-        env.print_map_in_shell()
+        if platform.system() == "Windows":
+            os.system("cls")
+        else:
+            os.system('clear')
+        #env.print_map_in_shell(clear=False)
         episode_over = terminated or truncated
         max_length = max (env.get_length_worn(), max_length)
         print(f"Episode {i + 1}/{NUM_EPISODES} \t - Length {env.get_length_worn()} \t - Max_length {max_length} \t - Action: {Action(action).get_action_name()}")
@@ -76,9 +83,9 @@ for i in range(NUM_EPISODES):
         print(f"\t\t\t- WALL {rewards[3]}\t- BODY {rewards[4]}\t- UNHANDLED {rewards[8]}\t - REPEATED_POSITION {rewards[7]}")
         # time.sleep(1)
     lengths.append(env.get_length_worn())
+    pd.DataFrame(lengths, columns=["length"]).to_csv("lengths.csv", index=False)
 episode_over = False
 lengths = np.array(lengths)
-pd.DataFrame(lengths, columns=["length"]).to_csv("lengths.csv", index=False)
 plt.plot(lengths, label='Length of Snake')
 plt.xlabel('Episode')
 plt.ylabel('Length')

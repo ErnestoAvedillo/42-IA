@@ -12,7 +12,7 @@ import platform
 import os
 
 
-NUM_EPISODES = 2000000       # Total episodes to train for
+NUM_EPISODES = 500000       # Total episodes to train for
 
 def Usage():
     print ("Usage:")

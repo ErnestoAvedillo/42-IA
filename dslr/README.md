@@ -26,17 +26,25 @@
 
 
 ##### Description
+- **Help log**:
+
+    For all scripts flag h will get a help text:
+
+    python [script] -h
+
+    ex:python describe -h
+
 - **Execution**: 
     
-    python describe.py ../data/dataset_training.csv
+    python describe.py -f ../data/dataset_training.csv
 
-    python histogram.py ../data/dataset_training.csv
+    python histogram.py -f ../data/dataset_training.csv
 
-    python pair_plot.py ../data/dataset_training.csv
+    python pair_plot.py -f ../data/dataset_training.csv
 
-    python logreg_train.py ../data/dataset_training.csv
+    python logreg_train.py -f ../data/dataset_training.csv -a arguments.json
 
-    python logreg_predict.py ../data/dataset_training.csv
+    python logreg_predict.py -f ../data/dataset_training.csv -a arguments.json
 
 
 ### Pictures

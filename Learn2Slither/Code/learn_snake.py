@@ -33,9 +33,19 @@ if len(sys.argv) > 2:
     except ValueError as e:
         print(f"Error: {e}. Defaulting to 'dqn_snake_model.joblib'.")
         File_Name = "dqn_snake_model.joblib"
+if len(sys.argv) > 3:
+    try:
+        gpu_number= int(sys.argv[3])
+    except ValueError as e:
+        gpu_number=0
+if len(sys.argv) > 4:
+    try:
+        filename_lengths = sys.argv[4]
+    except ValueError as e:
+        filename_lengths = "lengths.csv"
 env = EnvSnake(Nr_cells=[10, 10])
 agent = DQNAgent(state_shape=len(env.observation_space),
-                 num_actions=env.action_space,learning_type="SARSA", filename=File_Name)
+                 num_actions=env.action_space,learning_type="SARSA", filename=File_Name,gpu_number=gpu_number)
 rewards = [0 for _ in range(Reward.get_len() + 1)] # initialize counter of rewards for each action
 # agent = DQNAgent(state_shape=env.observation_space,
 #                  num_actions=env.action_space, filename="dqn_snake_model.joblib")

@@ -22,7 +22,7 @@ EPOCHS = 10                     # Number of epochs to train the model per batch
 MAX_MOVES = 1000                # Max number of moves per episode
 
 class DQNAgent():
-    def __init__(self, state_shape, num_actions,filename=None,learning_type="Q_LEARNING"):
+    def __init__(self, state_shape, num_actions,filename=None,learning_type="Q_LEARNING", gpu_number=0):
         """ Initialize the DQN agent with the given parameters.
         Args:
             state_shape (tuple): Shape of the state space.
@@ -32,8 +32,8 @@ class DQNAgent():
         """
         self.state_shape = state_shape
         self.num_actions = num_actions
-        self.policy_model = DLQModel((state_shape), num_actions)
-        self.target_model = DLQModel((state_shape), num_actions)
+        self.policy_model = DLQModel((state_shape), num_actions, gpu_number)
+        self.target_model = DLQModel((state_shape), num_actions, gpu_number)
         self.target_model.load_state_dict(self.policy_model.state_dict())  # Copy biases from policy to target model
         self.load_type = learning_type
         if self.load_type not in ["Q_LEARNING", "SARSA"]:

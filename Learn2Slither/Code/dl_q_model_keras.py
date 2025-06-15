@@ -7,7 +7,7 @@ HIDDEN_LAYERS = 2
 NUMBER_OF_NEURONS = 64
 
 class DLQModel(nn.Module):
-    def __init__(self, state_shape, nr_actions):
+    def __init__(self, state_shape, nr_actions,gpu_device=0):
         super(DLQModel, self).__init__()
         layers = []
         layers.append(nn.Linear(state_shape, NUMBER_OF_NEURONS))
@@ -24,7 +24,8 @@ class DLQModel(nn.Module):
         #    layers.append(nn.ReLU())
         #    neurons //= 2
         #layers.append(nn.Linear(neurons, nr_actions))
-        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        assert gpu_device < torch.cuda.device_count(), f"GPU device {gpu_device} is not available."
+        self.device = torch.device(f'cuda:{gpu_device}' if torch.cuda.is_available() else 'cpu')
         self.model = nn.Sequential(*layers).to(self.device)
 
     def forward(self, X):

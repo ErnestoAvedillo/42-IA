@@ -3,26 +3,33 @@ import sys
 import numpy as np
 import json
 from logistic_prediction import predict
+import argparse
 
-if len(sys.argv) != 2:
-    print("Please give a file as argument to describe.")
-    exit(1)
-try:
-    df = pd.read_csv(sys.argv[1])
-except:
-    print("The file you entered does not exist or you don't have access.")
-    exit(1)
-#get the arguments and the options for the houses
-arguments_file = "arguments.json"
-with open(arguments_file, "r", encoding="utf-8") as my_file:
-    data = json.load(my_file)
-    theta = np.array(data["arguments"])
-with open("houses.json", "r", encoding="utf-8") as myfile:
-    data = json.load(myfile)
-    options = data["houses"]
-# remove all the rows with missing values
-#df = df.dropna(axis=1, how = 'all')
-#df = df.dropna(axis = 0)
+if __name__ == "__main__":
+	parser = argparse.ArgumentParser(description="The CSV file data to predict.")
+	parser.add_argument("-f", "--file", type=str, help="Path to the CSV file to predict.")
+	parser.add_argument("-a","--args", type=str, help="Path to the JSON file with the arguments.")
+	args = parser.parse_args()
+
+	if not args.file or not args.args:
+		print("Please give a file as argument to predict and the arguments to use.")
+		print("Example: python logreg_predict.py --file dataset_test.csv --args arguments.json")
+		print("For help:python logreg_predict.py -h or python logreg_predict.py --help")
+		exit(1)
+	try:
+		df = pd.read_csv(args.file)
+		data_file = args.args
+		#get the arguments and the options for the houses
+		with open(data_file, "r", encoding="utf-8") as my_file:
+			data = json.load(my_file)
+			theta = np.array(data["arguments"])
+			options = data["houses"]
+	except:
+		print("The dataset file or arguments file you entered does not exist or you don't have access.")
+		exit(1)
+
+
+# fill missing values with the mean of the column
 df = df.fillna(df.mean(numeric_only=True))
 
 #extract the features
@@ -39,7 +46,11 @@ X = df[['Astronomy',
        'Flying']].to_numpy()
 
 # run the predictions
-list_of_houses = predict(X, theta,options)
+try:
+	list_of_houses = predict(X, theta,options)
+except Exception as e:
+	print(f"An error occurred during prediction: {e}")
+	sys.exit(1)
 
 #save the predictions in a csv file
 df_houses = pd.DataFrame(list_of_houses, columns = ["Hogwarts House"])

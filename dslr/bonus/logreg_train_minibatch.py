@@ -5,6 +5,7 @@ from logistic_prediction import predict
 import json
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+import argparse
 
 def obtain_data(data:pd.DataFrame, options = None):
 	X = data[['Astronomy', 
@@ -24,7 +25,27 @@ def obtain_data(data:pd.DataFrame, options = None):
 	return X,Y, options
 
 
-df = pd.read_csv("../datasets/dataset_train.csv")
+if __name__ == "__main__":
+	parser = argparse.ArgumentParser(description="Describe the CSV to be trained.")
+	parser.add_argument("-f", "--file", type=str, help="Path to the CSV file to train.")
+	parser.add_argument("-a","--args", type=str, help="Path to the JSON file with the arguments.")
+	args = parser.parse_args()
+
+	if not args.file:
+		print("Please give a file as argument to train.")
+		print("Example: python histogram.py --file hogwarts.csv")
+		print("For help:python histogram.py -h or python histogram.py --help")
+		exit(1)
+	if not args.args:
+		arguments_file = "arguments.json"
+	try:
+		df = pd.read_csv(args.file)
+		arguments_file = args.args
+	except:
+		print("The file you entered does not exist or you don't have access.")
+		exit(1)
+
+
 df = df.dropna(axis=1, how = 'all')
 df = df.dropna(axis = 0)
 
@@ -32,9 +53,10 @@ train_data, test_data = train_test_split(df, test_size=0.2, random_state=42)
 
 # Train the model with the training data
 X,Y,options = obtain_data(train_data)
-for i in range(5, 50, 5):
-	print ("Batch size: ", i)
-	theta, _ = logistic_regression(X,Y,optimizer="mini_batch_gradient_descent",batch_size = i)
+epochs = 1
+for i in range(epochs):
+	print ("Epoch nr: ", i)
+	theta, _ = logistic_regression(X,Y,optimizer="mini_batch_gradient_descent",batch_size = 50)
 
 	#test ethe model with the test data
 	X_test,_, _ = obtain_data(test_data, options)
@@ -56,7 +78,6 @@ for i in range(5, 50, 5):
 	# Classification Report (Precision, Recall, F1-score)
 	report = classification_report(Y_test, predictions, zero_division=0)
 	print("Classification Report:\n", report)
-	input("Press Enter to continue...")
 
 # Once everithing seems to be working, train the model with the whole dataset
 
@@ -64,12 +85,6 @@ X,Y,_ = obtain_data(df, options)
 theta, loss = logistic_regression(X,Y,optimizer="mini_batch_gradient_descent")
 
 # Save the arguments and the options in a json file
-arguments_file = "arguments.json"
-houses_file = "houses.json"
 with open(arguments_file, "w", encoding="utf-8") as myfile:
-	argument_dicc = {"arguments":theta.tolist()}
-	json.dump(argument_dicc, myfile, indent = 4, ensure_ascii = False)
-
-with open(houses_file, "w", encoding="utf-8") as myfile:
-	argument_dicc = {"houses":options.tolist()}
+	argument_dicc = {"arguments":theta.tolist(), "houses":options.tolist()}
 	json.dump(argument_dicc, myfile, indent = 4, ensure_ascii = False)

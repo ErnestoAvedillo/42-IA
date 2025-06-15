@@ -1,7 +1,7 @@
 import numpy as  np
 from matplotlib import pyplot as plt
 import pandas as pd
-import sys
+import argparse
 
 def show_all_histograms(data:pd.DataFrame):
 	keys = data.keys()
@@ -25,15 +25,21 @@ def show_all_histograms(data:pd.DataFrame):
 		fig.delaxes(axes[i])
 	plt.tight_layout()
 	plt.show()
+if __name__ == "__main__":
+	parser = argparse.ArgumentParser(description="The CSV file to be graphed with custom statistics.")
+	parser.add_argument("-f","--file", type=str, help="Path to the CSV file to graph.")
+	args = parser.parse_args()
 
-if len(sys.argv) != 2:
-	print("Please give a file as argument to describe.")
-	exit(1)
-try:
-	df = pd.read_csv(sys.argv[1])
-except:
-	print("The file you entered does not exist or you don't have access.")
-	exit(1)
+	if not args.file:
+		print("Please give a file as argument to graph.")
+		print("Example: python histogram.py --file hogwarts.csv")
+		print("For help:python histogram.py -h or python histogram.py --help")
+		exit(1)
+	try:
+		df = pd.read_csv(args.file)
+	except:
+		print("The file you entered does not exist or you don't have access.")
+		exit(1)
 
-data = df.dropna(axis=1, how = 'all')
-show_all_histograms(data)
+	data = df.dropna(axis=1, how = 'all')
+	show_all_histograms(data)

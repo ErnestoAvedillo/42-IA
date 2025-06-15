@@ -1,7 +1,9 @@
 import numpy as np
 import pandas as pd
 import math
-import sys
+import argparse
+
+
 def my_mean(data:np.ndarray):
 	sum = 0
 	max =-math.inf
@@ -61,33 +63,25 @@ def describe (data:pd.DataFrame):
 			val25 = np.nan
 			val50 = np.nan
 			val75 = np.nan
-		stats_data[keys[col]] =[
-			count, 
-			mean, 
-			std_dev, 
-			min, 
-			val25, 
-			val50, 
-			val75, 
-			max, 
-			mean - 1.96 * std_dev, 
-			mean + 1.96 * std_dev, 
-			mean - 3.291 * std_dev, 
-			mean + 3.291 * std_dev,
-			data[keys[col]].count() - data[keys[col]].quantile(0.999)]
-	stats_df = pd.DataFrame(stats_data, index=["count", "mean", "std_dev", "min", "25%", "50%", "75%", "max", "lower 95% conf", "upper 95% conf", "lower 99.9% conf", "upper 99.9% conf", "Nr. out of 99.9"])
+		stats_data[keys[col]] =[count, mean, std_dev, min, val25, val50, val75, max, mean - 1.96 * std_dev, mean + 1.96 * std_dev, mean - 3.291 * std_dev, mean + 3.291 * std_dev]
+	stats_df = pd.DataFrame(stats_data, index=["count", "mean", "std_dev", "min", "25%", "50%", "75%", "max", "lower 95% conf", "upper 95% conf", "lower 99.9% conf", "upper 99.9% conf"])
 	return stats_df
 
 
-if len(sys.argv) != 2:
-	print("Please give a file as argument to describe.")
-	exit(1)
-try:
-	df = pd.read_csv(sys.argv[1])
-except:
-	print("The file you entered does not exist or you don't have access.")
-	exit(1)
-data=df
-print(df.describe())
-resutl = describe(data)
-print (resutl)
+if __name__ == "__main__":
+	parser = argparse.ArgumentParser(description="Describe the CSV to be described with custom statistics.")
+	parser.add_argument("-f","--file", type=str, help="Path to the CSV file to describe.")
+	args = parser.parse_args()
+
+	if not args.file:
+		print("Please give a file as argument to describe.")
+		exit(1)
+	try:
+		df = pd.read_csv(args.file)
+	except:
+		print("The file you entered does not exist or you don't have access.")
+		exit(1)
+	data=df
+	print(df.describe())
+	resutl = describe(data)
+	print (resutl)

@@ -15,6 +15,7 @@ class MotorSnake():
         self.nr_cells = Nr_cells
         self.direction = Directions.get_random_direction()
         self.worn = deque()
+        self.history = deque(maxlen=10)  # Store last 10 worn deques
         self.red_apples = []
         self.green_apples = []
         MotorSnake.reset(self)
@@ -28,7 +29,7 @@ class MotorSnake():
         self.green_apples.clear()
         self._place_apple(type=ALL)
         self.collision = Collision.NONE
-        self.running = True
+        self.termnate = False
         self.moves = 0
         self._create_map()
 
@@ -84,22 +85,61 @@ class MotorSnake():
 
     def _move(self):
         self.moves += 1
+        if len(self.worn) == 0:
+            self.termnate = True
+            return Collision.NONE, self.termnate
         new_position = [self.worn[0][0] + self.direction[0],
                         self.worn[0][1] + self.direction[1]]
         self._check_collisions(new_position)
         if (self.collision == Collision.WALL or
                 self.collision == Collision.BODY):
-            return self.collision, not self.running
+            self.termnate = True
+            return self.collision, self.termnate
         self.worn.appendleft(new_position)
         match self.collision:
             case Collision.GREEN_APPLE:
                 self._place_apple(GREEN, new_position)
             case Collision.RED_APPLE:
+                self.worn.pop()
+                self.worn.pop()
+                if len(self.worn) == 0:
+                    self.termnate = True
+                    return self.collision, self.termnate
                 self._place_apple(RED, new_position)
+            case _:
                 self.worn.pop()
-            case Collision.NONE:
-                self.worn.pop()
-        return self.collision, not self.running
+            #case Collision.NONE:
+            #    self.worn.pop()
+            #case Collision.IS_THE_WAY:
+            #    self.worn.pop()
+            #case Collision.IS_ALLIGNED_WITH_GREEN_APPLE:
+            #    self.worn.pop()
+            #case Collision.REPEATED_POSITION:
+            #    self.worn.pop()
+        self.history.append(self.worn.copy())
+        return self.collision, self.termnate
+
+    def check_head_psition_near_green_apple(self):
+        """ Check if the head position is near a green apple.
+        """
+        if len(self.worn) == 0 or len(self.green_apples) == 0:
+            return False
+        for i in range(len(self.green_apples)):
+            if ((self.worn[0][0] == self.green_apples[i][0] and (abs(self.worn[0][1] - self.green_apples[i][1]) < 2 and abs(self.worn[0][1] != self.green_apples[i][1]))) or
+                (self.worn[0][1] == self.green_apples[i][1] and (abs(self.worn[0][0] - self.green_apples[i][0]) < 2 and abs(self.worn[0][0] != self.green_apples[i][0])))):
+                return True
+        return False
+
+    def check_head_psition_alligned_with_green_apple(self):
+        """ Check if the head position is alligned with a green apple.
+        This means that the head is in the same row or column as a green apple.
+        """
+        if len(self.worn) == 0 or len(self.green_apples) == 0:
+            return False
+        for i in range(len(self.green_apples)):
+            if ((self.worn[0][0] == self.green_apples[i][0] or self.worn[0][1] == self.green_apples[i][1])):
+                return True
+        return False
 
     def _check_collisions(self, head_pos):
         # No collision == 0
@@ -107,23 +147,38 @@ class MotorSnake():
         # Collision green apple == 2
         # Collission with body = 3
         self.collision = Collision.NONE
-        if head_pos in self.green_apples:
-            self.collision = Collision.GREEN_APPLE
-        if head_pos in self.red_apples:
-            self.worn.pop()
-            self.collision = Collision.RED_APPLE
-            if len(self.worn) == 0:
-                self.running = False
         if (head_pos[0] < 0 or
            head_pos[0] >= self.nr_cells[0] or
            head_pos[1] < 0 or
            head_pos[1] >= self.nr_cells[1]):
             self.collision = Collision.WALL
-            self.running = False
+            self.termnate = True
+            return
         for part in self.worn:
             if head_pos == part:
                 self.collision = Collision.BODY
-                self.running = False
+                self.termnate = True
+                return
+        if head_pos in self.red_apples:
+            #self.worn.pop()
+            self.collision = Collision.RED_APPLE
+            if len(self.worn) == 0:
+                self.termnate = True
+                return
+            #self._place_apple(RED, head_pos, operation="replace")
+            return
+        if head_pos in self.green_apples:
+            self.collision = Collision.GREEN_APPLE
+            return
+        if self.check_head_psition_near_green_apple():
+            self.collision = Collision.IS_THE_WAY
+            return
+        if self.check_head_psition_alligned_with_green_apple():
+            self.collision = Collision.IS_ALLIGNED_WITH_GREEN_APPLE
+            return
+        if self.worn_has_repeated_position():
+           self.collision = Collision.REPEATED_POSITION
+        return
 
     def _create_map(self):
         self.map = [["O" for _ in range(self.nr_cells[0] + 2)]
@@ -145,14 +200,30 @@ class MotorSnake():
             if first:
                 letter = "S"
 
-    def print_map_in_shell(self):
-        if platform.system() == "Windows":
-            os.system("cls")
-        else:
-            os.system('clear')
+    def print_map_in_shell(self, clear=True):
+        if clear:
+            if platform.system() == "Windows":
+                os.system("cls")
+            else:
+                os.system('clear')
         print("\033[H", end="")
         for fila in self.map:
             print(" ".join(f"{celda:2}" for celda in fila))
 
     def get_moves(self):
         return self.moves
+    
+    def get_length_worn(self):
+        return len(self.worn)
+
+    def worn_has_repeated_position(self):
+        """
+        Check if the worn has repeated positions.
+        """
+        nr_repeated_positions = 0
+        for historic_worn in self.history:
+            if historic_worn == self.worn:
+                nr_repeated_positions += 1
+        if nr_repeated_positions > 2:
+            return True
+        return False

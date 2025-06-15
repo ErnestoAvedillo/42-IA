@@ -12,32 +12,48 @@ class DLQModel(nn.Module):
         layers = []
         layers.append(nn.Linear(state_shape, NUMBER_OF_NEURONS))
         layers.append(nn.ReLU())
-        neurons = NUMBER_OF_NEURONS
-        for i in range(HIDDEN_LAYERS):
-            layers.append(nn.Linear(neurons, neurons // 2))
-            layers.append(nn.ReLU())
-            neurons //= 2
-        layers.append(nn.Linear(neurons, nr_actions))
-        self.model = nn.Sequential(*layers)
+        layers.append(nn.Linear(NUMBER_OF_NEURONS, NUMBER_OF_NEURONS))
+        #layers.append(nn.ReLU())
+        #layers.append(nn.Linear(NUMBER_OF_NEURONS, NUMBER_OF_NEURONS))
+        layers.append(nn.ReLU())
+        layers.append(nn.Linear(NUMBER_OF_NEURONS, nr_actions))
 
-    def forward(self, x):
-        if isinstance(x, np.ndarray):
-            x = torch.tensor(x, dtype=torch.float32)
-        elif not isinstance(x, torch.Tensor):
-            raise ValueError("Input must be a numpy array or a PyTorch tensor")
-        if x.ndim == 1:
-            x = x.unsqueeze(0)
-        elif x.ndim > 2:
+        #neurons = NUMBER_OF_NEURONS
+        #for i in range(HIDDEN_LAYERS):
+        #    layers.append(nn.Linear(neurons, neurons // 2))
+        #    layers.append(nn.ReLU())
+        #    neurons //= 2
+        #layers.append(nn.Linear(neurons, nr_actions))
+        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        self.model = nn.Sequential(*layers).to(self.device)
+
+    def forward(self, X):
+        if not isinstance(X, torch.Tensor):
+            X_tensor = torch.tensor(X, dtype=torch.float32)
+        else:
+            X_tensor = X
+        X_tensor = X_tensor.to(self.device)
+        if X_tensor.ndim == 1:
+            X_tensor = X_tensor.unsqueeze(0)
+        elif X_tensor.ndim > 2:
             raise ValueError("Input tensor must be 1D or 2D")
-        x = x.view(x.size(0), -1) # Flatten the input
-        return self.model(x)  # Set the model to training mode
+        X_tensor = X_tensor.view(X_tensor.size(0), -1) # Flatten the input
+        return self.model(X_tensor)  # Set the model to training mode
         
     
     def fit(self, X, Y, epochs=1000, batch_size=32, learning_rate=0.001):
+        torch.autograd.set_detect_anomaly(True)
         # Convert numpy arrays to PyTorch tensors
-        X_tensor = torch.tensor(X, dtype=torch.float32)
-        Y_tensor = torch.tensor(Y, dtype=torch.float32)
-
+        if not isinstance(X, torch.Tensor):
+            X_tensor = torch.tensor(X, dtype=torch.float32)
+        else:
+            X_tensor = X
+        if not isinstance(Y, torch.Tensor):
+            Y_tensor = torch.tensor(Y, dtype=torch.float32)
+        else:
+            Y_tensor = Y
+        X_tensor = X_tensor.to(self.device)
+        Y_tensor = Y_tensor.to(self.device)
         # Define loss function and optimizer
         criterion = nn.MSELoss()
         optimizer = optim.Adam(self.parameters(), lr=learning_rate)
@@ -50,7 +66,7 @@ class DLQModel(nn.Module):
             outputs = self.forward(X_tensor)  # Forward pass
             loss = criterion(outputs, Y_tensor)  # Compute loss
 
-            loss.backward()  # Backward pass
+            loss.backward(retain_graph=True)  # Backward pass
             optimizer.step()  # Update weights
 
             if (epoch + 1) % 100 == 0:

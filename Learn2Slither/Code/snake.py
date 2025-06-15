@@ -1,12 +1,23 @@
 import pygame as pg
 from motor_snake import MotorSnake
 import numpy as np
-from env_snake import EnvSnake
 from dqn_agent_keras import DQNAgent
 from actions import Action
 from directions import Directions
+from rewards import Reward
 import time
 import sys
+
+MAX_MOVES = 1000  # Maximum number of moves before truncation
+
+DICTIONARY_OBSERVATION = {
+    "O": 1,  # Empty cell
+    "W": 2,  # Wall
+    "H": 3,  # Head of the snake
+    "S": 4,  # Body of the snake
+    "G": 5,  # Green apple
+    "R": 6   # Red apple
+}
 
 DIRECTIONS = {
     "UP": [0, -1],
@@ -24,7 +35,7 @@ ACTIONS = ["NONE", "UP", "DOWN", "LEFT", "RIGHT"]
 MODEL_AUTO_PLAY = "model.json"
 
 class Snake(pg.sprite.Sprite, MotorSnake):
-    def __init__(self, x, y, Nr_cells=[10, 10]):
+    def __init__(self, x, y, Nr_cells=[10, 10], modelname=MODEL_AUTO_PLAY):
         pg.sprite.Sprite.__init__(self)
         MotorSnake.__init__(self, Nr_cells)
         self.size_cells = [x // self.nr_cells[0], y // self.nr_cells[1]]
@@ -42,9 +53,11 @@ class Snake(pg.sprite.Sprite, MotorSnake):
         self.tail_worn = None
         self.corner_worn = None
         self.menu_active = True
-        self.env = EnvSnake(Nr_cells=[10, 10])
-        self.agent = DQNAgent(state_shape=len(self.env.observation_space),
-                 num_actions=self.env.action_space)
+        self.truncated = False
+        self._autoplaying = False
+        self.agent = DQNAgent(state_shape=len(self.get_observation()),
+                 num_actions=Action.get_len_actions())
+        self.agent.load_model(modelname)
     
     def load_grass(self, filename):
         self.grass = pg.image.load(filename)
@@ -197,23 +210,34 @@ class Snake(pg.sprite.Sprite, MotorSnake):
     def _check_event_(self):
         events = pg.event.get()
         for event in events:
+            if event.type == pg.QUIT:
+                pg.quit()
+                exit()
             if self.menu_active:
-                if event.type == pg.QUIT:
-                    pg.quit()
-                    exit()
                 if event.type == pg.KEYDOWN:
                     if event.key == pg.K_1:
                         self.run()
+                        return
                     elif event.key == pg.K_2:
                         self._auto_play()
                         return
+                    elif event.key == pg.K_ESCAPE:
+                        pg.quit()
+                        exit()
                 if event.type == pg.MOUSEBUTTONDOWN:
                     if self.manual_button.collidepoint(pg.mouse.get_pos()):
                         self.run()
                         return
                     elif self.auto_button.collidepoint(pg.mouse.get_pos()):
                         self._auto_play()
-                        return 
+                        return
+                pg.event.clear()
+            if self._autoplaying:
+                if event.type == pg.KEYDOWN:
+                    if event.key == pg.K_ESCAPE:
+                        self._autoplaying = False
+                        self.episode_over = True
+                        return
             if event.type == pg.KEYDOWN:
                 if event.key == pg.K_LEFT:
                     self.direction = DIRECTIONS["LEFT"]
@@ -246,6 +270,9 @@ class Snake(pg.sprite.Sprite, MotorSnake):
         self._render()
                 
     def run(self):
+        """Run the game in manual mode."""
+        self.menu_active = False
+        self.clock.tick(2)
         while self.running:
             self._check_event_()
             self._move()
@@ -254,25 +281,75 @@ class Snake(pg.sprite.Sprite, MotorSnake):
             pg.display.flip()
             self.clock.tick(2)
         self._print_gameover()
+        self.menu_active = True
 
     def _auto_play(self):
-        episode_over = False
-        observation, _ = self.env.reset()
-        while not episode_over:
-            action, _ = self.agent.choose_action(observation)
-            observation, reward, terminated, truncated, _ = self.env.step(action)
-            self._move()
+        """Auto-play the game using the agent's policy."""
+        self.menu_active = False
+        self._autoplaying = True
+        self.clock.tick(2)
+        self.episode_over = False
+        observation = self.get_observation()
+        while not self.episode_over:
+            self._check_event_()
+            action, is_aleatory = self.agent.choose_action(observation)
+            observation, reward, terminated, truncated, _ = self.step(action)
             self._print_grass()
             self._render()
             pg.display.flip()
-            #self.clock.tick(2)
-            episode_over = terminated or truncated
-            print(f"Action: {Action(action).get_action_name()}, Aleatory {terminated}, Reward: {reward}, Episode Over: {truncated}")
-            time.sleep(1)
-
+            # self.print_map_in_shell()
+            self.clock.tick(2)
+            if not self.episode_over:
+                self.episode_over = terminated or truncated
+            #time.sleep(1)
+        self._autoplaying = False
+        self.menu_active = True
         self._print_gameover()
 
+    def step(self, action):
+        """Perform a step in the game with the given action.
+        Args:
+            action (int): The action to perform, represented as an integer.
+        Returns:
+            tuple: A tuple containing the observation, reward, termination status,
+                   truncation status, and additional info.
+        """
+        # convert from np.int64 to int
+        action = int(action)
+        self.direction = Directions.get_direction(action)
+        collision, self.terminated = self._move()
+        self._create_map()
+        self.reward = Reward.get_reward(self, collision)
+        if self.get_moves() >= MAX_MOVES:
+            self.truncated = True
+        return (self.get_observation(), self.reward,
+                self.terminated, self.truncated, {})
+
+    def get_observation(self):
+        """Get the current observation of the game.
+        Returns:
+            list: A list representing the observation, where each element corresponds
+                  to a cell in the game map, encoded as integers.
+        """
+        # If the snake is not placed, return a default observation
+        if len(self.worn) == 0:
+            head_col = 1
+            head_raw = 1
+        else:
+            head_col = self.worn[0][0] + 1
+            head_raw = self.worn[0][1] + 1
+        raw = self.map[head_raw]
+        col = []
+        for i in range(self.nr_cells[1] + 2):
+            col.append(self.map[i][head_col])
+        col1 = [row[head_col] for row in self.map]
+        numbered_raw = [DICTIONARY_OBSERVATION[cell] for cell in raw]
+        numbered_col = [DICTIONARY_OBSERVATION[cell] for cell in col]
+        observation = numbered_raw + numbered_col
+        return observation
+
     def _select_mode(self):
+        """Display the mode selection menu."""
         self._print_grass()
         self._render()
         self.menu_font = pg.font.Font(None, 48)
@@ -302,7 +379,10 @@ class Snake(pg.sprite.Sprite, MotorSnake):
         pg.quit()
 
 if __name__ == "__main__":
-    game = Snake(800, 600, [10, 10])
+    if len(sys.argv) > 1:
+        modelname = sys.argv[1]
+
+    game = Snake(800, 600, [10, 10], modelname=modelname)
     game.load_grass("./icons/grass.png")
     game.load_green_apple("./icons/green-apple-48.png")
     game.load_red_apple("./icons/red-apple-48.png")

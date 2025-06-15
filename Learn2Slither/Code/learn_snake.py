@@ -5,7 +5,14 @@ from actions import Action
 from rewards import Reward
 import time
 import sys
-NUM_EPISODES = 100000       # Total episodes to train for
+from matplotlib import pyplot as plt
+import numpy as np
+import pandas as pd
+import platform
+import os
+
+
+NUM_EPISODES = 500000       # Total episodes to train for
 
 def Usage():
     print ("Usage:")
@@ -16,26 +23,24 @@ def Usage():
     print ("python learn_snake.py 'SARSA' 'model.py'")
 
 if len(sys.argv) > 1:
-    try:
-        Learn_Type = sys.argv[1]
-        if Learn_Type not in ["Q_LEARNING", "SARSA"]:
-            raise ValueError("Invalid learning type. Choose 'Q_LEARNING' or 'SARSA'.")
-    except ValueError as e:
-        print(f"Error: {e}. Defaulting to 'Q_LEARNING'.")
-        Learn_Type = "Q_LEARNING"
+    Learn_Type = sys.argv[1]
+    if Learn_Type not in ["Q_LEARNING", "SARSA"]:
+        Usage()
+        raise ValueError("Invalid learning type. Choose 'Q_LEARNING' or 'SARSA'.")
 if len(sys.argv) > 2:
     try:
         File_Name = sys.argv[2]
     except ValueError as e:
-        print(f"Error: {e}. Defaulting to 'dqn_snake_model.json'.")
-        File_Name = "dqn_snake_model.json"
+        print(f"Error: {e}. Defaulting to 'dqn_snake_model.joblib'.")
+        File_Name = "dqn_snake_model.joblib"
 env = EnvSnake(Nr_cells=[10, 10])
 agent = DQNAgent(state_shape=len(env.observation_space),
                  num_actions=env.action_space,learning_type="SARSA", filename=File_Name)
-rewards = [0,0,0,0,0,0] # initialize counter of rewards for each action
+rewards = [0 for _ in range(Reward.get_len() + 1)] # initialize counter of rewards for each action
 # agent = DQNAgent(state_shape=env.observation_space,
-#                  num_actions=env.action_space, filename="dqn_snake_model.json")
+#                  num_actions=env.action_space, filename="dqn_snake_model.joblib")
 max_length = 3 
+lengths = []
 for i in range(NUM_EPISODES):
     observation, info = env.reset()
     episode_over = False
@@ -56,19 +61,41 @@ for i in range(NUM_EPISODES):
                 rewards[3] += 1
             case Reward.BODY_PENALTY.value:
                 rewards[4] += 1
+            case Reward.IS_THE_WAY.value:
+                rewards[5] += 1  # Reward for being on the way
+            case Reward.IS_ALLIGNED_WITH_GREEN_APPLE.value:
+                rewards[6] += 1  # Reward for being aligned with green apple
+            case Reward.IS_REPEATED_POSITION.value:
+                rewards[7] += 1  # Penalty for repeated position
             case _:
-                rewards[5] += 1  # Unhandled reward case
+                rewards[8] += 1  # Unhandled reward case
         agent.train()
-        env.print_map_in_shell()
+        if platform.system() == "Windows":
+            os.system("cls")
+        else:
+            os.system('clear')
+        #env.print_map_in_shell(clear=False)
         episode_over = terminated or truncated
         max_length = max (env.get_length_worn(), max_length)
         print(f"Episode {i + 1}/{NUM_EPISODES} \t - Length {env.get_length_worn()} \t - Max_length {max_length} \t - Action: {Action(action).get_action_name()}")
-        print(f"Reward: {reward} \t - Epsilon: {agent.epsilon:.4f} \t - Terminated: {terminated} \t- Truncated: {truncated}")
-        print(f"Rewards historic: NONE {rewards[0]}\t- RED {rewards[1]}\t- GREEN {rewards[2]}\t- WALL {rewards[3]}\t- BODY {rewards[4]}\t- UNHANDLED {rewards[5]}")
+        print(f"Reward: {reward} \t- Epsilon: {agent.epsilon:.4f} \t - Terminated: {terminated} \t- Truncated: {truncated}\t - Moves: {info['moves']}")
+        print(f"Rewards historic:\t- NONE {rewards[0]}\t- RED {rewards[1]}\t- GREEN {rewards[2]}\t - IS_THE_WAY {rewards[5]}\t - IS_ALLIGNED {rewards[6]}")
+        print(f"\t\t\t- WALL {rewards[3]}\t- BODY {rewards[4]}\t- UNHANDLED {rewards[8]}\t - REPEATED_POSITION {rewards[7]}")
         # time.sleep(1)
+    lengths.append(env.get_length_worn())
+    pd.DataFrame(lengths, columns=["length"]).to_csv("lengths.csv", index=False)
 episode_over = False
+lengths = np.array(lengths)
+plt.plot(lengths, label='Length of Snake')
+plt.xlabel('Episode')
+plt.ylabel('Length')
+plt.title('Length of Snake Over Episodes')
+plt.legend()
+plt.show()
+
 print("Training completed.")
-agent.save_model("dqn_snake_model_Sarsa.json")
+
+agent.save_model(File_Name)
 
 observation, info = env.reset()
 while not episode_over:

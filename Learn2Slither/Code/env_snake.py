@@ -48,7 +48,7 @@ class EnvSnake(MotorSnake):
         if self.get_moves() >= MAX_MOVES:
             self.truncated = True
         return (self.get_observation(), self.reward,
-                self.terminated, self.truncated, {})
+                self.terminated, self.truncated, {"moves": self.get_moves()})
 
     def get_observation(self):
         if len(self.worn) == 0:

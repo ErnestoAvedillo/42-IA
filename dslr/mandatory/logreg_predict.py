@@ -55,3 +55,14 @@ except Exception as e:
 #save the predictions in a csv file
 df_houses = pd.DataFrame(list_of_houses, columns = ["Hogwarts House"])
 df_houses.to_csv("houses.csv", index = True, index_label="Index")
+
+df_houses_truth = pd.read_csv("dataset_truth.csv")
+df_houses_truth = df_houses_truth["Hogwarts House"].to_numpy()
+
+df_predictions = df_houses["Hogwarts House"].to_numpy()
+
+match_array = (df_houses_truth == df_predictions)
+match_count = np.sum(match_array)
+total_count = match_array.size
+accuracy = match_count / total_count
+print(f"Accuracy of the predictions: {accuracy:.2%} ({match_count}/{total_count})")

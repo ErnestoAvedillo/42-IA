@@ -27,14 +27,13 @@ def logistic_regression(X:np.array, y:np.array,accuracy=0.001, max_iter=10000, l
 	
 	if optimizer != "gradient_descent":
 		if optimizer == "stochastic_gradient_descent":
-			x_batches = np.array_split(x, x.shape[0] / 1)
-			y_batches = np.array_split(y, y.shape[0] / 1)
-			batch_size = 1
+			batch_size = y.shape[0]
 		elif optimizer == "mini_batch_gradient_descent":
-			x_batches = np.array_split(x, x.shape[0] / batch_size)
-			y_batches = np.array_split(y, y.shape[0] / batch_size)
+			pass
 		else:
 			raise ValueError("The optimizer must be 'gradient_descent', 'stochastic_gradient_descent' or 'mini_batch_gradient_descent'")
+		x_batches = np.array_split(x, x.shape[0] / batch_size)
+		y_batches = np.array_split(y, y.shape[0] / batch_size)
 	else:
 		x_batches = np.array([x])
 		y_batches = np.array([y])

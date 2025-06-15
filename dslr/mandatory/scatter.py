@@ -1,7 +1,8 @@
 from matplotlib import pyplot as plt
 import pandas as pd
 import numpy as np
-import sys
+import argparse
+
 
 def scatter (data:pd.DataFrame):
 	keys = data.keys()
@@ -33,12 +34,15 @@ def scatter (data:pd.DataFrame):
 	plt.subplots_adjust()
 	plt.show()
 
-
-if len(sys.argv) != 2:
-	print("Please give a file as argument to describe.")
+if __name__ == "__main__":
+	parserr = argparse.ArgumentParser(description="The CSV file to be graphed with custom statistics.")
+	parserr.add_argument("-f","--file", type=str, help="Path to the CSV file to graph.")
+	args = parserr.parse_args()
+if not args.file:
+	print("Please give a file as argument to graph.")
 	exit(1)
 try:
-	df = pd.read_csv(sys.argv[1])
+	df = pd.read_csv(args.file)
 except:
 	print("The file you entered does not exist or you don't have access.")
 	exit(1)

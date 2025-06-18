@@ -36,7 +36,7 @@ class Reward(Enum):
             case Collision.NONE:
                 return Reward.NONE.value
             case Collision.IS_THE_WAY:
-                return Reward.IS_THE_WAY.value  # No reward for being on the way
+                return Reward.IS_THE_WAY.value
             case Collision.IS_ALLIGNED_WITH_GREEN_APPLE:
                 return Reward.IS_ALLIGNED_WITH_GREEN_APPLE.value
             case Collision.RED_APPLE:
@@ -55,7 +55,7 @@ class Reward(Enum):
     @classmethod
     def get_len(cls):
         return len(cls)
-    
+
     def __str__(self):
         return self.name.replace("_", " ").title()
 

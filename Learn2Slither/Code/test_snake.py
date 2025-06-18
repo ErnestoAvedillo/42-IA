@@ -19,7 +19,8 @@ episode_over = False
 print("Training completed.")
 agent.load_model(File_Name)
 print(f"Model loaded from {File_Name}")
-rewards = [0, 0, 0, 0, 0, 0]  # initialize counter of rewards for each action
+# initialize counter of rewards for each action
+rewards = [0, 0, 0, 0, 0, 0]
 
 observation, info = env.reset()
 while not episode_over:

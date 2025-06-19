@@ -29,7 +29,7 @@ if __name__ == "__main__":
     parser.add_argument('-f', '--file_model', type=str, nargs='?', default='dqn_snake_model.joblib', help='File name to save the model.')
     parser.add_argument('-g', '--gpu_nr', type=int, nargs='?', help='GPU number where to xecute the neural network.')
     parser.add_argument('--history_lengths', type=str, nargs='?', default='lengths.csv', help='File name to save the hystoric of lengths for each game played.')
-    parser.add_argument('-e', '--episodes', type=int, nargs='?', help='Number of maximum episodes to repeat.')
+    parser.add_argument('-e', '--episodes', type=int, nargs='?',default=1000, help='Number of maximum episodes to repeat.')
     args = parser.parse_args()
 
     # Check if learning type is provided, otherwise default to 'SARSA
@@ -41,14 +41,12 @@ if __name__ == "__main__":
         Learn_Type = args.learn
     # Check if file name is provided, otherwise default to 'dqn_snake_model.joblib'
     if not args.file_model:
-    elif args.learn_type not in ["Q_LEARNING", "SARSA"]:
-        Usage()
-        raise ValueError("Invalid learning type. "
-                         "Choose 'Q_LEARNING' or 'SARSA'.")
+        Learn_Type = 'Q_LEARNING'
+        print("No file name provided. Defaulting to 'dqn_snake_model.joblib'.")
     else:
-        print(f"Learning type set to: {args.learn_type}")
-        Learn_Type = args.learn_type
-    if not args.file_name:
+        print(f"Learning type set to: {args.learn}")
+        Learn_Type = args.learn
+    if not args.file_model:
         print("No file name provided. Defaulting to 'dqn_snake_model.joblib'.")
         File_Name = "dqn_snake_model.joblib"
     else:

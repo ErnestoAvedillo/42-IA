@@ -1,4 +1,3 @@
-import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -6,26 +5,23 @@ import torch.optim as optim
 HIDDEN_LAYERS = 2
 NUMBER_OF_NEURONS = 64
 
+
 class DLQModel(nn.Module):
-    def __init__(self, state_shape, nr_actions,gpu_device=0):
+    def __init__(self, state_shape, nr_actions, gpu_device=0):
         super(DLQModel, self).__init__()
         layers = []
         layers.append(nn.Linear(state_shape, NUMBER_OF_NEURONS))
         layers.append(nn.ReLU())
         layers.append(nn.Linear(NUMBER_OF_NEURONS, NUMBER_OF_NEURONS))
-        #layers.append(nn.ReLU())
-        #layers.append(nn.Linear(NUMBER_OF_NEURONS, NUMBER_OF_NEURONS))
         layers.append(nn.ReLU())
         layers.append(nn.Linear(NUMBER_OF_NEURONS, nr_actions))
 
-        #neurons = NUMBER_OF_NEURONS
-        #for i in range(HIDDEN_LAYERS):
-        #    layers.append(nn.Linear(neurons, neurons // 2))
-        #    layers.append(nn.ReLU())
-        #    neurons //= 2
-        #layers.append(nn.Linear(neurons, nr_actions))
-        assert gpu_device < torch.cuda.device_count(), f"GPU device {gpu_device} is not available."
-        self.device = torch.device(f'cuda:{gpu_device}' if torch.cuda.is_available() else 'cpu')
+        if torch.cuda.is_available():
+            assert gpu_device < torch.cuda.device_count(), (
+                f"GPU device {gpu_device} is not available."
+            )
+        self.device = torch.device(f'cuda:{gpu_device}'
+                                   if torch.cuda.is_available() else 'cpu')
         self.model = nn.Sequential(*layers).to(self.device)
 
     def forward(self, X):
@@ -38,10 +34,9 @@ class DLQModel(nn.Module):
             X_tensor = X_tensor.unsqueeze(0)
         elif X_tensor.ndim > 2:
             raise ValueError("Input tensor must be 1D or 2D")
-        X_tensor = X_tensor.view(X_tensor.size(0), -1) # Flatten the input
+        X_tensor = X_tensor.view(X_tensor.size(0), -1)  # Flatten the input
         return self.model(X_tensor)  # Set the model to training mode
-        
-    
+
     def fit(self, X, Y, epochs=1000, batch_size=32, learning_rate=0.001):
         torch.autograd.set_detect_anomaly(True)
         # Convert numpy arrays to PyTorch tensors

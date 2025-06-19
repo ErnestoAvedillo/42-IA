@@ -16,28 +16,38 @@ EPSILON_START = 1.0             # Initial exploration rate
 EPSILON_END = 0.01              # Minimum exploration rate
 EPSILON_DECAY = 0.999           # Rate at which epsilon decays per episode
 TARGET_UPDATE_FREQ = 100        # How often to update the target network
-                                # (in training steps)
 TARGET_SAVE_FREQ = 100          # How often to save the target model
 EPOCHS = 10                     # Number of epochs to train the model per batch
 MAX_MOVES = 1000                # Max number of moves per episode
 
+
 class DQNAgent():
-    def __init__(self, state_shape, num_actions,filename=None,learning_type="Q_LEARNING", gpu_number=0):
+    def __init__(self, state_shape, num_actions, filename=None,
+                 learning_type="Q_LEARNING", gpu_number=0):
         """ Initialize the DQN agent with the given parameters.
         Args:
-            state_shape (tuple): Shape of the state space.
-            num_actions (int): Number of possible actions.
-            filename (str, optional): Filename to save/load the model. Defaults to None.
-            learning_type (str, optional): Type of learning algorithm. Defaults to "Q_LEARNING", alterantive "SARSA".
+            state_shape (tuple):
+                Shape of the state space.
+            num_actions (int):
+                Number of possible actions.
+            filename (str, optional):
+                Filename to save/load the model. Defaults to None.
+            learning_type (str, optional):
+                Type of learning algorithm.
+                Defaults to "Q_LEARNING", alterantive "SARSA".
+            gpu_number (int, optional):
+                GPU number to use for the neural network.
+                Defaults to 0.
         """
         self.state_shape = state_shape
         self.num_actions = num_actions
         self.policy_model = DLQModel((state_shape), num_actions, gpu_number)
         self.target_model = DLQModel((state_shape), num_actions, gpu_number)
-        self.target_model.load_state_dict(self.policy_model.state_dict())  # Copy biases from policy to target model
+        self.target_model.load_state_dict(self.policy_model.state_dict())
         self.load_type = learning_type
         if self.load_type not in ["Q_LEARNING", "SARSA"]:
-            raise ValueError("Invalid learning type. Choose 'Q_LEARNING' or 'SARSA'.")
+            raise ValueError("Invalid learning type. Valid "
+                             "'Q_LEARNING' or 'SARSA'.")
         self.epsilon = EPSILON_START
         self.replay_buffer = deque(maxlen=REPLAY_BUFFER_SIZE)
         if filename is not None:
@@ -45,7 +55,8 @@ class DQNAgent():
             if os.path.isfile(filename):
                 self.load_model(filename)
             else:
-                print(f"File {filename} does not exist. Starting with a new model.")
+                print(f"File {filename} does not exist."
+                      "Starting with a new model.")
                 self.filename = None
         self.training_steps = TARGET_UPDATE_FREQ
         self.save_srteps = TARGET_SAVE_FREQ
@@ -65,7 +76,7 @@ class DQNAgent():
         if self.moves >= MAX_MOVES:
             self.truncated = True
         return output, is_aleatory
-    
+
     def store_experience(self, state, action, reward, next_state, done):
         self.replay_buffer.append((state, action, reward, next_state, done))
 
@@ -95,18 +106,31 @@ class DQNAgent():
                     target_q_values[i][actions[i]] = rewards[i]
                 else:
                     if self.load_type == "Q_LEARNING":
-                        target_q_values[i][actions[i]] = target_q_values[i][actions[i]] * (1 - AGENT_LEARNING_RATE) + AGENT_LEARNING_RATE * (rewards[i] + GAMMA *
-                                               torch.max(next_q_values[i]))
+                        target_q_values[i][actions[i]] = (
+                            (1 - AGENT_LEARNING_RATE) * (
+                                target_q_values[i][actions[i]]
+                            ) +
+                            AGENT_LEARNING_RATE * (
+                                rewards[i] + GAMMA *
+                                torch.max(next_q_values[i])
+                            )
+                        )
                     elif self.load_type == "SARSA":
-                        # SARSA update rule
-                        target_q_values[i][actions[i]] = (target_q_values[i][actions[i]] * (1 - AGENT_LEARNING_RATE) +
-                            AGENT_LEARNING_RATE * (rewards[i] + GAMMA * next_q_values[i][actions[i]]))
-
-        
+                        target_q_values[i][actions[i]] = (
+                            (1 - AGENT_LEARNING_RATE) * (
+                                target_q_values[i][actions[i]]
+                            ) +
+                            AGENT_LEARNING_RATE * (
+                                rewards[i] + GAMMA *
+                                next_q_values[i][actions[i]]
+                                )
+                            )
         if self.training_steps == 0:
             # Train the policy model
-            self.policy_model.fit(states, target_q_values, epochs=EPOCHS, batch_size=BATCH_SIZE, learning_rate=LEARNING_RATE)
-            self.target_model.load_state_dict(self.policy_model.state_dict())  # Copy biases from policy to target model
+            self.policy_model.fit(states, target_q_values, epochs=EPOCHS,
+                                  batch_size=BATCH_SIZE,
+                                  learning_rate=LEARNING_RATE)
+            self.target_model.load_state_dict(self.policy_model.state_dict())
             self.training_steps = TARGET_UPDATE_FREQ
         else:
             self.training_steps -= 1

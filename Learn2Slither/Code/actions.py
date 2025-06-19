@@ -8,6 +8,7 @@ NAMES = {
     3: "RIGHT"
 }
 
+
 class Action(Enum):
     # Actions for the snake
     UP = 0
@@ -26,6 +27,6 @@ class Action(Enum):
     def get_len_actions():
         return len(Action)
 
-    def get_action_name(self, action: int=None):
+    def get_action_name(self, action: int = None):
         """Print the name of the action."""
         return (NAMES[self.value])

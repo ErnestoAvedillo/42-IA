@@ -108,25 +108,21 @@ class MotorSnake():
                 self._place_apple(RED, new_position)
             case _:
                 self.worn.pop()
-            #case Collision.NONE:
-            #    self.worn.pop()
-            #case Collision.IS_THE_WAY:
-            #    self.worn.pop()
-            #case Collision.IS_ALLIGNED_WITH_GREEN_APPLE:
-            #    self.worn.pop()
-            #case Collision.REPEATED_POSITION:
-            #    self.worn.pop()
         self.history.append(self.worn.copy())
         return self.collision, self.termnate
 
     def check_head_psition_near_green_apple(self):
         """ Check if the head position is near a green apple.
+        This means that the head is in the same row or column as a green apple,
+        and the distance to the green apple is less than 2 cells.
         """
         if len(self.worn) == 0 or len(self.green_apples) == 0:
             return False
         for i in range(len(self.green_apples)):
-            if ((self.worn[0][0] == self.green_apples[i][0] and (abs(self.worn[0][1] - self.green_apples[i][1]) < 2 and abs(self.worn[0][1] != self.green_apples[i][1]))) or
-                (self.worn[0][1] == self.green_apples[i][1] and (abs(self.worn[0][0] - self.green_apples[i][0]) < 2 and abs(self.worn[0][0] != self.green_apples[i][0])))):
+            dx = abs(self.worn[0][0] - self.green_apples[i][0])
+            dy = abs(self.worn[0][1] - self.green_apples[i][1])
+            if ((self.worn[0][0] == self.green_apples[i][0] and dy == 1) or
+                    (self.worn[0][1] == self.green_apples[i][1] and dx == 1)):
                 return True
         return False
 
@@ -137,7 +133,8 @@ class MotorSnake():
         if len(self.worn) == 0 or len(self.green_apples) == 0:
             return False
         for i in range(len(self.green_apples)):
-            if ((self.worn[0][0] == self.green_apples[i][0] or self.worn[0][1] == self.green_apples[i][1])):
+            if ((self.worn[0][0] == self.green_apples[i][0] or
+                 self.worn[0][1] == self.green_apples[i][1])):
                 return True
         return False
 
@@ -160,12 +157,10 @@ class MotorSnake():
                 self.termnate = True
                 return
         if head_pos in self.red_apples:
-            #self.worn.pop()
             self.collision = Collision.RED_APPLE
             if len(self.worn) == 0:
                 self.termnate = True
                 return
-            #self._place_apple(RED, head_pos, operation="replace")
             return
         if head_pos in self.green_apples:
             self.collision = Collision.GREEN_APPLE
@@ -177,7 +172,7 @@ class MotorSnake():
             self.collision = Collision.IS_ALLIGNED_WITH_GREEN_APPLE
             return
         if self.worn_has_repeated_position():
-           self.collision = Collision.REPEATED_POSITION
+            self.collision = Collision.REPEATED_POSITION
         return
 
     def _create_map(self):
@@ -212,7 +207,7 @@ class MotorSnake():
 
     def get_moves(self):
         return self.moves
-    
+
     def get_length_worn(self):
         return len(self.worn)
 

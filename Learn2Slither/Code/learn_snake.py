@@ -137,17 +137,16 @@ for i in range(max_episodes):
         filled = int(num_Chars * percent // 100)
         bar = '█' * filled + '-' * (num_Chars - filled)
         print(f'', end='\r')
-        print(f"Time elapsed: {(time.time() - first_time) / 3600 :.2f} hours,\t|{bar}| {percent:.2f}% \t - time left: {(max_episodes - i - 1) * (time.time() - first_time) / (i + 1) / 3600:.2f} hours")
         # time.sleep(1)
+        print(f"Time elapsed: {(time.time() - first_time) / 3600:.2f} hours,",
+                end="\t")
+        print(f"|{bar}| {percent:.2f}%", end="\t")
+        time_left = ((NUM_EPISODES - i - 1) * (time.time() - first_time) /
+                        (i + 1) /
+                        3600)
+        print(f"- time left: {time_left:.2f} hours")
     lengths.append(env.get_length_worn())
     pd.DataFrame(lengths, columns=["length"]).to_csv(filename_lengths, index=False)
-    print(f"Time elapsed: {(time.time() - first_time) / 3600:.2f} hours,",
-            end="\t")
-    print(f"|{bar}| {percent:.2f}%", end="\t")
-    time_left = ((NUM_EPISODES - i - 1) * (time.time() - first_time) /
-                    (i + 1) /
-                    3600)
-    print(f"- time left: {time_left:.2f} hours")
     # time.sleep(1)
     lengths.append(env.get_length_worn())
     pd.DataFrame(lengths,

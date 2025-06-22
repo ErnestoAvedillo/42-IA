@@ -46,6 +46,8 @@ class EnvSnake(MotorSnake):
         return (self.get_observation(), self.reward,
                 self.terminated, self.truncated, {"moves": self.get_moves()})
 
+
+
     def get_observation(self):
         if len(self.worn) == 0:
             head_col = 1
@@ -59,7 +61,47 @@ class EnvSnake(MotorSnake):
             col.append(self.map[i][head_col])
         numbered_raw = [DICTIONARY_OBSERVATION[cell] for cell in raw]
         numbered_col = [DICTIONARY_OBSERVATION[cell] for cell in col]
-        observation = numbered_raw + numbered_col
+        if "G" in numbered_raw:
+            pos_green_apple_row = numbered_raw.index("G")
+        else:
+            pos_green_apple_row = 0
+        if "G" in numbered_col:
+            pos_green_apple_col = numbered_col.index("G")
+        else:
+            pos_green_apple_col = 0
+        observation = []
+        if pos_green_apple_row != 0:
+            if pos_green_apple_row < head_raw:
+                observation.append(DICTIONARY_OBSERVATION["G"])
+            else:
+                observation.append(DICTIONARY_OBSERVATION["O"])
+        else:
+            observation.append(DICTIONARY_OBSERVATION["O"])
+        observation.append(self.map[head_raw - 1][head_col])
+        observation.append(self.map[head_raw + 1][head_col])
+        if pos_green_apple_row != 0:
+            if pos_green_apple_row > head_raw:
+                observation.append(DICTIONARY_OBSERVATION["G"])
+            else:
+                observation.append(DICTIONARY_OBSERVATION["O"])
+        else:
+            observation.append(DICTIONARY_OBSERVATION["O"])
+        if pos_green_apple_col != 0:
+            if pos_green_apple_col < head_col:
+                observation.append(DICTIONARY_OBSERVATION["G"])
+            else:
+                observation.append(DICTIONARY_OBSERVATION["O"])
+        else:
+            observation.append(DICTIONARY_OBSERVATION["O"])        
+        observation.append(self.map[head_raw][head_col - 1])
+        observation.append(self.map[head_raw][head_col + 1])
+        if pos_green_apple_col != 0:
+            if pos_green_apple_col > head_col:
+                observation.append(DICTIONARY_OBSERVATION["G"])
+            else:
+                observation.append(DICTIONARY_OBSERVATION["O"])
+        else:
+            observation.append(DICTIONARY_OBSERVATION["O"])
         return observation
 
     def get_length_worn(self):

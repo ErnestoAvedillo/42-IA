@@ -35,7 +35,8 @@ class DLQModel(nn.Module):
         elif X_tensor.ndim > 2:
             raise ValueError("Input tensor must be 1D or 2D")
         X_tensor = X_tensor.view(X_tensor.size(0), -1)  # Flatten the input
-        return self.model(X_tensor)  # Set the model to training mode
+        output = self.model(X_tensor)  # Set the model to training mode
+        return output
 
     def fit(self, X, Y, epochs=1000, batch_size=32, learning_rate=0.001):
         torch.autograd.set_detect_anomaly(True)

@@ -106,6 +106,15 @@ class DQNAgent():
                     target_q_values[i][actions[i]] = rewards[i]
                 else:
                     if self.load_type == "Q_LEARNING":
+                        if rewards[i] == 500:
+                            aux1 = (1 - AGENT_LEARNING_RATE) * (
+                                    target_q_values[i][actions[i]]
+                                )
+                            aux2 = AGENT_LEARNING_RATE * (
+                                    rewards[i] + GAMMA *
+                                    next_q_values[i][actions[i]]
+                                    )
+                            print(f"position {i}, reward: {rewards[i]}, action {actions[i]}, aux1: {aux1}, aux2: {aux2}")
                         target_q_values[i][actions[i]] = (
                             (1 - AGENT_LEARNING_RATE) * (
                                 target_q_values[i][actions[i]]
@@ -138,6 +147,13 @@ class DQNAgent():
             self.policy_model.fit(states, target_q_values, epochs=EPOCHS,
                                   batch_size=BATCH_SIZE,
                                   learning_rate=LEARNING_RATE)
+            predictions = self.policy_model.forward(states).detach().numpy()
+            for i in range(BATCH_SIZE):
+                if rewards[i] == 500:
+                    print("-------------------------------------")
+                    print(f"position {i}, reward: {rewards[i]}, action {actions[i]}")
+                    print(f"q_value: {target_q_values[i]}")
+                    print(f"prediction: {predictions[i]}")
             self.target_model.load_state_dict(self.policy_model.state_dict())
             self.training_steps = TARGET_UPDATE_FREQ
         else:

@@ -36,6 +36,7 @@ class EnvSnake(MotorSnake):
 
     def step(self, action):
         # convert from np.int64 to int
+        in_observaion = self.get_observation()
         action = int(action)
         self.direction = Directions.get_direction(action)
         collision, self.terminated = self._move()
@@ -43,9 +44,9 @@ class EnvSnake(MotorSnake):
         self.reward = Reward.get_reward(self, collision)
         if self.get_moves() >= MAX_MOVES:
             self.truncated = True
-        return (self.get_observation(), self.reward,
-                self.terminated, self.truncated, {"moves": self.get_moves()})
-
+        out_observaion = self.get_observation()
+        return (in_observaion,  self.reward, self.terminated, 
+                self.truncated, out_observaion, {"moves": self.get_moves()})
     def get_observation(self):
         if len(self.worn) == 0:
             head_col = 1

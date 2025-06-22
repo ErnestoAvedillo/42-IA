@@ -106,6 +106,15 @@ class DQNAgent():
                     target_q_values[i][actions[i]] = rewards[i]
                 else:
                     if self.load_type == "Q_LEARNING":
+                        if rewards[i] == 500:
+                            aux1 = (1 - AGENT_LEARNING_RATE) * (
+                                    target_q_values[i][actions[i]]
+                                )
+                            aux2 = AGENT_LEARNING_RATE * (
+                                    rewards[i] + GAMMA *
+                                    next_q_values[i][actions[i]]
+                                    )
+                            print(f"position {i}, rewaard: {rewards[i]}, action {actions[i]}, aux1: {aux1}, aux2: {aux2}")
                         target_q_values[i][actions[i]] = (
                             (1 - AGENT_LEARNING_RATE) * (
                                 target_q_values[i][actions[i]]

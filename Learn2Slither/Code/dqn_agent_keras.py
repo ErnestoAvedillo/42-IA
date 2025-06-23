@@ -158,8 +158,8 @@ class DQNAgent():
 
     def save_model(self, filename):
         model = self.get_model()
-        joblib.dump(model, filename)
+        torch.save(model.state_dict(), filename)
 
     def load_model(self, filename):
-        model = joblib.load(filename)
-        self.set_model(model)
+        self.model.load_state_dict(torch.load(filename, map_location=torch.device('cuda' if torch.cuda.is_available() else 'cpu')))
+        self.model.eval()

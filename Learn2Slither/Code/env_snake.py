@@ -47,19 +47,70 @@ class EnvSnake(MotorSnake):
                 self.terminated, self.truncated, {"moves": self.get_moves()})
 
     def get_observation(self):
+        """
+        Returns the current observation of the environment.
+        The observation consists of the environment seen by the snake,
+        Structure:
+        head_collition_left:true/false
+        head_collition_right:true/false
+        head_collition_up:true/false
+        head_collition_down:true/false
+        green_apple_left:true/false
+        green_apple_right:true/false
+        green_apple_up:true/false
+        green_apple_down:true/false
+        red_apple_left:true/false
+        red_apple_right:true/false
+        red_apple_up:true/false
+        red_apple_down:true/false
+        """
         if len(self.worn) == 0:
             head_col = 1
             head_raw = 1
         else:
             head_col = self.worn[0][0] + 1
             head_raw = self.worn[0][1] + 1
-        raw = self.map[head_raw]
-        col = []
-        for i in range(self.nr_cells[1] + 2):
-            col.append(self.map[i][head_col])
-        numbered_raw = [DICTIONARY_OBSERVATION[cell] for cell in raw]
-        numbered_col = [DICTIONARY_OBSERVATION[cell] for cell in col]
-        observation = numbered_raw + numbered_col
+#        raw = self.map[head_raw]
+#        col = []
+#        for i in range(self.nr_cells[1] + 2):
+#            col.append(self.map[i][head_col])
+#        numbered_raw = [DICTIONARY_OBSERVATION[cell] for cell in raw]
+#        numbered_col = [DICTIONARY_OBSERVATION[cell] for cell in col]
+#        observation = numbered_raw + numbered_col
+        observation = [0 for _ in range(12)]
+        # Check for collisions with walls
+        if self.map[head_raw - 1][head_col] == "W" or \
+           self.map[head_raw - 1][head_col] in "S":
+            observation[0] = 1
+        if self.map[head_raw + 1][head_col] == "W" or \
+           self.map[head_raw + 1][head_col] in "S":
+            observation[1] = 1
+        if self.map[head_raw][head_col - 1] == "W" or \
+           self.map[head_raw][head_col - 1] in "S":
+            observation[2] = 1
+        if self.map[head_raw][head_col + 1] == "W" or \
+           self.map[head_raw][head_col + 1] in "S":
+            observation[3] = 1
+        # Check for coincidences in raw or col with green apples
+        for apple in self.green_apples:
+            if apple[0] < head_col and apple[1] == head_raw:
+                observation[4] = 1
+            if apple[0] > head_col and apple[1] == head_raw:
+                observation[5] = 1
+            if apple[0] == head_col and apple[1] > head_raw:
+                observation[6] = 1
+            if apple[0] == head_col and apple[1] < head_raw:
+                observation[7] = 1
+        # Check for coincidences in raw or col with red apples
+        for apple in self.red_apples:
+            if apple[0] < head_col and apple[1] == head_raw:
+                observation[8] = 1
+            if apple[0] > head_col and apple[1] == head_raw:
+                observation[9] = 1
+            if apple[0] == head_col and apple[1] > head_raw:
+                observation[10] = 1
+            if apple[0] == head_col and apple[1] < head_raw:
+                observation[11] = 1
         return observation
 
     def get_length_worn(self):

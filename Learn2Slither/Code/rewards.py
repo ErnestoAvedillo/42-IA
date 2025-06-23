@@ -15,15 +15,15 @@ DICCTIONARY = {
 
 class Reward(Enum):
     # No reward
-    NONE = -0.1
+    NONE = 0
     # REWARD ON THE WAY
     IS_THE_WAY = 7
     # Reward for being on the way to a green apple
     IS_ALLIGNED_WITH_GREEN_APPLE = 5
     # Penalty for repeated position
-    IS_REPEATED_POSITION = -7
+    IS_REPEATED_POSITION = -1
     # Green apple reward on th way
-    RED_APPLE = -6
+    RED_APPLE = -8
     # Reward for eating a green apple
     GREEN_APPLE = 10
     # Penalty for hitting a wall or body

@@ -174,7 +174,7 @@ while not episode_over:
     observation, reward, terminated, truncated, info = env.step(action)
     env.print_map_in_shell()
     episode_over = terminated or truncated
-    time.sleep(1)
+    time.sleep(0.25)
     print(f"Action: {Action(action).get_action_name()}", end="\t")
     print(f"- Length {env.get_length_worn()}", end="\t")
     print(f"- Aleatory {is_aleatory}", end="\t")

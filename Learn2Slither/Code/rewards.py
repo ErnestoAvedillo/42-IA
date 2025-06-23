@@ -21,9 +21,9 @@ class Reward(Enum):
     # Reward for being on the way to a green apple
     IS_ALLIGNED_WITH_GREEN_APPLE = 5
     # Penalty for repeated position
-    IS_REPEATED_POSITION = -4
+    IS_REPEATED_POSITION = -7
     # Green apple reward on th way
-    RED_APPLE = -5
+    RED_APPLE = -6
     # Reward for eating a green apple
     GREEN_APPLE = 10
     # Penalty for hitting a wall or body

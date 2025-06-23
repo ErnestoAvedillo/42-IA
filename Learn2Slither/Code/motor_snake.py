@@ -15,7 +15,7 @@ class MotorSnake():
         self.nr_cells = Nr_cells
         self.direction = Directions.get_random_direction()
         self.worn = deque()
-        self.history = deque(maxlen=10)  # Store last 10 worn deques
+        self.history = deque(maxlen=20)  # Store last 20 worn deques
         self.red_apples = []
         self.green_apples = []
         MotorSnake.reset(self)

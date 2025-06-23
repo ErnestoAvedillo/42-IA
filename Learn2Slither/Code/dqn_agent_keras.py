@@ -58,8 +58,7 @@ class DQNAgent():
                 print(f"File {filename} does not exist."
                       "Starting with a new model.")
                 self.filename = None
-        self.training_steps = TARGET_UPDATE_FREQ
-        self.save_srteps = TARGET_SAVE_FREQ
+        self.save_steps = TARGET_SAVE_FREQ
         self.moves = 0
         self.truncated = False
 
@@ -80,28 +79,57 @@ class DQNAgent():
     def store_experience(self, state, action, reward, next_state, done):
         self.replay_buffer.append((state, action, reward, next_state, done))
 
-    def train(self):
-        if len(self.replay_buffer) < BATCH_SIZE:
-            return
-
-        batch = random.sample(self.replay_buffer, BATCH_SIZE)
+    def train_all(self):
+        """ Train the agent using experiences stored in the replay buffer.
+        This method samples a batch of experiences from the replay buffer,
+        updates the Q-values, and trains the policy model.
+        """
+        if len(self.replay_buffer) > BATCH_SIZE:
+            batch = random.sample(self.replay_buffer, BATCH_SIZE)
+        else:
+            batch = self.replay_buffer
         states, actions, rewards, next_states, dones = zip(*batch)
-
-        states = np.array(states)
-        next_states = np.array(next_states)
-        rewards = np.array(rewards)
-        dones = np.array(dones)
-
+        self.train(states, actions, rewards, next_states, dones)
         # Update epsilon
         if self.epsilon > EPSILON_END:
             self.epsilon *= EPSILON_DECAY
 
+        self.target_model.load_state_dict(self.policy_model.state_dict())
+
+        if self.filename is not None and self.save_steps == 0:
+            self.save_model(self.filename)
+            self.save_steps = TARGET_SAVE_FREQ
+        else:
+            self.save_steps -= 1
+    
+    def train_single_step(self, state, action, reward, next_state, done):
+        """ Train the agent for a single step using the given experience.
+        Args:
+            state (np.array): Current state of the environment.
+            action (int): Action taken by the agent.
+            reward (float): Reward received from the environment.
+            next_state (np.array): Next state of the environment.
+            done (bool): Whether the episode has ended.
+        """
+        self.train(state, action, reward, next_state, done)
+
+    def train(self, states, actions, rewards, next_states, dones):
+        states = torch.tensor(states, dtype=torch.float32)
+        next_states = torch.tensor(next_states, dtype=torch.float32)
+        rewards = torch.tensor(rewards)
+        actions = torch.tensor(actions)
+        if len(states.shape) == 1:
+            states = torch.unsqueeze(states,0)
+            next_states = torch.unsqueeze(next_states,0)
+            rewards = torch.unsqueeze(rewards,0)
+            actions = torch.unsqueeze(actions,0)
+            dones = (dones,)
         # Predict Q-values for current and next states
         with torch.no_grad():
             target_q_values = self.policy_model.forward(states).cpu().numpy()
             next_q_values = self.target_model.forward(next_states).cpu().numpy()
 
-            for i in range(BATCH_SIZE):
+            for i in range(states.shape[0]):
                 if dones[i]:
                     target_q_values[i][actions[i]] = rewards[i]
                 else:
@@ -112,7 +140,7 @@ class DQNAgent():
                             ) +
                             AGENT_LEARNING_RATE * (
                                 rewards[i] + GAMMA *
-                                np.max(next_q_values[i])
+                                torch.max(next_q_values[i])
                             )
                         )
                     elif self.load_type == "SARSA":
@@ -124,21 +152,10 @@ class DQNAgent():
                                 next_q_values[i][actions[i]]
                                 )
                             )
-        if self.training_steps == 0:
-            # Train the policy model
-            self.policy_model.fit(states, target_q_values, epochs=EPOCHS,
-                                  batch_size=BATCH_SIZE,
-                                  learning_rate=LEARNING_RATE)
-            self.target_model.load_state_dict(self.policy_model.state_dict())
-            self.training_steps = TARGET_UPDATE_FREQ
-        else:
-            self.training_steps -= 1
-        del target_q_values
-        if self.filename is not None and self.save_srteps == 0:
-            self.save_model(self.filename)
-            self.save_srteps = TARGET_SAVE_FREQ
-        else:
-            self.save_srteps -= 1
+        self.policy_model.fit(states, target_q_values, epochs=EPOCHS,
+                                batch_size=BATCH_SIZE,
+                                learning_rate=LEARNING_RATE)
+
 
     def get_model(self):
         model = {}
@@ -157,9 +174,20 @@ class DQNAgent():
         self.num_actions = model["num_actions"]
 
     def save_model(self, filename):
-        model = self.get_model()
-        torch.save(model.state_dict(), filename)
-
+        """ Save the model to a file.
+        Args:
+            filename (str): The name of the file to save the model.
+        """
+        self.policy_model.save(filename)
+    
     def load_model(self, filename):
-        self.model.load_state_dict(torch.load(filename, map_location=torch.device('cuda' if torch.cuda.is_available() else 'cpu')))
-        self.model.eval()
+        """ Load the model from a file.
+        Args:
+            filename (str): The name of the file to load the model from.
+        """
+        if not os.path.isfile(filename):
+            raise FileNotFoundError(f"File {filename} does not exist.")
+        self.policy_model.load(filename)
+        self.target_model.load_state_dict(self.policy_model.state_dict())
+        print(f"Model loaded from {filename}.")
+        

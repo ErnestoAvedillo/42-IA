@@ -87,6 +87,8 @@ for i in range(max_episodes):
         next_observation, reward, terminated, truncated, info = env.step(action)
         agent.store_experience(observation, action, reward, next_observation,
                                terminated or truncated)
+        agent.train_single_step(observation, action, reward, next_observation,
+                               terminated or truncated)
         observation = next_observation
         match reward:
             case Reward.NONE.value:
@@ -107,7 +109,6 @@ for i in range(max_episodes):
                 rewards[7] += 1  # Penalty for repeated position
             case _:
                 rewards[8] += 1  # Unhandled reward case
-        agent.train()
         if platform.system() == "Windows":
             os.system("cls")
         else:
@@ -147,6 +148,7 @@ for i in range(max_episodes):
                         (i + 1) /
                         3600)
         print(f"- time left: {time_left:.2f} hours")
+    agent.train_all()
     lengths.append(env.get_length_worn())
     pd.DataFrame(lengths, columns=["length"]).to_csv(filename_lengths, index=False)
     # time.sleep(1)

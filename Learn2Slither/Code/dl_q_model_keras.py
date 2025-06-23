@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.optim as optim
 
 HIDDEN_LAYERS = 2
-NUMBER_OF_NEURONS = 128
+NUMBER_OF_NEURONS = 256
 
 
 class DLQModel(nn.Module):
@@ -68,3 +68,10 @@ class DLQModel(nn.Module):
 
             #if (epoch + 1) % 100 == 0:
             print(f'Epoch [{epoch + 1}/{epochs}], Loss: {loss.item():.4f}')
+
+    def save(self, file_path):
+        torch.save(self.model.state_dict(), file_path)
+        
+    def load(self, file_path):
+        self.model.load_state_dict(torch.load(file_path, map_location=self.device))
+        self.model.eval()

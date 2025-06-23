@@ -98,8 +98,8 @@ class DQNAgent():
 
         # Predict Q-values for current and next states
         with torch.no_grad():
-            target_q_values = self.policy_model.forward(states).numpy()
-            next_q_values = self.target_model.forward(next_states).numpy()
+            target_q_values = self.policy_model.forward(states).cpu().numpy()
+            next_q_values = self.target_model.forward(next_states).cpu().numpy()
 
             for i in range(BATCH_SIZE):
                 if dones[i]:

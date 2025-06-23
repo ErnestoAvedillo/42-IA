@@ -17,7 +17,7 @@ EPSILON_END = 0.01              # Minimum exploration rate
 EPSILON_DECAY = 0.999           # Rate at which epsilon decays per episode
 TARGET_UPDATE_FREQ = 100        # How often to update the target network
 TARGET_SAVE_FREQ = 100          # How often to save the target model
-EPOCHS = 10                     # Number of epochs to train the model per batch
+EPOCHS = 1                      # Number of epochs to train the model per batch
 MAX_MOVES = 1000                # Max number of moves per episode
 
 

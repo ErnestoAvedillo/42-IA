@@ -6,7 +6,8 @@ from actions import Action
 from directions import Directions
 from rewards import Reward
 import time
-import sys
+import os
+import argparse
 
 MAX_MOVES = 1000  # Maximum number of moves before truncation
 
@@ -32,10 +33,8 @@ RED = 2
 
 ACTIONS = ["NONE", "UP", "DOWN", "LEFT", "RIGHT"]
 
-MODEL_AUTO_PLAY = "model.json"
-
 class Snake(pg.sprite.Sprite, MotorSnake):
-    def __init__(self, x, y, Nr_cells=[10, 10], modelname=MODEL_AUTO_PLAY):
+    def __init__(self, x, y, Nr_cells=[10, 10], modelname=None):
         pg.sprite.Sprite.__init__(self)
         MotorSnake.__init__(self, Nr_cells)
         self.size_cells = [x // self.nr_cells[0], y // self.nr_cells[1]]
@@ -57,7 +56,12 @@ class Snake(pg.sprite.Sprite, MotorSnake):
         self._autoplaying = False
         self.agent = DQNAgent(state_shape=len(self.get_observation()),
                  num_actions=Action.get_len_actions())
-        self.agent.load_model(modelname)
+        if modelname is None:
+            print(f"Model for auto-play not added. No autoplay will be performed.")
+            self.show_autoplay = False
+        else:
+            self.show_autoplay = True
+            self.agent.load_model(modelname)
     
     def load_grass(self, filename):
         self.grass = pg.image.load(filename)
@@ -326,26 +330,70 @@ class Snake(pg.sprite.Sprite, MotorSnake):
                 self.terminated, self.truncated, {})
 
     def get_observation(self):
-        """Get the current observation of the game.
-        Returns:
-            list: A list representing the observation, where each element corresponds
-                  to a cell in the game map, encoded as integers.
         """
-        # If the snake is not placed, return a default observation
+        Returns the current observation of the environment.
+        The observation consists of the environment seen by the snake,
+        Structure:
+        head_collition_left:true/false
+        head_collition_right:true/false
+        head_collition_up:true/false
+        head_collition_down:true/false
+        green_apple_left:true/false
+        green_apple_right:true/false
+        green_apple_up:true/false
+        green_apple_down:true/false
+        red_apple_left:true/false
+        red_apple_right:true/false
+        red_apple_up:true/false
+        red_apple_down:true/false
+        """
         if len(self.worn) == 0:
             head_col = 1
             head_raw = 1
         else:
             head_col = self.worn[0][0] + 1
             head_raw = self.worn[0][1] + 1
-        raw = self.map[head_raw]
-        col = []
-        for i in range(self.nr_cells[1] + 2):
-            col.append(self.map[i][head_col])
-        col1 = [row[head_col] for row in self.map]
-        numbered_raw = [DICTIONARY_OBSERVATION[cell] for cell in raw]
-        numbered_col = [DICTIONARY_OBSERVATION[cell] for cell in col]
-        observation = numbered_raw + numbered_col
+#        raw = self.map[head_raw]
+#        col = []
+#        for i in range(self.nr_cells[1] + 2):
+#            col.append(self.map[i][head_col])
+#        numbered_raw = [DICTIONARY_OBSERVATION[cell] for cell in raw]
+#        numbered_col = [DICTIONARY_OBSERVATION[cell] for cell in col]
+#        observation = numbered_raw + numbered_col
+        observation = [0 for _ in range(12)]
+        # Check for collisions with walls
+        if self.map[head_raw - 1][head_col] == "W" or \
+           self.map[head_raw - 1][head_col] in "S":
+            observation[0] = 1
+        if self.map[head_raw + 1][head_col] == "W" or \
+           self.map[head_raw + 1][head_col] in "S":
+            observation[1] = 1
+        if self.map[head_raw][head_col - 1] == "W" or \
+           self.map[head_raw][head_col - 1] in "S":
+            observation[2] = 1
+        if self.map[head_raw][head_col + 1] == "W" or \
+           self.map[head_raw][head_col + 1] in "S":
+            observation[3] = 1
+        # Check for coincidences in raw or col with green apples
+        for apple in self.green_apples:
+            if apple[0] < head_col and apple[1] == head_raw:
+                observation[4] = 1
+            if apple[0] > head_col and apple[1] == head_raw:
+                observation[5] = 1
+            if apple[0] == head_col and apple[1] > head_raw:
+                observation[6] = 1
+            if apple[0] == head_col and apple[1] < head_raw:
+                observation[7] = 1
+        # Check for coincidences in raw or col with red apples
+        for apple in self.red_apples:
+            if apple[0] < head_col and apple[1] == head_raw:
+                observation[8] = 1
+            if apple[0] > head_col and apple[1] == head_raw:
+                observation[9] = 1
+            if apple[0] == head_col and apple[1] > head_raw:
+                observation[10] = 1
+            if apple[0] == head_col and apple[1] < head_raw:
+                observation[11] = 1
         return observation
 
     def _select_mode(self):
@@ -357,7 +405,8 @@ class Snake(pg.sprite.Sprite, MotorSnake):
 
         # Define button rectangles
         self.manual_button = pg.Rect(self.screen.get_width() // 2 - 100, 180, 200, 50)
-        self.auto_button = pg.Rect(self.screen.get_width() // 2 - 100, 250, 200, 50)
+        if self.show_autoplay:
+            self.auto_button = pg.Rect(self.screen.get_width() // 2 - 100, 250, 200, 50)
 
         while self.menu_active:
             # Title
@@ -366,21 +415,32 @@ class Snake(pg.sprite.Sprite, MotorSnake):
 
             # Draw buttons
             pg.draw.rect(self.screen, (70, 130, 180), self.manual_button)  # Steel Blue
-            pg.draw.rect(self.screen, (34, 139, 34), self.auto_button)     # Forest Green
+            if self.show_autoplay:
+                pg.draw.rect(self.screen, (34, 139, 34), self.auto_button)     # Forest Green
 
             # Button text
             manual_text = self.info_font.render("Manual Mode", True, (255, 255, 255))
             auto_text = self.info_font.render("Auto Mode", True, (255, 255, 255))
             self.screen.blit(manual_text, (self.manual_button.x + 30, self.manual_button.y + 10))
-            self.screen.blit(auto_text, (self.auto_button.x + 40, self.auto_button.y + 10))
+            if self.show_autoplay:
+                self.screen.blit(auto_text, (self.auto_button.x + 40, self.auto_button.y + 10))
 
             pg.display.flip()
             self._check_event_()
         pg.quit()
 
 if __name__ == "__main__":
-    if len(sys.argv) > 1:
-        modelname = sys.argv[1]
+    parser = argparse.ArgumentParser(description='Train a DQN agent for the Snake game.')
+    parser.add_argument('-f', '--file_model', type=str, help='File name to save the model.')
+    args = parser.parse_args()
+    if not args.file_model:
+        print("No model name provided.")
+        modelname = None
+    else:
+        modelname = args.file_model
+    if  not os.path.exists(modelname):
+        print(f"Model file {modelname} does not exist. Starting with a new model.")
+        modelname = None
 
     game = Snake(800, 600, [10, 10], modelname=modelname)
     game.load_grass("./icons/grass.png")

@@ -114,7 +114,7 @@ for i in range(max_episodes):
         env.print_map_in_shell()
         episode_over = terminated or truncated
         max_length = max(env.get_length_worn(), max_length)
-        print(f"Episode {i + 1}/{NUM_EPISODES}", end="\t")
+        print(f"Episode {i + 1}/{max_episodes}", end="\t")
         print(f"- Length {env.get_length_worn()}", end="\t")
         print(f"- Max_length {max_length}", end="\t")
         print(f"- Action: {Action(action).get_action_name()}")
@@ -142,7 +142,7 @@ for i in range(max_episodes):
         print(f"Time elapsed: {(time.time() - first_time) / 3600:.2f} hours,",
                 end="\t")
         print(f"|{bar}| {percent:.2f}%", end="\t")
-        time_left = ((NUM_EPISODES - i - 1) * (time.time() - first_time) /
+        time_left = ((max_episodes - i - 1) * (time.time() - first_time) /
                         (i + 1) /
                         3600)
         print(f"- time left: {time_left:.2f} hours")

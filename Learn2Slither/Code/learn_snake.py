@@ -84,9 +84,10 @@ for i in range(max_episodes):
     while not episode_over:
         # agent policy that uses the observation and info
         action, _ = agent.choose_action(observation)
-        observation, reward, terminated, truncated, info = env.step(action)
-        agent.store_experience(observation, action, reward, observation,
+        next_observation, reward, terminated, truncated, info = env.step(action)
+        agent.store_experience(observation, action, reward, next_observation,
                                terminated or truncated)
+        observation = next_observation
         match reward:
             case Reward.NONE.value:
                 rewards[0] += 1

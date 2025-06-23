@@ -143,7 +143,7 @@ class MotorSnake():
         # Collision red apple == 1
         # Collision green apple == 2
         # Collission with body = 3
-        if self.moves >= MAX_MOVES:
+        if self.moves >= MAX_MOVES or self.moves >= len(self.worn) * 100:
             self.termnate = True
             self.collision = Collision.BODY
             return

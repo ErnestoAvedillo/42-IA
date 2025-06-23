@@ -302,7 +302,7 @@ class Snake(pg.sprite.Sprite, MotorSnake):
             self._render()
             pg.display.flip()
             # self.print_map_in_shell()
-            self.clock.tick(2)
+            self.clock.tick(10)
             if not self.episode_over:
                 self.episode_over = terminated or truncated
             #time.sleep(1)

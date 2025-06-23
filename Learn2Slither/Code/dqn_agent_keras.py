@@ -18,7 +18,7 @@ EPSILON_DECAY = 0.999           # Rate at which epsilon decays per episode
 TARGET_UPDATE_FREQ = 100        # How often to update the target network
 TARGET_SAVE_FREQ = 100          # How often to save the target model
 EPOCHS = 1                      # Number of epochs to train the model per batch
-MAX_MOVES = 1000                # Max number of moves per episode
+#MAX_MOVES = 1000                # Max number of moves per episode
 
 
 class DQNAgent():
@@ -59,7 +59,7 @@ class DQNAgent():
                       "Starting with a new model.")
                 self.filename = None
         self.save_steps = TARGET_SAVE_FREQ
-        self.moves = 0
+        #self.moves = 0
         self.truncated = False
 
     def choose_action(self, state):
@@ -71,9 +71,9 @@ class DQNAgent():
             current_state = np.array(state)
             q_values = self.policy_model.forward(current_state)
             output = torch.argmax(q_values).item()
-        self.moves += 1
-        if self.moves >= MAX_MOVES:
-            self.truncated = True
+        #self.moves += 1
+        #if self.moves >= MAX_MOVES:
+        #    self.truncated = True
         return output, is_aleatory
 
     def store_experience(self, state, action, reward, next_state, done):
@@ -90,10 +90,6 @@ class DQNAgent():
             batch = self.replay_buffer
         states, actions, rewards, next_states, dones = zip(*batch)
         self.train(states, actions, rewards, next_states, dones)
-        # Update epsilon
-        if self.epsilon > EPSILON_END:
-            self.epsilon *= EPSILON_DECAY
-
         self.target_model.load_state_dict(self.policy_model.state_dict())
 
         if self.filename is not None and self.save_steps == 0:
@@ -111,6 +107,9 @@ class DQNAgent():
             next_state (np.array): Next state of the environment.
             done (bool): Whether the episode has ended.
         """
+        # Update epsilon
+        if self.epsilon > EPSILON_END:
+            self.epsilon *= EPSILON_DECAY
         self.train(state, action, reward, next_state, done)
 
     def train(self, states, actions, rewards, next_states, dones):
@@ -140,7 +139,7 @@ class DQNAgent():
                             ) +
                             AGENT_LEARNING_RATE * (
                                 rewards[i] + GAMMA *
-                                torch.max(next_q_values[i])
+                                np.max(next_q_values[i])
                             )
                         )
                     elif self.load_type == "SARSA":

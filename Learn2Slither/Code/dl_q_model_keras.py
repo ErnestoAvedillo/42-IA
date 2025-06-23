@@ -66,5 +66,5 @@ class DLQModel(nn.Module):
             loss.backward(retain_graph=True)  # Backward pass
             optimizer.step()  # Update weights
 
-            if (epoch + 1) % 100 == 0:
-                print(f'Epoch [{epoch + 1}/{epochs}], Loss: {loss.item():.4f}')
+            #if (epoch + 1) % 100 == 0:
+            print(f'Epoch [{epoch + 1}/{epochs}], Loss: {loss.item():.4f}')

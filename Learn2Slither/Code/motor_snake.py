@@ -8,7 +8,7 @@ import platform
 ALL = 0
 GREEN = 1
 RED = 2
-
+MAX_MOVES = 1000
 
 class MotorSnake():
     def __init__(self, Nr_cells=[10, 10]):
@@ -143,6 +143,10 @@ class MotorSnake():
         # Collision red apple == 1
         # Collision green apple == 2
         # Collission with body = 3
+        if self.moves >= MAX_MOVES:
+            self.termnate = True
+            self.collision = Collision.BODY
+            return
         self.collision = Collision.NONE
         if (head_pos[0] < 0 or
            head_pos[0] >= self.nr_cells[0] or

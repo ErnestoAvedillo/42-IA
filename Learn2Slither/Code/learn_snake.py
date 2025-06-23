@@ -111,6 +111,7 @@ for i in range(max_episodes):
             os.system("cls")
         else:
             os.system('clear')
+        env.print_map_in_shell()
         episode_over = terminated or truncated
         max_length = max(env.get_length_worn(), max_length)
         print(f"Episode {i + 1}/{NUM_EPISODES}", end="\t")

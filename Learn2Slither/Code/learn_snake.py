@@ -87,6 +87,7 @@ for i in range(max_episodes):
         next_observation, reward, terminated, truncated, info = env.step(action)
         agent.store_experience(observation, action, reward, next_observation,
                                terminated or truncated)
+        observation = next_observation
         match reward:
             case Reward.NONE.value:
                 rewards[0] += 1

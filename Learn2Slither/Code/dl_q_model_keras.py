@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.optim as optim
 
 HIDDEN_LAYERS = 2
-NUMBER_OF_NEURONS = 64
+NUMBER_OF_NEURONS = 128
 
 
 class DLQModel(nn.Module):
@@ -12,9 +12,9 @@ class DLQModel(nn.Module):
         layers = []
         layers.append(nn.Linear(state_shape, NUMBER_OF_NEURONS))
         layers.append(nn.ReLU())
-        layers.append(nn.Linear(NUMBER_OF_NEURONS, NUMBER_OF_NEURONS))
+        layers.append(nn.Linear(NUMBER_OF_NEURONS, NUMBER_OF_NEURONS // 2))
         layers.append(nn.ReLU())
-        layers.append(nn.Linear(NUMBER_OF_NEURONS, nr_actions))
+        layers.append(nn.Linear(NUMBER_OF_NEURONS // 2, nr_actions))
 
         if torch.cuda.is_available():
             assert gpu_device < torch.cuda.device_count(), (

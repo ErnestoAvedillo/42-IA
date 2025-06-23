@@ -17,19 +17,19 @@ class Reward(Enum):
     # No reward
     NONE = -0.1
     # REWARD ON THE WAY
-    IS_THE_WAY = 100
+    IS_THE_WAY = 7
     # Reward for being on the way to a green apple
-    IS_ALLIGNED_WITH_GREEN_APPLE = 50
+    IS_ALLIGNED_WITH_GREEN_APPLE = 5
     # Penalty for repeated position
-    IS_REPEATED_POSITION = -200
+    IS_REPEATED_POSITION = -4
     # Green apple reward on th way
-    RED_APPLE = -50
+    RED_APPLE = -5
     # Reward for eating a green apple
-    GREEN_APPLE = 500
+    GREEN_APPLE = 10
     # Penalty for hitting a wall or body
-    WALL_PENALTY = -400
+    WALL_PENALTY = -10
     # Penalty for hitting the snake's own body
-    BODY_PENALTY = -450
+    BODY_PENALTY = -11
 
     def get_reward(self, collision: Collision):
         match collision:

@@ -55,7 +55,7 @@ class Snake(pg.sprite.Sprite, MotorSnake):
         self.truncated = False
         self._autoplaying = False
         self.agent = DQNAgent(state_shape=len(self.get_observation()),
-                 num_actions=Action.get_len_actions(), epsilon=0.1)
+                 num_actions=Action.get_len_actions(), epsilon=0.01)
         if modelname is None:
             print(f"Model for auto-play not added. No autoplay will be performed.")
             self.show_autoplay = False
@@ -376,23 +376,23 @@ class Snake(pg.sprite.Sprite, MotorSnake):
             observation[3] = 1
         # Check for coincidences in raw or col with green apples
         for apple in self.green_apples:
-            if apple[0] < head_col and apple[1] == head_raw:
+            if apple[0] < head_col - 1 and apple[1] == head_raw - 1:
                 observation[4] = 1
-            if apple[0] > head_col and apple[1] == head_raw:
+            if apple[0] > head_col - 1 and apple[1] == head_raw - 1:
                 observation[5] = 1
-            if apple[0] == head_col and apple[1] > head_raw:
+            if apple[0] == head_col - 1 and apple[1] > head_raw - 1:
                 observation[6] = 1
-            if apple[0] == head_col and apple[1] < head_raw:
+            if apple[0] == head_col - 1 and apple[1] < head_raw - 1:
                 observation[7] = 1
         # Check for coincidences in raw or col with red apples
         for apple in self.red_apples:
-            if apple[0] < head_col and apple[1] == head_raw:
+            if apple[0] < head_col - 1 and apple[1] == head_raw - 1:
                 observation[8] = 1
-            if apple[0] > head_col and apple[1] == head_raw:
+            if apple[0] > head_col - 1 and apple[1] == head_raw - 1:
                 observation[9] = 1
-            if apple[0] == head_col and apple[1] > head_raw:
+            if apple[0] == head_col - 1 and apple[1] > head_raw - 1:
                 observation[10] = 1
-            if apple[0] == head_col and apple[1] < head_raw:
+            if apple[0] == head_col - 1 and apple[1] < head_raw - 1:
                 observation[11] = 1
         return observation
 

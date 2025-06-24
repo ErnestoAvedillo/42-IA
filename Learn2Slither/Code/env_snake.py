@@ -76,7 +76,7 @@ class EnvSnake(MotorSnake):
 #            col.append(self.map[i][head_col])
 #        numbered_raw = [DICTIONARY_OBSERVATION[cell] for cell in raw]
 #        numbered_col = [DICTIONARY_OBSERVATION[cell] for cell in col]
-#        observation = numbered_raw + numbered_col
+#        raw_col = numbered_raw + numbered_col
         observation = [0 for _ in range(12)]
         # Check for collisions with walls
         if self.map[head_raw - 1][head_col] == "W" or \
@@ -93,23 +93,23 @@ class EnvSnake(MotorSnake):
             observation[3] = 1
         # Check for coincidences in raw or col with green apples
         for apple in self.green_apples:
-            if apple[0] < head_col and apple[1] == head_raw:
+            if apple[0] < head_col - 1 and apple[1] == head_raw - 1:
                 observation[4] = 1
-            if apple[0] > head_col and apple[1] == head_raw:
+            if apple[0] > head_col - 1 and apple[1] == head_raw - 1:
                 observation[5] = 1
-            if apple[0] == head_col and apple[1] > head_raw:
+            if apple[0] == head_col - 1 and apple[1] > head_raw - 1:
                 observation[6] = 1
-            if apple[0] == head_col and apple[1] < head_raw:
+            if apple[0] == head_col - 1 and apple[1] < head_raw - 1:
                 observation[7] = 1
         # Check for coincidences in raw or col with red apples
         for apple in self.red_apples:
-            if apple[0] < head_col and apple[1] == head_raw:
+            if apple[0] < head_col - 1 and apple[1] == head_raw - 1:
                 observation[8] = 1
-            if apple[0] > head_col and apple[1] == head_raw:
+            if apple[0] > head_col - 1 and apple[1] == head_raw - 1:
                 observation[9] = 1
-            if apple[0] == head_col and apple[1] > head_raw:
+            if apple[0] == head_col - 1 and apple[1] > head_raw - 1:
                 observation[10] = 1
-            if apple[0] == head_col and apple[1] < head_raw:
+            if apple[0] == head_col - 1 and apple[1] < head_raw - 1:
                 observation[11] = 1
         return observation
 

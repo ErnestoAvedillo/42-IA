@@ -9,18 +9,9 @@ import platform
 import os
 import argparse
 import time
-
+from count_rewards import CountRewards
 
 NUM_EPISODES = 500000       # Total episodes to train for
-
-
-def Usage():
-    print("Usage:")
-    print("python learn_snake.py <type of learn> <model name to save")
-    print("Where:")
-    print("type to learn can be 'Q_LEARNING' or 'SARSA'")
-    print("Example:")
-    print("python learn_snake.py 'SARSA' 'model.py'")
 
 
 if __name__ == "__main__":
@@ -78,6 +69,7 @@ rewards = [0 for _ in range(Reward.get_len() + 1)]
 max_length = 3
 first_time = time.time()
 lengths = []
+total_rewards = CountRewards()
 for i in range(max_episodes):
     observation, info = env.reset()
     episode_over = False
@@ -85,30 +77,12 @@ for i in range(max_episodes):
         # agent policy that uses the observation and info
         action, _ = agent.choose_action(observation)
         next_observation, reward, terminated, truncated, info = env.step(action)
-        agent.store_experience(observation, action, reward, next_observation,
+        agent.store_experience(observation, action, reward.value, next_observation,
                                terminated or truncated)
-        agent.train_single_step(observation, action, reward, next_observation,
+        agent.train_single_step(observation, action, reward.value, next_observation,
                                terminated or truncated)
         observation = next_observation
-        match reward:
-            case Reward.NONE.value:
-                rewards[0] += 1
-            case Reward.RED_APPLE.value:
-                rewards[1] += 1
-            case Reward.GREEN_APPLE.value:
-                rewards[2] += 1
-            case Reward.WALL_PENALTY.value:
-                rewards[3] += 1
-            case Reward.BODY_PENALTY.value:
-                rewards[4] += 1
-            case Reward.IS_THE_WAY.value:
-                rewards[5] += 1  # Reward for being on the way
-            case Reward.IS_ALLIGNED_WITH_GREEN_APPLE.value:
-                rewards[6] += 1  # Reward for being aligned with green apple
-            case Reward.IS_REPEATED_POSITION.value:
-                rewards[7] += 1  # Penalty for repeated position
-            case _:
-                rewards[8] += 1  # Unhandled reward case
+        total_rewards.add_reward(reward)
         if platform.system() == "Windows":
             os.system("cls")
         else:
@@ -126,21 +100,13 @@ for i in range(max_episodes):
         print(f"- Truncated: {truncated}", end="\t")
         print(f"- Moves: {info['moves']}")
         print("Rewards historic:", end="\t")
-        print(f"- NONE {rewards[0]}", end="\t")
-        print(f"- RED {rewards[1]}", end="\t")
-        print(f"- GREEN {rewards[2]}", end="\t")
-        print(f"- IS_THE_WAY {rewards[5]}", end="\t")
-        print(f"- IS_ALLIGNED {rewards[6]}")
-        print(f"\t\t\t- WALL {rewards[3]}", end="\t")
-        print(f"- BODY {rewards[4]}", end="\t")
-        print(f"- UNHANDLED {rewards[8]}", end="\t")
-        print(f"- REPEATED_POSITION {rewards[7]}")
+        for my_reward, name, value in total_rewards.total_rewards():
+            print(f"{name}: {value} --", end="\t")
         num_Chars = 50
         percent = 100 * (i + 1) / max_episodes
         filled = int(num_Chars * percent // 100)
         bar = '█' * filled + '-' * (num_Chars - filled)
         print(f'', end='\r')
-        # time.sleep(1)
         print(f"Time elapsed: {(time.time() - first_time) / 3600:.2f} hours,",
                 end="\t")
         print(f"|{bar}| {percent:.2f}%", end="\t")
@@ -178,5 +144,5 @@ while not episode_over:
     print(f"Action: {Action(action).get_action_name()}", end="\t")
     print(f"- Length {env.get_length_worn()}", end="\t")
     print(f"- Aleatory {is_aleatory}", end="\t")
-    print(f"- Reward: {reward}", end="\t")
+    print(f"- Reward: {reward.value}", end="\t")
     print(f"- Episode Over: {episode_over}")

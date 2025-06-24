@@ -27,9 +27,7 @@ class Reward(Enum):
     # Reward for eating a green apple
     GREEN_APPLE = 10
     # Penalty for hitting a wall or body
-    WALL_PENALTY = -10
-    # Penalty for hitting the snake's own body
-    BODY_PENALTY = -11
+    BODY_WALL_PENALTY = -12
 
     def get_reward(self, collision: Collision):
         match collision:
@@ -43,10 +41,8 @@ class Reward(Enum):
                 return Reward.RED_APPLE
             case Collision.GREEN_APPLE:
                 return Reward.GREEN_APPLE
-            case Collision.WALL:
-                return Reward.WALL_PENALTY
-            case Collision.BODY:
-                return Reward.BODY_PENALTY
+            case Collision.WALL | Collision.BODY:
+                return Reward.BODY_WALL_PENALTY
             case Collision.REPEATED_POSITION:
                 return Reward.IS_REPEATED_POSITION
             case _:
@@ -55,12 +51,6 @@ class Reward(Enum):
     @classmethod
     def get_len(cls):
         return len(cls)
-
-    def __str__(self):
-        return self.name.replace("_", " ").title()
-
-    def __repr__(self):
-        return f"Reward.{self.name}"
 
     def get_reward_name(self, collision: Collision):
         """Get the name of the reward based on the collision."""
@@ -73,3 +63,12 @@ class Reward(Enum):
         if not isinstance(reward, Reward):
             raise ValueError(f"Invalid reward type: {type(reward)}")
         return reward.value
+
+    @classmethod
+    def get_reward_names(cls):
+        return [reward.name for reward in cls]
+
+    @classmethod
+    def get_list_rewards(cls):
+        return list(cls)
+   

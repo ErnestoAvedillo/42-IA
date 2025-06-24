@@ -23,7 +23,7 @@ EPOCHS = 1                      # Number of epochs to train the model per batch
 
 class DQNAgent():
     def __init__(self, state_shape, num_actions, filename=None,
-                 learning_type="Q_LEARNING", gpu_number=0):
+                 learning_type="Q_LEARNING", gpu_number=0, epsilon=EPSILON_START):
         """ Initialize the DQN agent with the given parameters.
         Args:
             state_shape (tuple):
@@ -48,7 +48,7 @@ class DQNAgent():
         if self.load_type not in ["Q_LEARNING", "SARSA"]:
             raise ValueError("Invalid learning type. Valid "
                              "'Q_LEARNING' or 'SARSA'.")
-        self.epsilon = EPSILON_START
+        self.epsilon = epsilon
         self.replay_buffer = deque(maxlen=REPLAY_BUFFER_SIZE)
         if filename is not None:
             self.filename = filename

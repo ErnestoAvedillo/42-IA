@@ -55,7 +55,7 @@ class Snake(pg.sprite.Sprite, MotorSnake):
         self.truncated = False
         self._autoplaying = False
         self.agent = DQNAgent(state_shape=len(self.get_observation()),
-                 num_actions=Action.get_len_actions())
+                 num_actions=Action.get_len_actions(), epsilon=0.1)
         if modelname is None:
             print(f"Model for auto-play not added. No autoplay will be performed.")
             self.show_autoplay = False

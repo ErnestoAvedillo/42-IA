@@ -18,9 +18,7 @@ class MotorSnake():
         self.history = deque(maxlen=20)  # Store last 20 worn deques
         self.red_apples = []
         self.green_apples = []
-        MotorSnake.reset(self)
-        self._create_map()
-        self.moves = 0
+        self.reset(self)
 
     def reset(self):
         self.worn.clear()
@@ -47,27 +45,24 @@ class MotorSnake():
                           position[1] - self.direction[1] * 2])
 
     def _place_apple(self, type, pos=None, operation="replace"):
-        if type == ALL:
-            self.red_apples.append(self._get_rand_pos())
-            for i in range(2):
+        if type == GREEN or type == ALL:
+
+            if operation == "replace":
+                for p in self.green_apples:
+                    if p == pos:
+                        self.green_apples.remove(p)
+            if type == ALL:
+                nr_apples = 2
+            else:
+                nr_apples = 1
+            for i in range(nr_apples):
                 posicion = self._get_rand_pos()
                 while (posicion in self.red_apples or
                        posicion in self.green_apples or
                        posicion in self.worn):
                     posicion = self._get_rand_pos()
                 self.green_apples.append(posicion)
-        elif type == GREEN:
-            if operation == "replace":
-                for p in self.green_apples:
-                    if p == pos:
-                        self.green_apples.remove(p)
-            posicion = self._get_rand_pos()
-            while (posicion in self.red_apples or
-                   posicion in self.green_apples or
-                   posicion in self.worn):
-                posicion = self._get_rand_pos()
-            self.green_apples.append(posicion)
-        elif type == RED:
+        elif type == RED or type == ALL:
             if operation == "replace":
                 for p in self.red_apples:
                     if p == pos:

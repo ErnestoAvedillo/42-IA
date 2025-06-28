@@ -36,6 +36,7 @@ RED = 2
 
 ACTIONS = ["NONE", "UP", "DOWN", "LEFT", "RIGHT"]
 
+MODEL_DEFAULT_NAME = "Model_Q.pt"
 
 class Snake(pg.sprite.Sprite, EnvSnake):
     def __init__(self, x, y, Nr_cells=[10, 10], modelname=None):

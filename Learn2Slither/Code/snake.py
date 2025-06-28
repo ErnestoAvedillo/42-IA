@@ -2,8 +2,6 @@ import os
 import argparse
 from snake_class import Snake
 
-MODEL_DEFAULT_NAME = "model.pt"
-
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Train a DQN agent for the Snake game.')
@@ -12,7 +10,6 @@ if __name__ == "__main__":
     args = parser.parse_args()
     if not args.file_model:
         print("No model name provided.Default name will be used.")
-        args.file_model = MODEL_DEFAULT_NAME
         modelname = None
     else:
         modelname = args.file_model

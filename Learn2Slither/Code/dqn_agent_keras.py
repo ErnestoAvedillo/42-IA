@@ -88,8 +88,7 @@ class DQNAgent():
         states, actions, rewards, next_states, dones = zip(*batch)
         self.train(states, actions, rewards, next_states, dones)
         self.target_model.load_state_dict(self.policy_model.state_dict())
-
-
+    
         if self.filename is not None and self.save_steps == 0:
             self.save_model(self.filename)
             self.save_steps = TARGET_SAVE_FREQ

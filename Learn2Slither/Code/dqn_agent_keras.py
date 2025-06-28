@@ -54,12 +54,9 @@ class DQNAgent():
             self.filename = filename
             if os.path.isfile(filename):
                 self.load_model(filename)
-            else:
-                print(f"File {filename} does not exist."
-                      "Starting with a new model.")
-                self.filename = None
+        else:
+            self.filename = None
         self.save_steps = TARGET_SAVE_FREQ
-        #self.moves = 0
         self.truncated = False
 
     def choose_action(self, state):
@@ -91,6 +88,7 @@ class DQNAgent():
         states, actions, rewards, next_states, dones = zip(*batch)
         self.train(states, actions, rewards, next_states, dones)
         self.target_model.load_state_dict(self.policy_model.state_dict())
+
 
         if self.filename is not None and self.save_steps == 0:
             self.save_model(self.filename)
@@ -189,4 +187,24 @@ class DQNAgent():
         self.policy_model.load(filename)
         self.target_model.load_state_dict(self.policy_model.state_dict())
         print(f"Model loaded from {filename}.")
+    
+    def set_model_name(self, filename):
+        """ Set the filename for saving/loading the model.
+        Args:
+            filename (str): The name of the file to save/load the model.
+        """
+        if not isinstance(filename, str):
+            raise ValueError("Filename must be a string.")
+        self.filename = filename
+        print (f"Model name set to {self.filename}.")
+    
+    def set_epsilon(self, epsilon):
+        """ Set the exploration rate (epsilon).
+        Args:
+            epsilon (float): The exploration rate.
+        """
+        if not (0 <= epsilon <= 1):
+            raise ValueError("Epsilon must be between 0 and 1.")
+        self.epsilon = epsilon
+        print(f"Epsilon set to {self.epsilon}.")
         

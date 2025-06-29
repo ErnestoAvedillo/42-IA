@@ -10,6 +10,7 @@ GREEN = 1
 RED = 2
 MAX_MOVES = 1000
 
+
 class MotorSnake():
     def __init__(self, Nr_cells=[10, 10]):
         self.nr_cells = Nr_cells
@@ -25,10 +26,12 @@ class MotorSnake():
         self._place_worn()
         self.red_apples.clear()
         self.green_apples.clear()
-        self._place_apple(type=ALL)
+        self._place_apple(type=ALL, operation="not_replace")
         self.collision = Collision.NONE
         self.termnate = False
         self.moves = 0
+        self.red_apples_eaten = 0
+        self.green_apples_eaten = 0
         self._create_map()
 
     def _place_worn(self):
@@ -62,7 +65,7 @@ class MotorSnake():
                        posicion in self.worn):
                     posicion = self._get_rand_pos()
                 self.green_apples.append(posicion)
-        elif type == RED or type == ALL:
+        if type == RED or type == ALL:
             if operation == "replace":
                 for p in self.red_apples:
                     if p == pos:
@@ -94,9 +97,12 @@ class MotorSnake():
         match self.collision:
             case Collision.GREEN_APPLE:
                 self._place_apple(GREEN, new_position)
+                self.green_apples_eaten += 1
+                return self.collision, self.termnate
             case Collision.RED_APPLE:
                 self.worn.pop()
                 self.worn.pop()
+                self.red_apples_eaten += 1
                 if len(self.worn) == 0:
                     self.termnate = True
                     return self.collision, self.termnate
@@ -193,6 +199,7 @@ class MotorSnake():
             self.map[pos[1] + 1][pos[0] + 1] = letter
             if first:
                 letter = "S"
+        return
 
     def print_map_in_shell(self, clear=True):
         if clear:
@@ -221,3 +228,14 @@ class MotorSnake():
         if nr_repeated_positions > 2:
             return True
         return False
+
+    def get_statistics(self):
+        """ Returns the statistics of the game
+        """
+        info = {
+            "red_apples": self.red_apples_eaten,
+            "green_apples": self.green_apples_eaten,
+            "moves": self.moves,
+            "score": len(self.worn)
+        }
+        return info

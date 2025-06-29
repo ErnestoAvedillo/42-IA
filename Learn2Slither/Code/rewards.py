@@ -57,7 +57,7 @@ class Reward(Enum):
         if collision not in DICCTIONARY.keys():
             raise ValueError(f"Invalid collision value: {collision}")
         return (DICCTIONARY[collision])
-    
+
     def get_reward_value(self, reward: 'Reward'):
         """Get the value of the reward."""
         if not isinstance(reward, Reward):
@@ -71,4 +71,3 @@ class Reward(Enum):
     @classmethod
     def get_list_rewards(cls):
         return list(cls)
-   

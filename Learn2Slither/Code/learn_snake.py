@@ -15,12 +15,35 @@ NUM_EPISODES = 500000       # Total episodes to train for
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Train a DQN agent for the Snake game.')
-    parser.add_argument('-l', '--learn', type=str, choices=['Q_LEARNING', 'SARSA'], help='Type of learning algorithm to use.')
-    parser.add_argument('-f', '--file_model', type=str, nargs='?', default='dqn_snake_model.joblib', help='File name to save the model.')
-    parser.add_argument('-g', '--gpu_nr', type=int, nargs='?', help='GPU number where to xecute the neural network.')
-    parser.add_argument('--history_lengths', type=str, nargs='?', default='lengths.csv', help='File name to save the hystoric of lengths for each game played.')
-    parser.add_argument('-e', '--episodes', type=int, nargs='?',default=1000, help='Number of maximum episodes to repeat.')
+    parser_description = "Script to train a DQN agent to play the Snake game."
+    parser = argparse.ArgumentParser(description=parser_description)
+    parser.add_argument('-l',
+                        '--learn',
+                        type=str,
+                        choices=['Q_LEARNING', 'SARSA'],
+                        help='Type of learning algorithm to use.')
+    parser.add_argument('-f',
+                        '--file_model',
+                        type=str,
+                        nargs='?',
+                        default='dqn_snake_model.joblib',
+                        help='File name to save the model.')
+    parser.add_argument('-g',
+                        '--gpu_nr',
+                        type=int,
+                        nargs='?',
+                        help='GPU number where to xecute the neural network.')
+    parser.add_argument('--history_lengths',
+                        type=str,
+                        nargs='?',
+                        default='lengths.csv',
+                        help='File to save the hystoric lengths for games.')
+    parser.add_argument('-e',
+                        '--episodes',
+                        type=int,
+                        nargs='?',
+                        default=1000,
+                        help='Number of maximum episodes to repeat.')
     args = parser.parse_args()
 
     # Check if learning type is provided, otherwise default to 'SARSA
@@ -30,7 +53,8 @@ if __name__ == "__main__":
     else:
         print(f"Learning type set to: {args.learn}")
         Learn_Type = args.learn
-    # Check if file name is provided, otherwise default to 'dqn_snake_model.joblib'
+    # Check if file name is provided,
+    # otherwise default to 'dqn_snake_model.joblib'
     if not args.file_model:
         Learn_Type = 'Q_LEARNING'
         print("No file name provided. Defaulting to 'dqn_snake_model.joblib'.")
@@ -42,7 +66,7 @@ if __name__ == "__main__":
         File_Name = "dqn_snake_model.joblib"
     else:
         File_Name = args.file_model
-    if not args.gpu_nr :
+    if not args.gpu_nr:
         print("No GPU number assigned. Default number taken 0")
         gpu_number = 0
     else:
@@ -55,7 +79,7 @@ if __name__ == "__main__":
     if not args.episodes:
         print("")
         max_episodes = NUM_EPISODES
-    else:  
+    else:
         max_episodes = args.episodes
 
 env = EnvSnake(Nr_cells=[10, 10])
@@ -76,11 +100,21 @@ for i in range(max_episodes):
     while not episode_over:
         # agent policy that uses the observation and info
         action, _ = agent.choose_action(observation)
-        next_observation, reward, terminated, truncated, info = env.step(action)
-        agent.store_experience(observation, action, reward.value, next_observation,
+        (next_observation,
+         reward,
+         terminated,
+         truncated,
+         info) = env.step(action)
+        agent.store_experience(observation,
+                               action,
+                               reward.value,
+                               next_observation,
                                terminated or truncated)
-        agent.train_single_step(observation, action, reward.value, next_observation,
-                               terminated or truncated)
+        agent.train_single_step(observation,
+                                action,
+                                reward.value,
+                                next_observation,
+                                terminated or truncated)
         observation = next_observation
         total_rewards.add_reward(reward)
         if platform.system() == "Windows":
@@ -106,17 +140,18 @@ for i in range(max_episodes):
         percent = 100 * (i + 1) / max_episodes
         filled = int(num_Chars * percent // 100)
         bar = '█' * filled + '-' * (num_Chars - filled)
-        print(f'', end='\r')
+        print('', end='\r')
         print(f"Time elapsed: {(time.time() - first_time) / 3600:.2f} hours,",
-                end="\t")
+              end="\t")
         print(f"|{bar}| {percent:.2f}%", end="\t")
-        time_left = ((max_episodes - i - 1) * (time.time() - first_time) /
-                        (i + 1) /
-                        3600)
+        time_left = ((max_episodes - i - 1) *
+                     (time.time() - first_time) /
+                     (i + 1) / 3600)
         print(f"- time left: {time_left:.2f} hours")
     agent.train_all()
     lengths.append(env.get_length_worn())
-    pd.DataFrame(lengths, columns=["length"]).to_csv(filename_lengths, index=False)
+    pd.DataFrame(lengths, columns=["length"]).to_csv(filename_lengths,
+                                                     index=False)
     # time.sleep(1)
     lengths.append(env.get_length_worn())
     pd.DataFrame(lengths,

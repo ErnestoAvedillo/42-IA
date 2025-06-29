@@ -54,24 +54,20 @@ class DLQModel(nn.Module):
         # Define loss function and optimizer
         criterion = nn.MSELoss()
         optimizer = optim.Adam(self.parameters(), lr=learning_rate)
-
         # Training loop
         for epoch in range(epochs):
             self.train()  # Set the model to training mode
             optimizer.zero_grad()  # Zero the gradients
-
             outputs = self.forward(X_tensor)  # Forward pass
             loss = criterion(outputs, Y_tensor)  # Compute loss
-
             loss.backward(retain_graph=True)  # Backward pass
             optimizer.step()  # Update weights
-
-            #if (epoch + 1) % 100 == 0:
             print(f'Epoch [{epoch + 1}/{epochs}], Loss: {loss.item():.4f}')
 
     def save(self, file_path):
         torch.save(self.model.state_dict(), file_path)
-        
+
     def load(self, file_path):
-        self.model.load_state_dict(torch.load(file_path, map_location=self.device))
+        self.model.load_state_dict(torch.load(file_path,
+                                              map_location=self.device))
         self.model.eval()

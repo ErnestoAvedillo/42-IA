@@ -1,5 +1,6 @@
 from rewards import Reward
 
+
 class CountRewards:
     def __init__(self):
         self.rewards = Reward.get_list_rewards()
@@ -16,4 +17,6 @@ class CountRewards:
         return self.reward_counter[reward]
 
     def total_rewards(self):
-        return zip(Reward.get_list_rewards(), Reward.get_reward_names(), self.reward_counter.values())
+        return zip(Reward.get_list_rewards(),
+                   Reward.get_reward_names(),
+                   self.reward_counter.values())

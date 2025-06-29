@@ -44,7 +44,7 @@ class EnvSnake(MotorSnake):
         if self.get_moves() >= MAX_MOVES:
             self.truncated = True
         return (self.get_observation(), self.reward,
-                self.terminated, self.truncated, {"moves": self.get_moves()})
+                self.terminated, self.truncated, {self.get_statistics()})
 
     def get_observation(self):
         """
@@ -70,15 +70,7 @@ class EnvSnake(MotorSnake):
         else:
             head_col = self.worn[0][0] + 1
             head_raw = self.worn[0][1] + 1
-#        raw = self.map[head_raw]
-#        col = []
-#        for i in range(self.nr_cells[1] + 2):
-#            col.append(self.map[i][head_col])
-#        numbered_raw = [DICTIONARY_OBSERVATION[cell] for cell in raw]
-#        numbered_col = [DICTIONARY_OBSERVATION[cell] for cell in col]
-#        raw_col = numbered_raw + numbered_col
         observation = [0 for _ in range(12)]
-        # Check for collisions with walls
         if self.map[head_raw - 1][head_col] == "W" or \
            self.map[head_raw - 1][head_col] in "S":
             observation[0] = 1

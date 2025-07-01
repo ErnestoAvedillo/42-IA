@@ -97,12 +97,10 @@ class MotorSnake():
         match self.collision:
             case Collision.GREEN_APPLE:
                 self._place_apple(GREEN, new_position)
-                self.green_apples_eaten += 1
                 return self.collision, self.termnate
             case Collision.RED_APPLE:
                 self.worn.pop()
                 self.worn.pop()
-                self.red_apples_eaten += 1
                 if len(self.worn) == 0:
                     self.termnate = True
                     return self.collision, self.termnate
@@ -163,12 +161,14 @@ class MotorSnake():
                 return
         if head_pos in self.red_apples:
             self.collision = Collision.RED_APPLE
+            self.red_apples_eaten += 1
             if len(self.worn) == 0:
                 self.termnate = True
                 return
             return
         if head_pos in self.green_apples:
             self.collision = Collision.GREEN_APPLE
+            self.green_apples_eaten += 1
             return
         if self.check_head_psition_near_green_apple():
             self.collision = Collision.IS_THE_WAY
@@ -233,9 +233,9 @@ class MotorSnake():
         """ Returns the statistics of the game
         """
         info = {
-            "red_apples": self.red_apples_eaten,
-            "green_apples": self.green_apples_eaten,
+            "score": len(self.worn),
             "moves": self.moves,
-            "score": len(self.worn)
+            "green_apples": self.green_apples_eaten,
+            "red_apples": self.red_apples_eaten,
         }
         return info

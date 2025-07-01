@@ -6,7 +6,7 @@ import pandas as pd
 STATS_FILE_MANUAL = "snake_stats_man.csv"
 STATS_FILE_AUTO = "snake_stats_auto.csv"
 STATS_FILE_LEARNING = "snake_stats_learn.csv"
-
+STATISTICS_FIELDS = ["score", "moves", "green_apples", "red_apples"]
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Snake Game Options')
     parser.add_argument('-f',
@@ -27,22 +27,13 @@ if __name__ == "__main__":
         print("Starting with a new model.")
         modelname = None
     if not os.path.exists(STATS_FILE_MANUAL):
-        df = pd.DataFrame(columns=["score",
-                                   "moves",
-                                   "green_apples",
-                                   "red_apples"])
+        df = pd.DataFrame(columns=[STATISTICS_FIELDS])
         df.to_csv(STATS_FILE_MANUAL, index=False)
     if not os.path.exists(STATS_FILE_AUTO):
-        df = pd.DataFrame(columns=["score",
-                                   "moves",
-                                   "green_apples",
-                                   "red_apples"])
+        df = pd.DataFrame(columns=[STATISTICS_FIELDS])
         df.to_csv(STATS_FILE_AUTO, index=False)
     if not os.path.exists(STATS_FILE_LEARNING):
-        df = pd.DataFrame(columns=["score",
-                                   "moves",
-                                   "green_apples",
-                                   "red_apples"])
+        df = pd.DataFrame(columns=[STATISTICS_FIELDS])
         df.to_csv(STATS_FILE_LEARNING, index=False)
     if not args.cells:
         print("No number of cells provided. Defaulting to 10x10 grid.")

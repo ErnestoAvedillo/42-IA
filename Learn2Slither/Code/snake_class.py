@@ -10,6 +10,8 @@ import os
 import platform
 import pandas as pd
 from matplotlib import pyplot as plt
+from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+
 
 MAX_MOVES = 1000  # Maximum number of moves before truncation
 
@@ -296,6 +298,9 @@ class Snake(pg.sprite.Sprite, EnvSnake):
                     elif self.learn_button.collidepoint(pg.mouse.get_pos()):
                         self._learn_game()
                         return
+                    elif self.stats_button.collidepoint(pg.mouse.get_pos()):
+                        self._select_statistics()
+                        return
                 pg.event.clear()
             if self._autoplaying | self._learning_game:
                 if event.type == pg.KEYDOWN:
@@ -357,13 +362,11 @@ class Snake(pg.sprite.Sprite, EnvSnake):
             pg.display.flip()
             self.clock.tick(2 + (self.get_length_worn() - 3) // 2)
         statistics = self.get_statistics()
-
         self._print_gameover()
         self.menu_active = True
-        stats = self.get_statistics()
         try:
             df = pd.read_csv(self.stats_manual)
-            df = df.concat([df, pd.DataFrame([stats])], ignore_index=True)
+            df = pd.concat([df, pd.DataFrame([statistics])], ignore_index=True)
             df.to_csv(self.stats_manual, index=False)
         except FileNotFoundError:
             print(f"Statistics file {self.stats_manual} not found.")
@@ -377,8 +380,8 @@ class Snake(pg.sprite.Sprite, EnvSnake):
         observation = self.get_observation()
         while not self.episode_over:
             self._check_event_()
-            action, is_aleatory = self.agent.choose_action(observation)
-            observation, reward, terminated, truncated, _ = self.step(action)
+            action, _ = self.agent.choose_action(observation)
+            observation, _, terminated, truncated, _ = self.step(action)
             self._print_grass()
             self._render()
             pg.display.flip()
@@ -387,11 +390,11 @@ class Snake(pg.sprite.Sprite, EnvSnake):
                 self.episode_over = terminated or truncated
         self._autoplaying = False
         self.menu_active = True
-        self._print_gameover()
         stats = self.get_statistics()
+        self._print_gameover()
         try:
             df = pd.read_csv(self.stats_auto)
-            df = df.concat([df, pd.DataFrame([stats])], ignore_index=True)
+            df = pd.concat([df, pd.DataFrame([stats])], ignore_index=True)
             df.to_csv(self.stats_auto, index=False)
         except FileNotFoundError:
             print(f"Statistics file {self.stats_auto} not found.")
@@ -423,7 +426,10 @@ class Snake(pg.sprite.Sprite, EnvSnake):
                     gpu_number=0):
         max_length = 3
         first_time = time.time()
-        lengths = []
+        statistics = pd.DataFrame(columns=["red_apples",
+                                           "green_apples",
+                                           "score",
+                                           "moves"])
         self.menu_active = False
         self.episode_over = False
         self._learning_game = True
@@ -491,26 +497,14 @@ class Snake(pg.sprite.Sprite, EnvSnake):
             if self.episode_over:
                 break
             self.agent.train_all()
-            lengths.append(self.get_length_worn())
+            statistics = pd.concat([statistics, pd.DataFrame([self.get_statistics()])], ignore_index=True)
         self.agent.set_epsilon(0.01)
         self.episode_over = False
-        lengths = np.array(lengths)
         self._learning_game = False
         self.menu_active = True
-        plt.plot(lengths, label='Length of Snake')
-        plt.xlabel('Episode')
-        plt.ylabel('Length')
-        plt.title('Length of Snake Over Episodes')
-        plt.legend()
-        plt.show()
-
-        print("Training completed.")
-        self.agent.save_model(filename=FileNameModel)
-        self.show_autoplay = True
         try:
             df = pd.read_csv(self.stats_learn)
-            stats = self.get_statistics()
-            df = df.concat([df, pd.DataFrame([stats])], ignore_index=True)
+            df = pd.concat([df, statistics], ignore_index=True)
             df.to_csv(self.stats_learn, index=False)
         except FileNotFoundError:
             print(f"Statistics file {self.stats_learn} not found.")
@@ -583,3 +577,151 @@ class Snake(pg.sprite.Sprite, EnvSnake):
             pg.display.flip()
             self._check_event_()
         pg.quit()
+
+    def _check_event_statistics_(self):
+        """Check events in the statistics menu."""
+        events = pg.event.get()
+        for event in events:
+            if event.type == pg.QUIT:
+                pg.quit()
+                exit()
+            if event.type == pg.KEYDOWN:
+                if event.key == pg.K_ESCAPE:
+                    self.menu_stats_active = False
+                    return
+            if event.type == pg.MOUSEBUTTONDOWN:
+                if self.manual_stats_button.collidepoint(pg.mouse.get_pos()):
+                    self._show_statistics(type="manual")
+                    return
+                elif self.auto_stats_button.collidepoint(pg.mouse.get_pos()):
+                    self._show_statistics(type="auto")
+                    return
+                elif self.learn_stats_button.collidepoint(pg.mouse.get_pos()):
+                    self._show_statistics(type="learn")
+                    return
+        return
+    
+    def _select_statistics(self):
+        self._print_grass()
+        self._render()
+        self.menu_font = pg.font.Font(None, 48)
+        self.info_font = pg.font.Font(None, 28)
+
+        # Define button rectangles
+        self.manual_stats_button = pg.Rect(self.screen.get_width() // 2 - 150,
+                                     180,
+                                     300,
+                                     50)
+        self.auto_stats_button = pg.Rect(self.screen.get_width() // 2 - 150,
+                                   240,
+                                   300,
+                                   50)
+        self.learn_stats_button = pg.Rect(self.screen.get_width() // 2 - 150,
+                                    300,
+                                    300,
+                                    50)
+        self.menu_stats_active = True
+        while self.menu_stats_active:
+            # Title
+            title = self.menu_font.render("Select Statsistics to show", True, (255, 255, 255))
+            self.screen.blit(title,
+                             ((self.screen.get_width() // 2 -
+                               title.get_width() // 2),
+                              100))
+
+            # Draw buttons
+            pg.draw.rect(self.screen, (70, 130, 180), self.manual_stats_button)
+            pg.draw.rect(self.screen, (34, 139, 34), self.auto_stats_button)
+            pg.draw.rect(self.screen, (255, 69, 0), self.learn_stats_button)
+            # Buttons text
+            manual_text = self.info_font.render("Manual play Statistics",
+                                                True,
+                                                (255, 255, 255))
+            self.screen.blit(manual_text,
+                             (self.manual_stats_button.x + 30,
+                              self.manual_stats_button.y + 10))
+            auto_text = self.info_font.render("Auto play Statistics",
+                                                True,
+                                                (255, 255, 255))
+            self.screen.blit(auto_text,
+                                (self.auto_stats_button.x + 40,
+                                self.auto_stats_button.y + 10))
+            learn_text = self.info_font.render("Learn play Statistics",
+                                               True,
+                                               (255, 255, 255))
+            self.screen.blit(learn_text,
+                             (self.learn_stats_button.x + 40,
+                              self.learn_stats_button.y + 10))
+            pg.display.flip()
+            self._check_event_statistics_()
+        self._print_grass()
+        self._render()
+
+    def _show_statistics(self,type="manual"):
+        """Display the statistics of the game."""
+
+        if type == "manual" and self.stats_manual is not None:
+            try:
+                df = pd.read_csv(self.stats_manual)
+                self.show_graphics(df)
+            except FileNotFoundError:
+                print(f"Statistics file {self.stats_manual} not found.")
+        if type == "auto" and self.stats_auto is not None:
+            try:
+                df = pd.read_csv(self.stats_auto)
+                self.show_graphics(df)
+            except FileNotFoundError:
+                print(f"Statistics file {self.stats_auto} not found.")
+        if type == "learn" and self.stats_learn is not None:
+            try:
+                df = pd.read_csv(self.stats_learn)
+                self.show_graphics(df)
+            except FileNotFoundError:
+                print(f"Statistics file {self.stats_learn} not found.")
+        return
+
+    def show_graphics(self, df):
+        
+        # 1. Create the matplotlib figure and axes
+        fig, ax = plt.subplots(figsize=(8, 6), dpi=100)
+        episodes = range(len(df))  # X-axis: episode indices
+
+        ax.plot(episodes, df['score'], label='Score')
+        ax.plot(episodes, df['green_apples'], label='Green Apples')
+        ax.plot(episodes, df['red_apples'], label='Red Apples')
+        ax.plot(episodes, df['moves'], label='Moves')
+        ax.set_title('Length of Snake Over Episodes')
+        ax.set_xlabel('Episode')
+        ax.set_ylabel('Length')
+        ax.legend()
+        ax.grid(True)
+        fig.tight_layout()
+        #ax.show()
+        # 2. Render the plot to a canvas
+        canvas = FigureCanvas(fig)
+        canvas.draw()
+        # 3. Convert to a numpy RGB array
+        width, height = fig.get_size_inches() * fig.get_dpi()
+        width, height = int(width), int(height)
+
+        raw_data = canvas.buffer_rgba()  # not rgba
+        image = np.frombuffer(raw_data, dtype=np.uint8).reshape(width,height,4)
+
+        # 4. Convert to Pygame surfaceyter
+        surface = pg.image.frombuffer(image.tobytes(), (width, height), "RGBA")
+        self.screen.blit(surface, (0, 0))
+
+        plt.close(fig)
+        pg.display.flip()
+        while True:
+            for event in pg.event.get():
+                if event.type == pg.QUIT:
+                    pg.quit()
+                    exit()
+                if event.type == pg.KEYDOWN:
+                    if event.key == pg.K_ESCAPE:
+                        self._print_grass()
+                        self._render()
+                        pg.display.flip()
+                        return
+            self.clock.tick(60)

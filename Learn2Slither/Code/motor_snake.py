@@ -22,6 +22,7 @@ class MotorSnake():
         self.reset(self)
 
     def reset(self):
+        """Reset the game state."""
         self.worn.clear()
         self._place_worn()
         self.red_apples.clear()
@@ -35,6 +36,7 @@ class MotorSnake():
         self._create_map()
 
     def _place_worn(self):
+        """Place the worn in a random position."""
         self.direction = Directions.get_random_direction()
         position = self._get_rand_pos()
         position[0] = max(2, position[0])
@@ -48,6 +50,18 @@ class MotorSnake():
                           position[1] - self.direction[1] * 2])
 
     def _place_apple(self, type, pos=None, operation="replace"):
+        """Place an apple in a random position.
+        pos is the appel to be replaced. only is used if operation is 
+            "replace".
+        If operation is "replace", the apple will be replaced in an 
+            aleatory position.
+        If operation is "not_replace", the apple will not be added in an 
+            aleatory position.
+        Args:
+            type (int): Type of apple to place (GREEN, RED, ALL).
+            pos (list, optional): Position to place the apple. Defaults to None.
+            operation (str, optional): Operation to perform with the apple.
+        """
         if type == GREEN or type == ALL:
 
             if operation == "replace":
@@ -78,10 +92,16 @@ class MotorSnake():
             self.red_apples.append(posicion)
 
     def _get_rand_pos(self):
+        """Get a random position in the map."""
         return [random.randint(0, self.nr_cells[0] - 2),
                 random.randint(0, self.nr_cells[1] - 2)]
 
     def _move(self):
+        """Move the snake in the current direction.
+        Returns:
+            Collision: The type of collision that occurred.
+            bool: True if the game is terminated, False otherwise.
+        """
         self.moves += 1
         if len(self.worn) == 0:
             self.termnate = True
@@ -138,10 +158,19 @@ class MotorSnake():
         return False
 
     def _check_collisions(self, head_pos):
+        """Check for collisions with walls, apples, or the snake's body.
         # No collision == 0
         # Collision red apple == 1
         # Collision green apple == 2
         # Collission with body = 3
+        # Collision with wall = 4
+        Args:
+            head_pos (list): The position of the snake's head.
+        Returns:
+            None: If no collision occurs.
+            Collision: The type of collision that occurred.
+            bool: True if the game is terminated, False otherwise.
+        """
         if self.moves >= MAX_MOVES or self.moves >= len(self.worn) * 100:
             self.termnate = True
             self.collision = Collision.BODY
@@ -181,6 +210,15 @@ class MotorSnake():
         return
 
     def _create_map(self):
+        """Create the map of the game.
+        The map is a 2D list with the following structure:
+        - "W" for walls
+        - "O" for empty cells
+        - "R" for red apples
+        - "G" for green apples
+        - "H" for the head of the snake
+        - "S" for the rest of the snake
+        """
         self.map = [["O" for _ in range(self.nr_cells[0] + 2)]
                     for _ in range(self.nr_cells[1] + 2)]
         for i in range(self.nr_cells[0] + 2):
@@ -202,6 +240,10 @@ class MotorSnake():
         return
 
     def print_map_in_shell(self, clear=True):
+        """Print the map in the shell.
+        Args:
+            clear (bool): If True, clear the shell before printing.
+        """
         if clear:
             if platform.system() == "Windows":
                 os.system("cls")
@@ -212,14 +254,24 @@ class MotorSnake():
             print(" ".join(f"{celda:2}" for celda in fila))
 
     def get_moves(self):
+        """Get the number of moves made in the game.
+        Returns:
+            int: The number of moves made.
+        """
         return self.moves
 
     def get_length_worn(self):
+        """Get the length of the worn.
+        Returns:
+            int: The length of the worn.
+        """
         return len(self.worn)
 
     def worn_has_repeated_position(self):
         """
         Check if the worn has repeated positions.
+        Returns:
+            bool: True if there are repeated positions, False otherwise.
         """
         nr_repeated_positions = 0
         for historic_worn in self.history:
@@ -231,6 +283,12 @@ class MotorSnake():
 
     def get_statistics(self):
         """ Returns the statistics of the game
+        Returns:
+            dict: A dictionary with the statistics of the game.
+            - "score": The score of the game (length of the worn).
+            - "moves": The number of moves made in the game.
+            - "green_apples": The number of green apples eaten.
+            - "red_apples": The number of red apples eaten.
         """
         info = {
             "score": len(self.worn),

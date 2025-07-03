@@ -107,6 +107,14 @@ class DQNAgent():
         self.train(state, action, reward, next_state, done)
 
     def train(self, states, actions, rewards, nxt_states, dones):
+        """ Train the agent using the given experiences.
+        Args:
+            states (list): List of current states.
+            actions (list): List of actions taken.
+            rewards (list): List of rewards received.
+            nxt_states (list): List of next states.
+            dones (list): List of done flags indicating if the episode ended.
+        """
         states = torch.tensor(states, dtype=torch.float32)
         nxt_states = torch.tensor(nxt_states, dtype=torch.float32)
         rewards = torch.tensor(rewards)

@@ -62,8 +62,8 @@ class Snake(pg.sprite.Sprite, EnvSnake):
         self.corner_worn = None
         self.menu_active = True
         self.truncated = False
-        self._learning_game = False
-        self._autoplaying = False
+        #self._learning_game = False
+#        self._autoplaying = False
         self.stats_manual = stats_man
         self.stats_auto = stats_auto
         self.stats_learn = stats_learn
@@ -83,6 +83,7 @@ class Snake(pg.sprite.Sprite, EnvSnake):
             self.show_autoplay = True
 
     def load_grass(self, filename):
+        """Load the grass image and scale it to the size of the cells."""
         self.grass = pg.image.load(filename)
         self.grass = pg.transform.scale(self.grass,
                                         (self.size_cells[0],
@@ -90,6 +91,7 @@ class Snake(pg.sprite.Sprite, EnvSnake):
                                         )
 
     def load_green_apple(self, filename):
+        """Load the green apple image and scale it to the size of the cells."""
         self.green_apple = pg.image.load(filename)
         self.green_apple = pg.transform.scale(self.green_apple,
                                               (self.size_cells[0],
@@ -97,6 +99,7 @@ class Snake(pg.sprite.Sprite, EnvSnake):
                                               )
 
     def load_red_apple(self, filename):
+        """Load the red apple image and scale it to the size of the cells."""
         self.red_apple = pg.image.load(filename)
         self.red_apple = pg.transform.scale(self.red_apple,
                                             (self.size_cells[0],
@@ -104,12 +107,14 @@ class Snake(pg.sprite.Sprite, EnvSnake):
                                             )
 
     def load_head_worn(self, filename):
+        """Load the head worn image and scale it to the size of the cells."""
         self.head_worn = pg.image.load(filename)
         self.head_worn = pg.transform.scale(self.head_worn,
                                             (self.size_cells[0],
                                              self.size_cells[1]))
 
     def orient_head_worn(self):
+        """Orient the head worn image based on the orientation of the snake."""
         if self.head_worn is not None:
             if all(self.direction == DOWN):
                 head_worn = pg.transform.rotate(self.head_worn, 0)
@@ -125,12 +130,14 @@ class Snake(pg.sprite.Sprite, EnvSnake):
         return head_worn
 
     def load_body_worn(self, filename):
+        """Load the body worn image and scale it to the size of the cells."""
         self.body_worn = pg.image.load(filename)
         self.body_worn = pg.transform.scale(self.body_worn,
                                             (self.size_cells[0],
                                              self.size_cells[1]))
 
     def orient_body_worn(self, index_position):
+        """Orient the body worn image based on the orientation of the snake."""
         pre_orientation = (np.array(self.worn[index_position + 1]) -
                            np.array(self.worn[index_position]))
         post_orientation = (np.array(self.worn[index_position - 1]) -
@@ -180,6 +187,7 @@ class Snake(pg.sprite.Sprite, EnvSnake):
         return oriented_body_worn
 
     def load_tail_worn(self, filename):
+        """Load the tail worn image and scale it to the size of the cells."""
         self.tail_worn = pg.image.load(filename)
         self.tail_worn = pg.transform.scale(self.tail_worn,
                                             (self.size_cells[0],
@@ -187,6 +195,7 @@ class Snake(pg.sprite.Sprite, EnvSnake):
                                             )
 
     def orient_tail_worn(self):
+        """Orient the tail worn image based on the orientation of the snake."""
         len_worn = len(self.worn) - 1
         pre_orientation = (np.array(self.worn[len_worn]) -
                            np.array(self.worn[len_worn - 1]))
@@ -205,12 +214,14 @@ class Snake(pg.sprite.Sprite, EnvSnake):
         return rot_tail
 
     def load_corner_worn(self, filename):
+        """Load the corner worn image and scale it to the size of the cells."""
         self.corner_worn = pg.image.load(filename)
         self.corner_worn = pg.transform.scale(self.corner_worn,
                                               (self.size_cells[0],
                                                self.size_cells[1]))
 
     def _render(self):
+        """Render the game state on the screen."""
         for apple in self.green_apples:
             if self.green_apple is not None:
                 self.screen.blit(self.green_apple,
@@ -267,64 +278,8 @@ class Snake(pg.sprite.Sprite, EnvSnake):
                                      self.size_cells[0],
                                      self.size_cells[1]))
 
-    def _check_event_(self):
-        events = pg.event.get()
-        for event in events:
-            if event.type == pg.QUIT:
-                pg.quit()
-                exit()
-            if self.menu_active:
-                if event.type == pg.KEYDOWN:
-                    if event.key == pg.K_F1:
-                        self.run()
-                        return
-                    elif event.key == pg.K_F2:
-                        self._auto_play()
-                        return
-                    elif event.key == pg.K_F3:
-                        self._learn_game()
-                        return
-                    elif event.key == pg.K_ESCAPE:
-                        pg.quit()
-                        exit()
-                if event.type == pg.MOUSEBUTTONDOWN:
-                    if self.manual_button.collidepoint(pg.mouse.get_pos()):
-                        self.run()
-                        return
-                    elif (self.show_autoplay and
-                          self.auto_button.collidepoint(pg.mouse.get_pos())):
-                        self._auto_play()
-                        return
-                    elif self.learn_button.collidepoint(pg.mouse.get_pos()):
-                        self._learn_game()
-                        return
-                    elif self.stats_button.collidepoint(pg.mouse.get_pos()):
-                        self._select_statistics()
-                        return
-                pg.event.clear()
-            if self._autoplaying | self._learning_game:
-                if event.type == pg.KEYDOWN:
-                    if event.key == pg.K_ESCAPE:
-                        self._autoplaying = False
-                        self._learning_game = False
-                        self.episode_over = True
-                        return
-                    else:
-                        pass
-                return
-            if event.type == pg.KEYDOWN:
-                if event.key == pg.K_LEFT:
-                    self.direction = LEFT
-                if event.key == pg.K_RIGHT:
-                    self.direction = RIGHT
-                if event.key == pg.K_UP:
-                    self.direction = UP
-                if event.key == pg.K_DOWN:
-                    self.direction = DOWN
-                if event.key == pg.K_ESCAPE:
-                    self.episode_over = True
-
     def _print_grass(self):
+        """Fill the screen with grass."""
         for i in range(self.nr_cells[0]):
             for j in range(self.nr_cells[1]):
                 self.screen.blit(self.grass,
@@ -332,6 +287,7 @@ class Snake(pg.sprite.Sprite, EnvSnake):
                                   j * self.size_cells[1]))
 
     def _print_gameover(self):
+        """Display the game over message and score."""
         font = pg.font.SysFont('Arial', 48)
         text_surface = font.render("Game Over", True, (255, 255, 255))
         self.screen.blit(text_surface,
@@ -354,7 +310,7 @@ class Snake(pg.sprite.Sprite, EnvSnake):
         self.clock.tick(2)
         self.episode_over = False
         while not self.episode_over:
-            self._check_event_()
+            self._check_event_play_()
             if not self.episode_over:
                 _, self.episode_over = self._move()
             self._print_grass()
@@ -371,15 +327,35 @@ class Snake(pg.sprite.Sprite, EnvSnake):
         except FileNotFoundError:
             print(f"Statistics file {self.stats_manual} not found.")
 
+    def _check_event_play_(self):
+        """Check events during manual play."""
+        events = pg.event.get()
+        for event in events:
+            if event.type == pg.QUIT:
+                pg.quit()
+                exit()
+            if event.type == pg.KEYDOWN:
+                if event.key == pg.K_LEFT:
+                    self.direction = LEFT
+                elif event.key == pg.K_RIGHT:
+                    self.direction = RIGHT
+                elif event.key == pg.K_UP:
+                    self.direction = UP
+                elif event.key == pg.K_DOWN:
+                    self.direction = DOWN
+                elif event.key == pg.K_ESCAPE:
+                    self.episode_over = True
+            pg.event.clear()
+    
     def _auto_play(self):
         """Auto-play the game using the agent's policy."""
         self.menu_active = False
-        self._autoplaying = True
+#        self._autoplaying = True
         self.clock.tick(2)
         self.episode_over = False
         observation = self.get_observation()
         while not self.episode_over:
-            self._check_event_()
+            self._check_event_autoplay_()
             action, _ = self.agent.choose_action(observation)
             observation, _, terminated, truncated, _ = self.step(action)
             self._print_grass()
@@ -388,7 +364,7 @@ class Snake(pg.sprite.Sprite, EnvSnake):
             self.clock.tick(10)
             if not self.episode_over:
                 self.episode_over = terminated or truncated
-        self._autoplaying = False
+#        self._autoplaying = False
         self.menu_active = True
         stats = self.get_statistics()
         self._print_gameover()
@@ -432,7 +408,7 @@ class Snake(pg.sprite.Sprite, EnvSnake):
                                            "moves"])
         self.menu_active = False
         self.episode_over = False
-        self._learning_game = True
+        #self._learning_game = True
         self.agent.set_epsilon(0.9)
         for i in range(max_episodes):
             observation, info = self.reset()
@@ -489,7 +465,7 @@ class Snake(pg.sprite.Sprite, EnvSnake):
                 pg.display.flip()
                 # self.print_map_in_shell()
                 self.clock.tick(10)
-                self._check_event_()
+                self._check_event_autoplay_()
                 if not game_over:
                     game_over = terminated or truncated
                 elif self.episode_over:
@@ -497,10 +473,11 @@ class Snake(pg.sprite.Sprite, EnvSnake):
             if self.episode_over:
                 break
             self.agent.train_all()
-            statistics = pd.concat([statistics, pd.DataFrame([self.get_statistics()])], ignore_index=True)
+            statistics = pd.concat([statistics,
+                                    pd.DataFrame([self.get_statistics()])],
+                                    ignore_index=True)
         self.agent.set_epsilon(0.01)
         self.episode_over = False
-        self._learning_game = False
         self.menu_active = True
         try:
             df = pd.read_csv(self.stats_learn)
@@ -508,6 +485,32 @@ class Snake(pg.sprite.Sprite, EnvSnake):
             df.to_csv(self.stats_learn, index=False)
         except FileNotFoundError:
             print(f"Statistics file {self.stats_learn} not found.")
+
+    def _print_finish_learn(self):
+        """Display the finish learning message and score after learning.""" 
+        font = pg.font.SysFont('Arial', 48)
+        text_surface = font.render("Learning finished", True, (255, 255, 255))
+        self.screen.blit(text_surface,
+                         ((self.nr_cells[0] // 2 - 3) * self.size_cells[0],
+                          (self.nr_cells[1] // 2 - 1) * self.size_cells[1]))
+        pg.display.flip()  # Update the full display
+        self.clock.tick(0.5)
+        self.reset()
+        self._print_grass()
+        self._render()
+
+    def _check_event_autoplay_(self):
+        """Check events during auto-play."""
+        events = pg.event.get()
+        for event in events:
+            if event.type == pg.QUIT:
+                pg.quit()
+                exit()
+            if event.type == pg.KEYDOWN:
+                if event.key == pg.K_ESCAPE:
+                    self.episode_over = True
+                    return
+            pg.event.clear()
 
     def _select_mode(self):
         """Display the mode selection menu."""
@@ -575,8 +578,45 @@ class Snake(pg.sprite.Sprite, EnvSnake):
                              (self.stats_button.x + 40,
                               self.stats_button.y + 10))
             pg.display.flip()
-            self._check_event_()
+            self._check_event_menu_()
         pg.quit()
+
+    def _check_event_menu_(self):
+        """Check events in the main menu."""
+        events = pg.event.get()
+        for event in events:
+            if event.type == pg.QUIT:
+                pg.quit()
+                exit()
+            if self.menu_active:
+                if event.type == pg.KEYDOWN:
+                    if event.key == pg.K_F1:
+                        self.run()
+                        return
+                    elif event.key == pg.K_F2:
+                        self._auto_play()
+                        return
+                    elif event.key == pg.K_F3:
+                        self._learn_game()
+                        return
+                    elif event.key == pg.K_ESCAPE:
+                        pg.quit()
+                        exit()
+                if event.type == pg.MOUSEBUTTONDOWN:
+                    if self.manual_button.collidepoint(pg.mouse.get_pos()):
+                        self.run()
+                        return
+                    elif (self.show_autoplay and
+                          self.auto_button.collidepoint(pg.mouse.get_pos())):
+                        self._auto_play()
+                        return
+                    elif self.learn_button.collidepoint(pg.mouse.get_pos()):
+                        self._learn_game()
+                        return
+                    elif self.stats_button.collidepoint(pg.mouse.get_pos()):
+                        self._select_statistics()
+                        return
+                pg.event.clear()
 
     def _check_event_statistics_(self):
         """Check events in the statistics menu."""
@@ -602,6 +642,7 @@ class Snake(pg.sprite.Sprite, EnvSnake):
         return
     
     def _select_statistics(self):
+        """Display the statistics selection menu."""
         self._print_grass()
         self._render()
         self.menu_font = pg.font.Font(None, 48)
@@ -656,10 +697,10 @@ class Snake(pg.sprite.Sprite, EnvSnake):
             self._check_event_statistics_()
         self._print_grass()
         self._render()
+        self.menu_stats_active = False
 
     def _show_statistics(self,type="manual"):
         """Display the statistics of the game."""
-
         if type == "manual" and self.stats_manual is not None:
             try:
                 df = pd.read_csv(self.stats_manual)
@@ -681,7 +722,7 @@ class Snake(pg.sprite.Sprite, EnvSnake):
         return
 
     def show_graphics(self, df):
-        
+        """Display the statistics in a graphical format using matplotlib."""
         # 1. Create the matplotlib figure and axes
         fig, ax = plt.subplots(figsize=(8, 6), dpi=100)
         episodes = range(len(df))  # X-axis: episode indices
@@ -689,7 +730,7 @@ class Snake(pg.sprite.Sprite, EnvSnake):
         ax.plot(episodes, df['score'], label='Score')
         ax.plot(episodes, df['green_apples'], label='Green Apples')
         ax.plot(episodes, df['red_apples'], label='Red Apples')
-        ax.plot(episodes, df['moves'], label='Moves')
+        #ax.plot(episodes, df['moves'], label='Moves')
         ax.set_title('Length of Snake Over Episodes')
         ax.set_xlabel('Episode')
         ax.set_ylabel('Length')

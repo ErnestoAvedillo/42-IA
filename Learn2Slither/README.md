@@ -5,14 +5,19 @@
   <img alt="42" width=40 align="top" src="https://cdn.simpleicons.org/42/Black">
  </picture>
  Cursus 
- <img alt="Warning" src="https://raw.githubusercontent.com/Mqxx/GitHub-Markdown/main/blockquotes/badge/dark-theme/warning.svg"> Ongoing work
+  <img alt="Complete" src="https://raw.githubusercontent.com/Mqxx/GitHub-Markdown/main/blockquotes/badge/dark-theme/complete.svg">
 </h1>
+
 <!--FINISH HEADER-->
 
 ## Learn2Slither Reinforcement Learning
 
 ### Descripion
-- With this exercise we lean how to create an environment and how to use it for a reinforcement learning
+- With this exercise we lean how to create an environment and how to use it for a reinforcement learning.
+
+ <img alt="Warning" src="https://raw.githubusercontent.com/Mqxx/GitHub-Markdown/main/blockquotes/badge/dark-theme/warning.svg"> Folder MyNN is an experimental work using my own NN which is not yet finished. Ongoing work
+</h1>
+
 ##### File configuration
 - **__snake.py__**: Script for the game itself;
 - **__snake_class.py__**: Class that executtes the cmplete hame ith it's options;

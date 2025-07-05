@@ -17,11 +17,6 @@ NUM_EPISODES = 500000       # Total episodes to train for
 if __name__ == "__main__":
     parser_description = "Script to train a DQN agent to play the Snake game."
     parser = argparse.ArgumentParser(description=parser_description)
-    parser.add_argument('-l',
-                        '--learn',
-                        type=str,
-                        choices=['Q_LEARNING', 'SARSA'],
-                        help='Type of learning algorithm to use.')
     parser.add_argument('-f',
                         '--file_model',
                         type=str,
@@ -46,21 +41,7 @@ if __name__ == "__main__":
                         help='Number of maximum episodes to repeat.')
     args = parser.parse_args()
 
-    # Check if learning type is provided, otherwise default to 'SARSA
-    if not args.learn:
-        print("No learning type provided. Defaulting to 'Q_LEARNING'.")
-        Learn_Type = "Q_LEARNING"
-    else:
-        print(f"Learning type set to: {args.learn}")
-        Learn_Type = args.learn
     # Check if file name is provided,
-    # otherwise default to 'dqn_snake_model.joblib'
-    if not args.file_model:
-        Learn_Type = 'Q_LEARNING'
-        print("No file name provided. Defaulting to 'dqn_snake_model.joblib'.")
-    else:
-        print(f"Learning type set to: {args.learn}")
-        Learn_Type = args.learn
     if not args.file_model:
         print("No file name provided. Defaulting to 'dqn_snake_model.joblib'.")
         File_Name = "dqn_snake_model.joblib"
@@ -85,7 +66,6 @@ if __name__ == "__main__":
 env = EnvSnake(Nr_cells=[10, 10])
 agent = DQNAgent(state_shape=len(env.observation_space),
                  num_actions=env.action_space,
-                 learning_type=Learn_Type,
                  filename=File_Name,
                  gpu_number=gpu_number)
 # initialize counter of rewards for each action
@@ -152,10 +132,6 @@ for i in range(max_episodes):
     lengths.append(env.get_length_worn())
     pd.DataFrame(lengths, columns=["length"]).to_csv(filename_lengths,
                                                      index=False)
-    # time.sleep(1)
-    lengths.append(env.get_length_worn())
-    pd.DataFrame(lengths,
-                 columns=["length"]).to_csv("lengths.csv", index=False)
 episode_over = False
 lengths = np.array(lengths)
 plt.plot(lengths, label='Length of Snake')

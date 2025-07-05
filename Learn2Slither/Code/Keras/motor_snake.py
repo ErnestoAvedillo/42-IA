@@ -51,16 +51,17 @@ class MotorSnake():
 
     def _place_apple(self, type, pos=None, operation="replace"):
         """Place an apple in a random position.
-        pos is the appel to be replaced. only is used if operation is 
+        pos is the appel to be replaced. only is used if operation is
             "replace".
-        If operation is "replace", the apple will be replaced in an 
+        If operation is "replace", the apple will be replaced in an
             aleatory position.
-        If operation is "not_replace", the apple will not be added in an 
+        If operation is "not_replace", the apple will not be added in an
             aleatory position.
         Args:
             type (int): Type of apple to place (GREEN, RED, ALL).
-            pos (list, optional): Position to place the apple. Defaults to None.
-            operation (str, optional): Operation to perform with the apple.
+            pos (list, optional): Position to place the apple.
+            Defaults to None.
+            Operation (str, optional): Operation to perform with the apple.
         """
         if type == GREEN or type == ALL:
 

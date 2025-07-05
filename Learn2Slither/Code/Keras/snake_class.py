@@ -42,12 +42,17 @@ class Snake(pg.sprite.Sprite, EnvSnake):
     def __init__(self, x, y,
                  Nr_cells=[10, 10],
                  modelname=None,
+                 time_frequency=None,
                  stats_man=None,
                  stats_auto=None,
                  stats_learn=None):
         pg.sprite.Sprite.__init__(self)
         EnvSnake.__init__(self, Nr_cells)
         self.size_cells = [x // self.nr_cells[0], y // self.nr_cells[1]]
+        if time_frequency is None:
+            time_frequency = 10
+        else:
+            self.time_frequency = time_frequency
         pg.display.set_caption("Snake Game")
         pg.font.init()
         self.font = pg.font.Font(None, 36)
@@ -62,8 +67,6 @@ class Snake(pg.sprite.Sprite, EnvSnake):
         self.corner_worn = None
         self.menu_active = True
         self.truncated = False
-        #self._learning_game = False
-#        self._autoplaying = False
         self.stats_manual = stats_man
         self.stats_auto = stats_auto
         self.stats_learn = stats_learn
@@ -346,11 +349,10 @@ class Snake(pg.sprite.Sprite, EnvSnake):
                 elif event.key == pg.K_ESCAPE:
                     self.episode_over = True
             pg.event.clear()
-    
+
     def _auto_play(self):
         """Auto-play the game using the agent's policy."""
         self.menu_active = False
-#        self._autoplaying = True
         self.clock.tick(2)
         self.episode_over = False
         observation = self.get_observation()
@@ -361,7 +363,7 @@ class Snake(pg.sprite.Sprite, EnvSnake):
             self._print_grass()
             self._render()
             pg.display.flip()
-            self.clock.tick(10)
+            self.clock.tick(self.time_frequency)
             if not self.episode_over:
                 self.episode_over = terminated or truncated
 #        self._autoplaying = False
@@ -408,7 +410,6 @@ class Snake(pg.sprite.Sprite, EnvSnake):
                                            "moves"])
         self.menu_active = False
         self.episode_over = False
-        #self._learning_game = True
         self.agent.set_epsilon(0.9)
         for i in range(max_episodes):
             observation, info = self.reset()
@@ -464,7 +465,7 @@ class Snake(pg.sprite.Sprite, EnvSnake):
                 self._render()
                 pg.display.flip()
                 # self.print_map_in_shell()
-                self.clock.tick(10)
+                self.clock.tick(self.time_frequency)
                 self._check_event_autoplay_()
                 if not game_over:
                     game_over = terminated or truncated
@@ -474,8 +475,8 @@ class Snake(pg.sprite.Sprite, EnvSnake):
                 break
             self.agent.train_all()
             statistics = pd.concat([statistics,
-                                    pd.DataFrame([self.get_statistics()])],
-                                    ignore_index=True)
+                                   pd.DataFrame([self.get_statistics()])],
+                                   ignore_index=True)
         self.agent.set_epsilon(0.01)
         self.episode_over = False
         self.menu_active = True
@@ -485,9 +486,10 @@ class Snake(pg.sprite.Sprite, EnvSnake):
             df.to_csv(self.stats_learn, index=False)
         except FileNotFoundError:
             print(f"Statistics file {self.stats_learn} not found.")
+        self._print_finish_learn()
 
     def _print_finish_learn(self):
-        """Display the finish learning message and score after learning.""" 
+        """Display the finish learning message and score after learning."""
         font = pg.font.SysFont('Arial', 48)
         text_surface = font.render("Learning finished", True, (255, 255, 255))
         self.screen.blit(text_surface,
@@ -509,8 +511,8 @@ class Snake(pg.sprite.Sprite, EnvSnake):
             if event.type == pg.KEYDOWN:
                 if event.key == pg.K_ESCAPE:
                     self.episode_over = True
+                    pg.event.clear()
                     return
-            pg.event.clear()
 
     def _select_mode(self):
         """Display the mode selection menu."""
@@ -640,7 +642,7 @@ class Snake(pg.sprite.Sprite, EnvSnake):
                     self._show_statistics(type="learn")
                     return
         return
-    
+
     def _select_statistics(self):
         """Display the statistics selection menu."""
         self._print_grass()
@@ -650,21 +652,23 @@ class Snake(pg.sprite.Sprite, EnvSnake):
 
         # Define button rectangles
         self.manual_stats_button = pg.Rect(self.screen.get_width() // 2 - 150,
-                                     180,
-                                     300,
-                                     50)
+                                           180,
+                                           300,
+                                           50)
         self.auto_stats_button = pg.Rect(self.screen.get_width() // 2 - 150,
-                                   240,
-                                   300,
-                                   50)
+                                         240,
+                                         300,
+                                         50)
         self.learn_stats_button = pg.Rect(self.screen.get_width() // 2 - 150,
-                                    300,
-                                    300,
-                                    50)
+                                          300,
+                                          300,
+                                          50)
         self.menu_stats_active = True
         while self.menu_stats_active:
             # Title
-            title = self.menu_font.render("Select Statsistics to show", True, (255, 255, 255))
+            title = self.menu_font.render("Select Statsistics to show",
+                                          True,
+                                          (255, 255, 255))
             self.screen.blit(title,
                              ((self.screen.get_width() // 2 -
                                title.get_width() // 2),
@@ -682,11 +686,11 @@ class Snake(pg.sprite.Sprite, EnvSnake):
                              (self.manual_stats_button.x + 30,
                               self.manual_stats_button.y + 10))
             auto_text = self.info_font.render("Auto play Statistics",
-                                                True,
-                                                (255, 255, 255))
+                                              True,
+                                              (255, 255, 255))
             self.screen.blit(auto_text,
-                                (self.auto_stats_button.x + 40,
-                                self.auto_stats_button.y + 10))
+                             (self.auto_stats_button.x + 40,
+                              self.auto_stats_button.y + 10))
             learn_text = self.info_font.render("Learn play Statistics",
                                                True,
                                                (255, 255, 255))
@@ -699,7 +703,7 @@ class Snake(pg.sprite.Sprite, EnvSnake):
         self._render()
         self.menu_stats_active = False
 
-    def _show_statistics(self,type="manual"):
+    def _show_statistics(self, type="manual"):
         """Display the statistics of the game."""
         if type == "manual" and self.stats_manual is not None:
             try:
@@ -724,20 +728,18 @@ class Snake(pg.sprite.Sprite, EnvSnake):
     def show_graphics(self, df):
         """Display the statistics in a graphical format using matplotlib."""
         # 1. Create the matplotlib figure and axes
-        fig, ax = plt.subplots(figsize=(8, 6), dpi=100)
+        fig, ax = plt.subplots(figsize=(16, 12), dpi=100)
         episodes = range(len(df))  # X-axis: episode indices
 
         ax.plot(episodes, df['score'], label='Score')
         ax.plot(episodes, df['green_apples'], label='Green Apples')
         ax.plot(episodes, df['red_apples'], label='Red Apples')
-        #ax.plot(episodes, df['moves'], label='Moves')
         ax.set_title('Length of Snake Over Episodes')
         ax.set_xlabel('Episode')
         ax.set_ylabel('Length')
         ax.legend()
         ax.grid(True)
         fig.tight_layout()
-        #ax.show()
         # 2. Render the plot to a canvas
         canvas = FigureCanvas(fig)
         canvas.draw()
@@ -746,10 +748,14 @@ class Snake(pg.sprite.Sprite, EnvSnake):
         width, height = int(width), int(height)
 
         raw_data = canvas.buffer_rgba()  # not rgba
-        image = np.frombuffer(raw_data, dtype=np.uint8).reshape(width,height,4)
+        image = np.frombuffer(raw_data, dtype=np.uint8).reshape(width,
+                                                                height,
+                                                                4)
 
         # 4. Convert to Pygame surfaceyter
-        surface = pg.image.frombuffer(image.tobytes(), (width, height), "RGBA")
+        surface = pg.image.frombuffer(image.tobytes(),
+                                      (width, height),
+                                      "RGBA")
         self.screen.blit(surface, (0, 0))
 
         plt.close(fig)

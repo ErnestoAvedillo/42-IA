@@ -21,7 +21,6 @@ EPOCHS = 1                      # Number of epochs to train the model per batch
 
 class DQNAgent():
     def __init__(self, state_shape, num_actions, filename=None,
-                 learning_type="Q_LEARNING",
                  gpu_number=0,
                  epsilon=EPSILON_START):
         """ Initialize the DQN agent with the given parameters.
@@ -32,9 +31,6 @@ class DQNAgent():
                 Number of possible actions.
             filename (str, optional):
                 Filename to save/load the model. Defaults to None.
-            learning_type (str, optional):
-                Type of learning algorithm.
-                Defaults to "Q_LEARNING", alterantive "SARSA".
             gpu_number (int, optional):
                 GPU number to use for the neural network.
                 Defaults to 0.
@@ -44,10 +40,6 @@ class DQNAgent():
         self.policy_model = DLQModel((state_shape), num_actions, gpu_number)
         self.target_model = DLQModel((state_shape), num_actions, gpu_number)
         self.target_model.load_state_dict(self.policy_model.state_dict())
-        self.load_type = learning_type
-        if self.load_type not in ["Q_LEARNING", "SARSA"]:
-            raise ValueError("Invalid learning type. Valid "
-                             "'Q_LEARNING' or 'SARSA'.")
         self.epsilon = epsilon
         self.replay_buffer = deque(maxlen=REPLAY_BUFFER_SIZE)
         if filename is not None:
@@ -134,25 +126,16 @@ class DQNAgent():
                 if dones[i]:
                     target_q_values[i][actions[i]] = rewards[i]
                 else:
-                    if self.load_type == "Q_LEARNING":
-                        target_q_values[i][actions[i]] = (
-                            (1 - AGENT_LEARNING_RATE) * (
-                                target_q_values[i][actions[i]]
-                            ) +
-                            AGENT_LEARNING_RATE * (
-                                rewards[i] + GAMMA *
-                                np.max(next_q_values[i])
-                            )
+                    target_q_values[i][actions[i]] = (
+                        (1 - AGENT_LEARNING_RATE) * (
+                            target_q_values[i][actions[i]]
+                        ) +
+                        AGENT_LEARNING_RATE * (
+                            rewards[i] + GAMMA *
+                            np.max(next_q_values[i])
                         )
-                    elif self.load_type == "SARSA":
-                        target_q_values[i][actions[i]] = (
-                            (1 - AGENT_LEARNING_RATE) * (
-                                target_q_values[i][actions[i]]
-                            ) + AGENT_LEARNING_RATE * (
-                                rewards[i] + GAMMA *
-                                next_q_values[i][actions[i]]
-                                )
-                            )
+                    )
+
         self.policy_model.fit(states, target_q_values, epochs=EPOCHS,
                               batch_size=BATCH_SIZE,
                               learning_rate=LEARNING_RATE)

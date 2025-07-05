@@ -3,9 +3,9 @@ import argparse
 from snake_class import Snake
 import pandas as pd
 
-STATS_FILE_MANUAL = "snake_stats_man.csv"
-STATS_FILE_AUTO = "snake_stats_auto.csv"
-STATS_FILE_LEARNING = "snake_stats_learn.csv"
+STATS_FILE_MANUAL = "stats/snake_stats_man.csv"
+STATS_FILE_AUTO = "stats/snake_stats_auto.csv"
+STATS_FILE_LEARNING = "stats/snake_stats_learn.csv"
 STATISTICS_FIELDS = ["score", "moves", "green_apples", "red_apples"]
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Snake Game Options')
@@ -16,6 +16,10 @@ if __name__ == "__main__":
     parser.add_argument('-c',
                         '--cells',
                         type=int, help='Number of cells in the grid.')
+    parser.add_argument('-t',
+                        '--time_frequency',
+                        type=int,
+                        help='Time frequency for the game loop.')
     args = parser.parse_args()
     if not args.file_model:
         print("No model name provided.Default name will be used.")
@@ -46,11 +50,18 @@ if __name__ == "__main__":
     if args.cells > 50:
         print("Number of cells is too large. Setting to 50x50 grid.")
         args.cells = 50
+    if not args.time_frequency:
+        print("No time frequency provided. Defaulting to 10 hertz.")
+        frequency = 10
+    else:
+        print(f"Using {args.time_frequency} seconds time frequency.")
+        frequency = args.time_frequency
 
-    game = Snake(800, 600,
+    game = Snake(1600, 1200,
                  [args.cells, args.cells],
-                 modelname=modelname
-                 ,stats_man=STATS_FILE_MANUAL,
+                 modelname=modelname,
+                 time_frequency=frequency,
+                 stats_man=STATS_FILE_MANUAL,
                  stats_auto=STATS_FILE_AUTO,
                  stats_learn=STATS_FILE_LEARNING)
     game.load_grass("./icons/grass.png")

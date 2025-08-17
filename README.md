@@ -17,7 +17,9 @@
 - [X] [Clasification regression](https://github.com/ErnestoAvedillo/42-IA/tree/main/dslr) <img alt="Complete" src="https://raw.githubusercontent.com/Mqxx/GitHub-Markdown/main/blockquotes/badge/dark-theme/complete.svg">
 - [X] [Multilier preceptron](https://github.com/ErnestoAvedillo/42-IA/tree/main/Multilayer%20Perceptron)   <img alt="Complete" src="https://raw.githubusercontent.com/Mqxx/GitHub-Markdown/main/blockquotes/badge/dark-theme/complete.svg">
 - [X] [Total Perspective Vortex](https://github.com/ErnestoAvedillo/42-IA/tree/main/Multilayer%20Perceptron) <img alt="Warning" src="https://raw.githubusercontent.com/Mqxx/GitHub-Markdown/main/blockquotes/badge/dark-theme/complete.svg">
-- [X] [Learn2Slither (Reinforcement learnng)](https://github.com/ErnestoAvedillo/42-IA/tree/main/Multilayer%20Perceptron) Under construction <img alt="Warning" src="https://raw.githubusercontent.com/Mqxx/GitHub-Markdown/main/blockquotes/badge/dark-theme/warning.svg">
+- [X] [Learn2Slither (Reinforcement learnng)](https://github.com/ErnestoAvedillo/42-IA/tree/main/Multilayer%20Perceptron) <img alt="Warning" src="https://raw.githubusercontent.com/Mqxx/GitHub-Markdown/main/blockquotes/badge/dark-theme/complete.svg">
+- [X] [Leaffliction (AI computer vision project )](https://github.com/ErnestoAvedillo/42-IA/tree/main/Multilayer%20Perceptron) Comming soon <img alt="Warning" src="https://raw.githubusercontent.com/Mqxx/GitHub-Markdown/main/blockquotes/badge/dark-theme/warning.svg">
+
 ### Resources
 
 * **[Andrew NG Lexture notes.](https://sgfin.github.io/files/notes/CS229_Lecture_Notes.pdf)**
